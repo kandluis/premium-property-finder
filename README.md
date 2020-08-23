@@ -18,7 +18,6 @@ To get started. See the `package.json` file for other available types.
 Run the following commands:
 
 ```
-npm run prebuild
 npm run build
 npm run push-gh-pages
 ```
