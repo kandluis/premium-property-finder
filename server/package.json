@@ -1,0 +1,25 @@
+{
+  "name": "premium-property-finder-db",
+  "version": "0.0.1",
+  "description": "Property Finder Database",
+  "main": "web.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kandluis/premium-property-finder"
+  },
+  "keywords": [
+    "node",
+    "express",
+    "redis"
+  ],
+  "author": "Luis Perez",
+  "license": "GPL",
+  "bugs": {
+    "url": "https://github.com/kandluis/premium-property-finder/issues"
+  },
+  "dependencies": {
+    "redis": "^0.12.1",
+    "express": "^4.8.3",
+    "logfmt": "^1.1.2"
+  }
+}
