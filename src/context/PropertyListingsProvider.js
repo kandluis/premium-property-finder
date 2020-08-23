@@ -7,7 +7,7 @@ import plimit from 'p-limit';
 
 import * as utilities from '../utilities';
 
-const geocodingBaseUrl = "http://www.mapquestapi.com/geocoding/v1/address";
+const geocodingBaseUrl = "https://www.mapquestapi.com/geocoding/v1/address";
 const zillowBaseUrl = 'https://www.zillow.com/search/GetSearchPageState.htm';
 const zillowApiBaseUrl = 'https://www.zillow.com/webservice';
 const proxyUrl = 'https://cors-anywhere.herokuapp.com';
