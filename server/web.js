@@ -95,6 +95,9 @@ function allowCrossDomains(req, res, next) {
   if ('OPTIONS' == req.method) {
     res.sendStatus(200);
   }
+  else if (req.header('Api-Key') != process.env.SECRET) {
+    res.sendStatus(403);
+  }
   else {
     next();
   }
