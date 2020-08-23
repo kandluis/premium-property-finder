@@ -11,9 +11,11 @@ const geocodingBaseUrl = "http://www.mapquestapi.com/geocoding/v1/address";
 const zillowBaseUrl = 'https://www.zillow.com/search/GetSearchPageState.htm';
 const zillowApiBaseUrl = 'https://www.zillow.com/webservice';
 const proxyUrl = 'https://cors-anywhere.herokuapp.com';
+const dbEndpoint = 'https://property-server.herokuapp.com/api';
 
 const MAPQUEST_API_KEY = process.env.REACT_APP_MAPQUEST_API_KEY;
 const ZILLOW_API_KEY = process.env.REACT_APP_ZILLOW_API_KEY;
+const DB_SECRET = process.env.REACT_APP_SECRET;
 
 const DefaultState = {
   propertyListings: [],
@@ -43,17 +45,41 @@ function boundingBox(lat, lng, side) {
   }
 }
 
+async function dbFetch() {
+  const url = `${dbEndpoint}/get`
+  const storageKey = `dbFetch(${url})`;
+  const data = sessionStorage.getItem(storageKey);
+  if (data != null) {
+    return JSON.parse(data);
+  }
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Api-Key': DB_SECRET
+    },
+  });
+  const result = await res.json();
+  sessionStorage.setItem(storageKey, JSON.stringify(result));
+  return result;
+}
+
+async function dbUpdate(db) {
+  return await fetch(`${dbEndpoint}/set`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Api-Key': DB_SECRET
+    },
+    body: JSON.stringify(db),
+  });
+}
+
 /*
   Attaches the Zillow zestimate for rent to each propertiy.
 */
-async function attachRentestimates(zillow, properties) {
-  const zestimateLocalStorageKey = 'zillow-zestimates';
-  const zestimateData = localStorage.getItem(zestimateLocalStorageKey);
-  // zestimate object is mapping from {zpid : <data>} about the property.
-  let ZillowDB = {};
-  if (zestimateData != null) {
-    ZillowDB = JSON.parse(zestimateData);
-  }
+async function attachRentestimates(properties) {
+  let ZillowDB = await dbFetch();
   const newProperties = properties.filter((item) => !(item.zpid in ZillowDB));
   if (newProperties.length > 0) {
     // Limit concurrency to 20 requests at a time.
@@ -61,7 +87,7 @@ async function attachRentestimates(zillow, properties) {
     const apiName = 'GetDeepSearchResults';
     const zillowUrl = `${zillowApiBaseUrl}/${apiName}.htm?zws-id=${ZILLOW_API_KEY}`
     const requests = newProperties.map((property) => {
-      if (property.price > 400000) {
+      if (property.price > 315000) {
         return null;
       }
       const url = `${zillowUrl}&address=${encodeURIComponent(property.address)}&citystatezip=${property.zipCode}&rentzestimate=true`;
@@ -76,7 +102,6 @@ async function attachRentestimates(zillow, properties) {
       const found = results.filter(
         (item) =>  utilities.get(item, 'rentzestimate.0.amount.0._'));
       if (found.length == 0) {
-        newDB[utilities.get(results, '0.zpid.0')] = {};
         return;
       }
       newDB[Number(utilities.get(found, '0.zpid.0'))] = {
@@ -85,7 +110,7 @@ async function attachRentestimates(zillow, properties) {
       };
     })
     ZillowDB = {...ZillowDB, ...newDB };
-    localStorage.setItem(zestimateLocalStorageKey, JSON.stringify(ZillowDB));
+    dbUpdate(ZillowDB);
   }
   properties = properties.map((property) => {
     return {...property, ...ZillowDB[property.zpid] };
@@ -203,7 +228,7 @@ export class PropertyListingsProvider extends React.Component {
     // New location so we need to fetch new property listings.
     if (prevGeoLocation !== geoLocation || prevRadius != radius) {
       const properties = await fetchProperties(geoLocation, (radius) ? radius : 8);
-      const newListings = await attachRentestimates(this.zillowApi, properties);
+      const newListings = await attachRentestimates(properties);
       if (newListings) {
         propertyListings = newListings;
       }
