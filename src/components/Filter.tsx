@@ -6,7 +6,7 @@ import styles from './styles.module.css'
 
 type FilterProps {
   updateFilter: (filter: FilterState) => void
-}
+};
 
 class Filter extends React.Component<FilterProps, FilterState> {
   state: FilterState = DefaultFilter

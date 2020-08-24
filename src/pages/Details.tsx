@@ -15,15 +15,17 @@ function Details({ propertyId }: RouteComponentProps<DetailsProps>): React.React
     'Exposed brickwork retaining the charm of the existing building',
     'Cycle storage',
     'Victorian Mill conversion',
-    '13 unique 1,2 and 3 bed apartments available'
-  ]
+    '13 unique 1,2 and 3 bed apartments available',
+  ];
   return (
     <div>
-      Show details for property with Id of {propertyId || 'N/A'} 
+      Show details for property with Id of
+      {' '}
+      {propertyId || 'N/A'}
       <KeyFeatures features={features} />
       <Map />
     </div>
-  )
+  );
 }
 
 export { Details };

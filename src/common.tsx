@@ -7,7 +7,7 @@ interface FilterState {
   sortOrder: string,
 
   readonly sortOrders: Array<string>,
-};
+}
 
 const DefaultFilter: FilterState = {
   geoLocation: '',
@@ -17,7 +17,7 @@ const DefaultFilter: FilterState = {
   rentOnly: false,
   sortOrder: '',
   sortOrders: ['Highest First', 'Lowest First'],
-}
+};
 
 interface Property {
   address?: string,
@@ -31,7 +31,7 @@ interface Property {
   price?: number,
   rentzestimate?: number
   state?: string,
-  statusText?: string ,
+  statusText?: string,
   zipCode?: number,
   zpid?: number,
 }
@@ -40,4 +40,4 @@ export {
   DefaultFilter,
   FilterState,
   Property,
-}
+};

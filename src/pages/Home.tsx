@@ -10,7 +10,7 @@ import {
   PropertyListingsConsumer,
 } from '../context/PropertyListingsProvider';
 
-function Home(pros: RouteComponentProps): React.ReactElement {
+function Home(props: RouteComponentProps): React.ReactElement {
   return (
     <>
       <Hero />

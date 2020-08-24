@@ -114,7 +114,7 @@ async function dbFetch(): Promise<Database> {
 }
 
 function dbUpdate(db: Database): void {
-  fetch(`${dbEndpoint}/set`, {
+  void fetch(`${dbEndpoint}/set`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

@@ -1,7 +1,7 @@
-import React from "react";
+import React from 'react';
 
 function Map(): React.ReactElement {
-  const address = "Mason Street, Manchester, Greater Manchester, M4";
+  const address = 'Mason Street, Manchester, Greater Manchester, M4';
   const search = `https://maps.google.com/maps?q=${address}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
 
   return (
