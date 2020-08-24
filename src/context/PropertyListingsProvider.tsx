@@ -154,7 +154,7 @@ const DefaultState: PropertyListingsState = {
   filter: DefaultFilter,
   filteredListings: [],
   propertyListings: [],
-  updateFilter: (filter: FilterState) => void,
+  updateFilter: (filter: FilterState) => { return; },
 };
 
 const PropertyListingsContext = React.createContext(DefaultState);
