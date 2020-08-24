@@ -1,9 +1,14 @@
-import * as React from 'react';
+import React from 'react';
+import { RouteComponentProps } from '@reach/router';
 
 import { Map } from '../components/map';
 import { KeyFeatures } from '../components/keyFeatures';
 
-function Details({ propertyId }) {
+type DetailsProps = {
+  propertyId: number
+};
+
+function Details({ propertyId }: RouteComponentProps<DetailsProps>): React.ReactElement {
   const features = [
     'Help to Buy available, ideal for first time buyers',
     'Within walking distance of the Northern Quarter, Ancoats & NOMA',
@@ -14,7 +19,7 @@ function Details({ propertyId }) {
   ]
   return (
     <div>
-      Show details for property with Id of {propertyId} 
+      Show details for property with Id of {propertyId || 'N/A'} 
       <KeyFeatures features={features} />
       <Map />
     </div>

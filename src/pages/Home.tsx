@@ -1,0 +1,43 @@
+import React from 'react';
+import { RouteComponentProps } from '@reach/router';
+
+import { Filter } from '../components/Filter';
+import { Hero } from '../components/Hero';
+import { Listing } from '../components/Listing';
+
+import {
+  PropertyListingsProvider,
+  PropertyListingsConsumer,
+} from '../context/PropertyListingsProvider';
+
+function Home(pros: RouteComponentProps): React.ReactElement {
+  return (
+    <>
+      <Hero />
+      <div className="container">
+        <PropertyListingsProvider>
+          <PropertyListingsConsumer>
+            {({ filteredListings, updateFilter }) => (
+              <>
+                <Filter
+                  updateFilter={updateFilter}
+                />
+                <h3>
+                  Num Results:
+                  {filteredListings.length}
+                </h3>
+                <div className="columns">
+                  {filteredListings.map((property, idx) => (
+                    <Listing property={property} key={idx} />
+                  ))}
+                </div>
+              </>
+            )}
+          </PropertyListingsConsumer>
+        </PropertyListingsProvider>
+      </div>
+    </>
+  );
+}
+
+export { Home };

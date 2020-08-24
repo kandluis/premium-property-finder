@@ -1,18 +1,15 @@
-import * as React from 'react'
-import classnames from 'classnames'
+import React from 'react';
+import classnames from 'classnames';
+import { DefaultFilter, FilterState } from '../common';
 
 import styles from './styles.module.css'
 
-class Filter extends React.Component {
-  state = {
-    radius: '',
-    priceFrom: '',
-    sortOrder: '',
-    geoLocation: '',
-    meetsRule: '',
-    rentOnly: false,
-    sortOrders: ['Highest First', 'Lowest First'],
-  }
+type FilterProps {
+  updateFilter: (filter: FilterState) => void
+}
+
+class Filter extends React.Component<FilterProps, FilterState> {
+  state: FilterState = DefaultFilter
 
   render() {
     const containerClasses = classnames('container', 'mb-1', styles.container);
@@ -61,7 +58,7 @@ class Filter extends React.Component {
                     type="number"
                     id="radius"
                     placeholder="15"
-                    value={this.state.radius}
+                    value={this.state.radius || ''}
                     onChange={event => this.setState({ radius: Number(event.target.value)})}
                   />
                 </div>
@@ -82,7 +79,7 @@ class Filter extends React.Component {
                     type="number"
                     id="price-from"
                     placeholder="£1,000,000"
-                    value={this.state.priceFrom}
+                    value={this.state.priceFrom || ''}
                     onChange={event => this.setState({ priceFrom: Number(event.target.value)})}
                   />
                 </div>
@@ -128,7 +125,7 @@ class Filter extends React.Component {
                     step="0.1"
                     id="meets-rule"
                     placeholder="1.5"
-                    value={this.state.meetsRule}
+                    value={this.state.meetsRule || ''}
                     onChange={event => this.setState({ meetsRule: Number(event.target.value)})}
                   />
                 </div>

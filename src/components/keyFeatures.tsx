@@ -2,7 +2,11 @@ import React from "react";
 
 import styles from "./styles.module.css";
 
-class KeyFeatures extends React.Component {
+type KeyFeaturesProps = {
+  features: Array<string>,
+};
+
+class KeyFeatures extends React.Component<KeyFeaturesProps> {
   render() {
     const { features } = this.props;
 

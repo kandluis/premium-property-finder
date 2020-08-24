@@ -1,10 +1,10 @@
-import * as React from 'react'
+import React from 'react'
 
 import classnames from 'classnames'
 import styles from './styles.module.css'
 
 
-function Hero() {
+function Hero(): React.ReactElement {
   const classes = classnames('hero', 'hero-lg', 'mb-3', styles.hero);
   return (
     <div className={classes}>

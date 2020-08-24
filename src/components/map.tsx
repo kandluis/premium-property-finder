@@ -1,6 +1,6 @@
 import React from "react";
 
-function Map() {
+function Map(): React.ReactElement {
   const address = "Mason Street, Manchester, Greater Manchester, M4";
   const search = `https://maps.google.com/maps?q=${address}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
 
@@ -15,8 +15,8 @@ function Map() {
           id="gmap_canvas"
           frameBorder="0"
           scrolling="no"
-          marginHeight="0"
-          marginWidth="0"
+          marginHeight={0}
+          marginWidth={0}
         />
       </div>
     </div>
