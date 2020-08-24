@@ -1,21 +1,10 @@
-import * as React from 'react';
 import accounting from 'accounting';
+import * as constants from '../constants';
 import debounce from 'lodash.debounce';
-import * as geometry from 'spherical-geometry-js';
-import xml2js from 'xml2js';
 import plimit from 'p-limit';
-
+import * as React from 'react';
 import * as utilities from '../utilities';
-
-const geocodingBaseUrl = "https://www.mapquestapi.com/geocoding/v1/address";
-const zillowBaseUrl = 'https://www.zillow.com/search/GetSearchPageState.htm';
-const zillowApiBaseUrl = 'https://www.zillow.com/webservice';
-const proxyUrl = 'https://cors-anywhere.herokuapp.com';
-const dbEndpoint = 'https://property-server.herokuapp.com/api';
-
-const MAPQUEST_API_KEY = process.env.REACT_APP_MAPQUEST_API_KEY;
-const ZILLOW_API_KEY = process.env.REACT_APP_ZILLOW_API_KEY;
-const DB_SECRET = process.env.REACT_APP_SECRET;
+import xml2js from 'xml2js';
 
 const DefaultState = {
   propertyListings: [],
@@ -25,67 +14,17 @@ const DefaultState = {
 
 const PropertyListingsContext = React.createContext(DefaultState);
 
-window.requestFileSystem  = window.requestFileSystem || window.webkitRequestFileSystem;
-
-/*
-  Computes a bounding box around the (lat, lng) point with side lenghs of
-  'side' miles.
-
-  Works only for relatively small 'side' values (compared to earth radius)
-  and when we're not too close to the poles.
-*/
-function boundingBox(lat, lng, side) {
-  const sideLengthInMeters = side * 1.60934 * 1000;
-  const center = new geometry.LatLng(lat, lng);
-  return {
-    'north': geometry.computeOffset(center, sideLengthInMeters, 0).latitude,
-    'east': geometry.computeOffset(center, sideLengthInMeters, 90).longitude,
-    'south': geometry.computeOffset(center, sideLengthInMeters, 180).latitude,
-    'west': geometry.computeOffset(center, sideLengthInMeters, 270).longitude,
-  }
-}
-
-async function dbFetch() {
-  const url = `${dbEndpoint}/get`
-  const storageKey = `dbFetch(${url})`;
-  const data = sessionStorage.getItem(storageKey);
-  if (data != null) {
-    return JSON.parse(data);
-  }
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Api-Key': DB_SECRET
-    },
-  });
-  const result = await res.json();
-  sessionStorage.setItem(storageKey, JSON.stringify(result));
-  return result;
-}
-
-async function dbUpdate(db) {
-  return await fetch(`${dbEndpoint}/set`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Api-Key': DB_SECRET
-    },
-    body: JSON.stringify(db),
-  });
-}
-
 /*
   Attaches the Zillow zestimate for rent to each propertiy.
 */
 async function attachRentestimates(properties) {
-  let ZillowDB = await dbFetch();
+  let ZillowDB = await utilities.dbFetch();
   const newProperties = properties.filter((item) => !(item.zpid in ZillowDB));
   if (newProperties.length > 0) {
     // Limit concurrency to 20 requests at a time.
     const limit = plimit(20);
     const apiName = 'GetDeepSearchResults';
-    const zillowUrl = `${zillowApiBaseUrl}/${apiName}.htm?zws-id=${ZILLOW_API_KEY}`
+    const zillowUrl = `${constants.zillowApiBaseUrl}/${apiName}.htm?zws-id=${constants.ZILLOW_API_KEY}`
     const requests = newProperties.map((property) => {
       if (property.price > 315000) {
         return null;
@@ -110,7 +49,7 @@ async function attachRentestimates(properties) {
       };
     })
     ZillowDB = {...ZillowDB, ...newDB };
-    dbUpdate(ZillowDB);
+    utilities.dbUpdate(ZillowDB);
   }
   properties = properties.map((property) => {
     return {...property, ...ZillowDB[property.zpid] };
@@ -126,7 +65,7 @@ async function attachRentestimates(properties) {
 */
 async function getJsonResponse(url, format='json', useProxy=false) {
   if (useProxy) {
-    url = `${proxyUrl}/${url}`;
+    url = `${constants.proxyUrl}/${url}`;
   }
   const storageKey = `getJsonReponse(${url})`;
   const data = sessionStorage.getItem(storageKey);
@@ -148,7 +87,7 @@ async function getJsonResponse(url, format='json', useProxy=false) {
 }
 
 async function fetchProperties(location, radius) {
-  const geoCodeUrl = `${geocodingBaseUrl}?key=${MAPQUEST_API_KEY}&location=${location.toLowerCase()}`
+  const geoCodeUrl = `${constants.geocodingBaseUrl}?key=${constants.MAPQUEST_API_KEY}&location=${location.toLowerCase()}`
   const latLongData = await getJsonResponse(geoCodeUrl);
   const statusCode = utilities.get(latLongData, 'info.statuscode');
   if (statusCode !== 0) {
@@ -165,9 +104,9 @@ async function fetchProperties(location, radius) {
     cat1: ["mapResults"]
   };
   const searchQueryState = {
-    mapBounds: boundingBox(lat, lng, radius * 2)
+    mapBounds: utilities.boundingBox(lat, lng, radius * 2)
   };
-  const zillowUrl = `${zillowBaseUrl}?searchQueryState=${JSON.stringify(searchQueryState)}&wants=${JSON.stringify(wants)}`;
+  const zillowUrl = `${constants.zillowBaseUrl}?searchQueryState=${JSON.stringify(searchQueryState)}&wants=${JSON.stringify(wants)}`;
   const data = await getJsonResponse(`${zillowUrl}`, 'json', true);
   var propertyListings = utilities.get(data, 'cat1.searchResults.mapResults');
   propertyListings = propertyListings.map((item) => parseResult(item));
