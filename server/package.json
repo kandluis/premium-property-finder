@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "body-parser": "^1.19.0",
+    "cors-anywhere": "^0.4.3",
     "express": "^4.8.3",
     "logfmt": "^1.1.2",
     "pg": "^8.3.2",

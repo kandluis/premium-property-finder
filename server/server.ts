@@ -1,8 +1,10 @@
 import bodyParser from 'body-parser';
+// @ts-ignore
+import {createServer} from 'cors-anywhere';
 import express from 'express';
-import url from 'url';
-import redis from 'redis';
 import pg from 'pg';
+import redis from 'redis';
+import url from 'url';
 
 type StoredData = {
   [zpid: number]: {
@@ -158,6 +160,21 @@ function allowCrossDomains(
   }
 }
 
+/**
+  Parses a comma-seperated list, if any.
+
+  @parameter envList - The string representation of the list to parse.
+
+  @returns An array of the parsed list.
+*/
+function parseEnvList(envList: string | undefined | null): Array<string> {
+  if (!envList) {
+    return [];
+  }
+  return envList.split(',');
+}
+
+
 const app = express()
   .use(bodyParser.json())
   .use(bodyParser.urlencoded({ extended: true }))
@@ -248,11 +265,36 @@ const router = express.Router()
 
   const port = Number(process.env.PORT || 5000);
 
-  app
-    .use('/', router)
-    .listen(port, () => {
+  // Back-end server. 
+  app.use('/', router)
+     .listen(port, () => {
       console.log(`Listening on ${port}`);
     });
+
+  // Server for routing requests.
+  const corsPort = Number(process.env.CORS_PORT || 8080);
+  const host = process.env.HOST || 'localhost';
+  const originAllowList = parseEnvList(process.env.CORS_ANYWHERE_ALLOWLIST);
+  createServer({
+    originWhitelist: originAllowList,
+    requireHeader: ['origin', 'x-requested-with'],
+    removeHeaders: [
+      'cookie',
+      'cookie2',
+      // Strip Heroku-specific headers
+      'x-heroku-queue-wait-time',
+      'x-heroku-queue-depth',
+      'x-heroku-dynos-in-use',
+      'x-request-start',
+    ],
+    redirectSameOrigin: true,
+    httpProxyOptions: {
+      // Do not add X-Forwarded-For, etc. headers, because Heroku already adds it.
+      xfwd: false,
+    },
+  }).listen(corsPort, process.env.HOST, () => {
+      console.log(`Running CORS Anywhere on ${corsPort} with allowList: ${process.env.CORS_ANYWHERE_ALLOWLIST}`)
+    })
 })()
   .then(null)
   .catch(null);
