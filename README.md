@@ -4,7 +4,16 @@ Run
 npm install
 ```
 
-This should install all the required dependencies. Then simply run:
+This should install all the required dependencies. If this is a fresh pull from the directory, you'll also need to provide a few keys. At the top-level (eg, same location as `package.json`), add a file called `.env` which defines the following environment variables:
+
+```
+REACT_APP_MAPQUEST_API_KEY=<TODO>
+REACT_APP_ZILLOW_API_KEY=<TODO>
+REACT_APP_SECRET=<TODO>
+```
+where each of the above correspond to your keys.
+
+Then simply run:
 
 ```
 npm start
@@ -26,6 +35,13 @@ npm run push-gh-pages
 Make sure you install the heroku CLI. You can add the remote branch to git using:
 ```
 git remote add heroku https://git.heroku.com/property-server.git
+```
+
+If this is a fresh pull, you'll also need to add the following into `server/.env`:
+
+```
+REDISCLOUD_URL=<TODO>
+DATABASE_URL=<TODO>
 ```
 
 # Deploying Back-end server
