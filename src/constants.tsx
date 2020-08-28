@@ -3,7 +3,7 @@ export const geocodingBaseUrl = 'https://www.mapquestapi.com/geocoding/v1/addres
 // URL for public Zillow API.
 export const zillowBaseUrl = 'https://www.zillow.com/search/GetSearchPageState.htm';
 export const zillowApiBaseUrl = 'https://www.zillow.com/webservice';
-export const proxyUrl = 'https://property-server.herokuapp.com:8080';
+export const proxyUrl = 'https://property-server.herokuapp.com/proxy';
 export const dbEndpoint = 'https://property-server.herokuapp.com/api';
 
 export const MAPQUEST_API_KEY: string = process.env.REACT_APP_MAPQUEST_API_KEY || '';

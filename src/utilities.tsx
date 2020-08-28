@@ -37,7 +37,11 @@ async function getJsonResponse(url: string, format = 'json', useProxy = false) :
   if (data != null) {
     return JSON.parse(data);
   }
-  const blob = await fetch(fullUrl);
+  const blob = await fetch(fullUrl, {
+    headers: {
+      'Api-Key': DB_SECRET,
+    },
+  });
   let parsedData = null;
   if (format === 'json') {
     parsedData = await blob.json();
