@@ -214,7 +214,7 @@ export class PropertyListingsProvider extends React.Component<PropertyListingsPr
       });
     }
     if (sortOrder) {
-      filteredListings = propertyListings.sort((a, b) => {
+      filteredListings = filteredListings.sort((a, b) => {
         const aPrice = a.price || 0;
         const bPrice = b.price || 0;
         return ((sortOrder == 'lowestfirst') ? 1 : -1) * (aPrice - bPrice)
