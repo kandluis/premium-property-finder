@@ -180,6 +180,8 @@ const cors_proxy = createServer({
 })
 
 
+let inCache = false;
+
 const app = express()
   .use(bodyParser.json({limit: '50mb'}))
   .use(bodyParser.urlencoded({ limit: '50mb', extended: true }))
@@ -212,21 +214,31 @@ const router = express.Router()
           .then(null)
           .catch(null);
         const blob = JSON.stringify(data);
+        inCache = redisClient.set(tableName, blob)
         response.json({
-          message: redisClient.set(tableName, blob),
+          message: inCache,
         });
         break;
       }
       case 'get': {
-        redisClient.get(tableName, (err, reply) => {
-          if (reply != null) {
-            response.json(JSON.parse(reply));
+        if (inCache) {
+          redisClient.get(tableName, (err, reply) => {
+            if (reply != null) {
+              response.json(JSON.parse(reply));
+            } else {
+              response.json({
+                message: err,
+              });
+            }
+          });
+        } else {
+          const data = await fetch();
+          if (data === null) {
+            response.json({});
           } else {
-            response.json({
-              message: err,
-            });
+            response.json(JSON.parse(data));
           }
-        });
+        }
         break;
       }
       case 'infodb': {
