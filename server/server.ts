@@ -181,8 +181,8 @@ const cors_proxy = createServer({
 
 
 const app = express()
-  .use(bodyParser.json())
-  .use(bodyParser.urlencoded({ extended: true }))
+  .use(bodyParser.json({limit: '50mb'}))
+  .use(bodyParser.urlencoded({ limit: '50mb', extended: true }))
   .use(allowCrossDomains);
 
 const router = express.Router()
