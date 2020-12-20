@@ -7,6 +7,9 @@ interface FilterState {
   sortOrder: string,
 
   readonly sortOrders: Array<string>,
+
+  // Used to indicate the filter data is still loading.
+  loading: boolean,
 }
 
 const DefaultFilter: FilterState = {
@@ -17,6 +20,7 @@ const DefaultFilter: FilterState = {
   rentOnly: false,
   sortOrder: '',
   sortOrders: ['Highest First', 'Lowest First'],
+  loading: false,
 };
 
 interface Property {

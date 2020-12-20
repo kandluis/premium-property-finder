@@ -267,6 +267,8 @@ export class PropertyListingsProvider extends React.Component<PropertyListingsPr
     let { propertyListings } = this.state;
     // New location so we need to fetch new property listings.
     if (prevGeoLocation !== geoLocation || prevRadius != radius) {
+      // Loading!
+      this.setState({ filter: {...filter, loading: true}});
       const properties = await fetchProperties(geoLocation, (radius) || defaultRadiusSearch);
       const newListings = await attachRentestimates(properties);
       if (newListings) {
@@ -308,7 +310,7 @@ export class PropertyListingsProvider extends React.Component<PropertyListingsPr
     }
 
     this.setState({
-      filter,
+      filter: {...filter, loading: false},
       propertyListings,
       filteredListings,
     });

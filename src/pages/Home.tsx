@@ -17,14 +17,16 @@ function Home(props: RouteComponentProps): React.ReactElement {
       <div className="container">
         <PropertyListingsProvider>
           <PropertyListingsConsumer>
-            {({ filteredListings, updateFilter }) => (
+            {({ filter, filteredListings, updateFilter }) => (
               <>
                 <Filter
                   updateFilter={updateFilter}
                 />
-                <h3>
-                  Num Results:
-                  {filteredListings.length}
+                <h3> 
+                  {!filter.loading
+                    ? `Num Results: ${filteredListings.length}`
+                    : "Loading results..."
+                  }
                 </h3>
                 <div className="columns">
                   {filteredListings.map((property, idx) => (
