@@ -79,7 +79,11 @@ async function getJsonResponse(url: string, format: 'json' | 'xml' = 'json', use
     parsedData = get(parsedData,
       'SearchResults:searchresults.response.0.results.0.result');
   }
-  sessionStorage.setItem(storageKey, JSON.stringify(parsedData));
+  try {
+    sessionStorage.setItem(storageKey, JSON.stringify(parsedData));
+  } catch (e) {
+    console.log(e);
+  }
   return parsedData;
 }
 
@@ -141,7 +145,11 @@ async function dbFetch(): Promise<Database> {
     },
   });
   const result = await res.json() as Database;
-  sessionStorage.setItem(storageKey, JSON.stringify(result));
+  try {
+    sessionStorage.setItem(storageKey, JSON.stringify(result));
+  } catch (e) {
+    console.log(e);
+  }
   return result;
 }
 
