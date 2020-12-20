@@ -55,7 +55,7 @@ async function getLatLong(location: string): Promise<Location | null> {
 
   @returns: The response, in JSON format from the url.
 */
-async function getJsonResponse(url: string, format: 'json' | 'xml' = 'json', useProxy: boolean = false, cache: boolean=true) : Promise<any> {
+async function getJsonResponse(url: string, format: 'json' | 'xml' = 'json', useProxy: boolean = false) : Promise<any> {
   let fullUrl = url;
   if (useProxy) {
     fullUrl = `${proxyUrl}/${url}`;
@@ -79,9 +79,7 @@ async function getJsonResponse(url: string, format: 'json' | 'xml' = 'json', use
     parsedData = get(parsedData,
       'SearchResults:searchresults.response.0.results.0.result');
   }
-  if (cache) {
-    sessionStorage.setItem(storageKey, JSON.stringify(parsedData));
-  }
+  sessionStorage.setItem(storageKey, JSON.stringify(parsedData));
   return parsedData;
 }
 

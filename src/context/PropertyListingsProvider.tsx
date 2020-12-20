@@ -27,7 +27,7 @@ async function fetchRentalZestimates(newProperties: Array<Property>): Promise<Da
       return null;
     }
     const url = `${zillowUrl}&address=${encodeURIComponent(property.address)}&citystatezip=${property.zipCode}&rentzestimate=true`;
-    return limit(() => getJsonResponse(url, 'xml', true, false));
+    return limit(() => getJsonResponse(url, 'xml', true));
   }).filter((request: Promise<any> | null) => request);
   const zillowData = await Promise.all(requests);
   const newDB: Database = {};
@@ -60,7 +60,7 @@ async function fetchRentalZestimates(newProperties: Array<Property>): Promise<Da
 async function getRentBitsEstimate({lat, lng}: Location): Promise<number | null> {
   const box = boundingBox(lat, lng, 5);
   const url = `${rentBitsApiBaseUrl}?bounds=${box.south},${box.north},${box.west},${box.east}`;
-  const res = await getJsonResponse(url, 'json', true, false);
+  const res = await getJsonResponse(url, 'json', true);
   const results = get(res, 'data') as (Array<{price?: string}> | null)
   if (results === null) {
     return null;
