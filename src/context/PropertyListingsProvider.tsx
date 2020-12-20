@@ -1,5 +1,5 @@
 import accounting from 'accounting';
-import { DefaultFilter, FilterState, Property } from '../common';
+import { sortFn, DefaultFilter, FilterState, Property } from '../common';
 import {
   defaultRadiusSearch, zillowApiBaseUrl, zillowBaseUrl, ZILLOW_API_KEY, rentBitsApiBaseUrl,
 } from '../constants';
@@ -262,7 +262,13 @@ export class PropertyListingsProvider extends React.Component<PropertyListingsPr
     const prevGeoLocation = this.state.filter.geoLocation;
     const prevRadius = this.state.filter.radius;
     const {
-      geoLocation, priceFrom, sortOrder, radius, meetsRule, rentOnly,
+      geoLocation,
+      includeLand,
+      meetsRule,
+      priceFrom,
+      radius,
+      rentOnly,
+      sortOrder,
     } = filter;
     let { propertyListings } = this.state;
     // New location so we need to fetch new property listings.
@@ -286,6 +292,11 @@ export class PropertyListingsProvider extends React.Component<PropertyListingsPr
         return item.rentzestimate && item.rentzestimate > 0;
       });
     }
+    if (!includeLand) {
+      filteredListings = filteredListings.filter((item) => {
+        return item.beds && item.baths;
+      });
+    }
     if (meetsRule) {
       filteredListings = filteredListings.filter((item) => {
         if (!item.rentzestimate) {
@@ -301,12 +312,8 @@ export class PropertyListingsProvider extends React.Component<PropertyListingsPr
         return ratio >= meetsRule;
       });
     }
-    if (sortOrder) {
-      filteredListings = filteredListings.sort((a, b) => {
-        const aPrice = a.price || 0;
-        const bPrice = b.price || 0;
-        return ((sortOrder == 'lowestfirst') ? 1 : -1) * (aPrice - bPrice)
-      });
+    if (sortOrder !== '') {
+      filteredListings = filteredListings.sort(sortFn(sortOrder));
     }
 
     this.setState({

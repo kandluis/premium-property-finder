@@ -1,6 +1,6 @@
 import React from 'react';
 import classnames from 'classnames';
-import { DefaultFilter, FilterState } from '../common';
+import { DefaultFilter, FilterState, SortOrder } from '../common';
 
 import styles from './styles.module.css'
 
@@ -97,7 +97,7 @@ class Filter extends React.Component<FilterProps, FilterState> {
                     className="form-select"
                     id="sortorder"
                     value={this.state.sortOrder}
-                    onChange={event => this.setState({ sortOrder: event.target.value })}
+                    onChange={event => this.setState({ sortOrder: event.target.value as SortOrder })}
                   >
                     <option>Choose...</option>
                     {this.state.sortOrders.map(order => (
@@ -144,6 +144,23 @@ class Filter extends React.Component<FilterProps, FilterState> {
                     id="only-rent"
                     checked={this.state.rentOnly}
                     onChange={event => this.setState({ rentOnly: event.target.checked })}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="column col-2 col-xs-5">
+              <div className="form-group">
+                <div className="col-10 col-sm-12">
+                  <label className="form-label" htmlFor="only-rent">
+                    Include Land
+                  </label>
+                </div>
+                <div className="col-4 col-sm-12">
+                  <input
+                    type="checkbox"
+                    id="only-rent"
+                    checked={this.state.includeLand}
+                    onChange={event => this.setState({ includeLand: event.target.checked })}
                   />
                 </div>
               </div>
