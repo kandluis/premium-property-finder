@@ -20,7 +20,10 @@ class Filter extends React.Component<FilterProps, FilterState> {
         <form
           className={formClasses}
           noValidate
-          onChange={() => setTimeout(() => this.props.updateFilter(this.state), 0)}
+          onSubmit={(event) => {
+            event.preventDefault();
+            this.props.updateFilter(this.state);
+          }}
         >
           <p className="mb-1">Refine your results</p>
           <div className="columns text-center">
@@ -165,6 +168,9 @@ class Filter extends React.Component<FilterProps, FilterState> {
                 </div>
               </div>
             </div>
+          </div>
+          <div className="columns text-center">
+            <input type="submit" value="Submit" />
           </div>
         </form>
       </div>
