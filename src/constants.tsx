@@ -3,6 +3,8 @@ export const geocodingBaseUrl = 'https://www.mapquestapi.com/geocoding/v1/addres
 // URL for public Zillow API.
 export const zillowBaseUrl = 'https://www.zillow.com/search/GetSearchPageState.htm';
 export const zillowApiBaseUrl = 'https://www.zillow.com/webservice';
+// URL used for Rent Bits rental estimates.proxyUrl
+export const rentBitsApiBaseUrl = 'https://service.rentbits.com/api/v1/search';
 export const proxyUrl = 'https://property-server.herokuapp.com/proxy';
 export const dbEndpoint = 'https://property-server.herokuapp.com/api';
 

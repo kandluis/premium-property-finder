@@ -1,6 +1,6 @@
 import { computeOffset, LatLng } from 'spherical-geometry-js';
 import { parseStringPromise } from 'xml2js';
-import { dbEndpoint, DB_SECRET, proxyUrl } from './constants';
+import { dbEndpoint, DB_SECRET, proxyUrl, geocodingBaseUrl, MAPQUEST_API_KEY } from './constants';
 
 /**
   Utility function to extract elements from an object.
@@ -12,6 +12,34 @@ import { dbEndpoint, DB_SECRET, proxyUrl } from './constants';
 */
 function get(object: unknown, path: string): unknown | null {
   return path.split('.').reduce((xs, x) => ((xs != null && xs[x] != null) ? xs[x] : null), object);
+}
+
+/**
+  Fetches the lat/long of a location.
+
+  @param location - The geo location. Could be zip code, address, state, etc.
+
+  @returns: The coordinates of the location.
+*/
+type Location = {
+  lat: number;
+  lng: number
+};
+async function getLatLong(location: string): Promise<Location | null> {
+  const geoCodeUrl = `${geocodingBaseUrl}?key=${MAPQUEST_API_KEY}&location=${location.toLowerCase()}`;
+  const latLongData = await getJsonResponse(geoCodeUrl);
+  const statusCode = get(latLongData, 'info.statuscode') as number;
+  if (statusCode !== 0) {
+    console.log(`Failed to retrieve lat/long data from ${location}. Status code: ${statusCode}`);
+    return null;
+  }
+  const primaryResult = get(latLongData, 'results.0.locations.0') as {latLng: {lat: number, lng: number}} | null;
+  if (primaryResult === null) {
+    console.log(`Successful response with empty locations for location: ${location}`);
+    return null;
+  }
+  const { lat, lng } = primaryResult.latLng;
+  return { lat: Number(lat), lng: Number(lng) };
 }
 
 /**
@@ -27,7 +55,7 @@ function get(object: unknown, path: string): unknown | null {
 
   @returns: The response, in JSON format from the url.
 */
-async function getJsonResponse(url: string, format = 'json', useProxy = false) : Promise<any> {
+async function getJsonResponse(url: string, format: 'json' | 'xml' = 'json', useProxy: boolean = false, cache: boolean=true) : Promise<any> {
   let fullUrl = url;
   if (useProxy) {
     fullUrl = `${proxyUrl}/${url}`;
@@ -51,7 +79,9 @@ async function getJsonResponse(url: string, format = 'json', useProxy = false) :
     parsedData = get(parsedData,
       'SearchResults:searchresults.response.0.results.0.result');
   }
-  sessionStorage.setItem(storageKey, JSON.stringify(parsedData));
+  if (cache) {
+    sessionStorage.setItem(storageKey, JSON.stringify(parsedData));
+  }
   return parsedData;
 }
 
@@ -135,5 +165,7 @@ export {
   dbUpdate,
   get,
   getJsonResponse,
+  getLatLong,
+  Location,
   LocationBox,
 };
