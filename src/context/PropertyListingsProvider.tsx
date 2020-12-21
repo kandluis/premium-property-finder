@@ -60,7 +60,12 @@ async function fetchRentalZestimates(newProperties: Array<Property>): Promise<Da
 async function getRentBitsEstimate({lat, lng}: Location): Promise<number | null> {
   const box = boundingBox(lat, lng, 5);
   const url = `${rentBitsApiBaseUrl}?bounds=${box.south},${box.north},${box.west},${box.east}`;
-  const res = await getJsonResponse(url, 'json', true);
+  try {
+    const res = await getJsonResponse(url, 'json', true);
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
   const results = get(res, 'data') as (Array<{price?: string}> | null)
   if (results === null) {
     return null;
