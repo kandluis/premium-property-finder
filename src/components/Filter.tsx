@@ -21,7 +21,11 @@ function Filter(props: FilterProps) {
   const onShareClick = async () => {
     const url = `${urlShortnerEndpoint}?key=${CUTTLY_API_KEY}&short=${window.location.href}`;
     const json = await getJsonResponse(url, 'json', true);
-    setShareUrl(get(json, 'url.shortLink') as string | null);
+    const shortUrl = get(json, 'url.shortLink') as string | null;
+    if (shortUrl) {
+      navigator.clipboard.writeText(shortUrl);
+    }
+    setShareUrl(shortUrl);
   }
   const containerClasses = classnames('container', 'mb-1', styles.container);
   const formClasses = classnames('form-horizontal', styles.form);
@@ -191,17 +195,11 @@ function Filter(props: FilterProps) {
           </div>
           <div className="column col-2 col-xs-5" >
             { (shareUrl)
-              ? <textarea
+              ? <input
+                  type='text'
                   readOnly={true}
-                  onChange={(event) => {
-                    event.preventDefault();
-                    event.target.select();
-                    document.execCommand('copy');
-                    event.target.focus();
-                  }}
-                >
-                  {shareUrl}
-                </textarea>
+                  value={shareUrl}
+                />
               : <input type="button" value="Share" onClick={onShareClick} />
             }
           </div>
