@@ -1,16 +1,33 @@
 import accounting from 'accounting';
-import { sortFn, DefaultFilter, FilterState, Property } from '../common';
 import {
-  defaultRadiusSearch, zillowApiBaseUrl, zillowBaseUrl, ZILLOW_API_KEY, rentBitsApiBaseUrl,
+  DefaultFilter,
+  FilterState,
+  Property,
+  sortFn,
+} from '../common';
+import {
+  defaultRadiusSearch,
+  rentBitsApiBaseUrl,
+  ZILLOW_API_KEY,
+  zillowApiBaseUrl,
+  zillowBaseUrl,
 } from '../constants';
 import debounce from 'lodash.debounce';
 import plimit from 'p-limit';
 import pthrottle from 'p-throttle';
 import React, { useState } from 'react';
+import { useQueryParam } from 'use-query-params';
 import {
-  Location, LocationBox, boundingBox, Database, dbFetch, dbUpdate, get, getJsonResponse, getLatLong,
+  boundingBox,
+  Database,
+  dbFetch,
+  dbUpdate,
+  get,
+  getJsonResponse,
+  getLatLong,
+  Location,
+  LocationBox,
 } from '../utilities';
-import { useQueryParam, JsonParam } from 'use-query-params';
 
 
 /**
@@ -59,7 +76,7 @@ async function fetchRentalZestimates(newProperties: Array<Property>): Promise<Da
 
   @returns: The estimated price or null if not possible to estimate.
 */
-async function getRentBitsEstimate({lat, lng}: Location): Promise<number | null> {
+async function getRentBitsEstimate({ lat, lng }: Location): Promise<number | null> {
   const box = boundingBox(lat, lng, 5);
   const url = `${rentBitsApiBaseUrl}?bounds=${box.south},${box.north},${box.west},${box.east}`;
   let res;
@@ -69,7 +86,7 @@ async function getRentBitsEstimate({lat, lng}: Location): Promise<number | null>
     console.log(e);
     return null;
   }
-  const results = get(res, 'data') as (Array<{price?: string}> | null)
+  const results = get(res, 'data') as (Array<{ price?: string }> | null)
   if (results === null) {
     return null;
   }
@@ -83,9 +100,9 @@ async function getRentBitsEstimate({lat, lng}: Location): Promise<number | null>
     return null;
   }
   const mid = Math.floor(prices.length / 2);
-  const sorted = [...prices].sort((a,b) => a - b);
+  const sorted = [...prices].sort((a, b) => a - b);
   return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-} 
+}
 
 /**
   Fetches the rental estimates from bits rental API.
@@ -98,7 +115,7 @@ async function fetchRentalBitsEstimates(properties: Array<Property>): Promise<Da
   // We only do this by zip code to reduce the load on the API.
   const zips = properties.filter((item) => item.zipCode).map((item) => item.zipCode) as number[];
   const uniqueZips = Array.from(new Set(zips));
-  const rents: {[key: number]: number} = {};
+  const rents: { [key: number]: number } = {};
   const throttled = pthrottle(getRentBitsEstimate, 5, 1000);
   const fetch = uniqueZips.map(async (zipCode: number) => {
     const location = await getLatLong(`${zipCode}`);
@@ -257,7 +274,7 @@ const FilterParams = {
   encode(value: FilterState): string {
     return btoa(JSON.stringify(value, undefined, 1));
   },
-  decode(value: string| (string | null)[] | null | undefined ): FilterState {
+  decode(value: string | (string | null)[] | null | undefined): FilterState {
     if (!value || Array.isArray(value)) {
       return DefaultState.filter;
     }
@@ -268,7 +285,7 @@ const FilterParams = {
 async function filterAndFetchProperties(
   propertyListings: Property[],
   prevFilter: FilterState,
-  filter: FilterState): Promise<{propertyListings:Property[]; filteredListings: Property[]}> {
+  filter: FilterState): Promise<{ propertyListings: Property[]; filteredListings: Property[] }> {
   const prevGeoLocation = prevFilter.geoLocation;
   const prevRadius = prevFilter.radius;
   const {
@@ -329,13 +346,13 @@ export function PropertyListingsProvider({ children }: any) {
   const [state, setState] = useState(DefaultState);
   const applyFilter = async (filter: FilterState): Promise<void> => {
     // Loading!
-    setState({...state, initialLoad: false, loading: true, filteredListings: [] });
+    setState({ ...state, initialLoad: false, loading: true, filteredListings: [] });
     const newProperties = await filterAndFetchProperties(
       state.propertyListings, state.filter, filter);
     if (filter !== state.filter) {
       setFilterParams(filter, 'replace');
     }
-    setState({...state, filter, ...newProperties });
+    setState({ ...state, filter, ...newProperties });
   }
   const debouncedFilter = debounce(applyFilter, 500);
   const [filterParams, setFilterParams] = useQueryParam('filter', FilterParams);

@@ -1,10 +1,9 @@
 import React from 'react';
-import { RouteComponentProps } from '@reach/router';
 
 import { Filter } from '../components/Filter';
 import { Hero } from '../components/Hero';
 import { Listing } from '../components/Listing';
-
+import { RouteComponentProps } from '@reach/router';
 import {
   PropertyListingsProvider,
   PropertyListingsConsumer,

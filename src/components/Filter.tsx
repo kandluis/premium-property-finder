@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
 import classnames from 'classnames';
-import { DefaultFilter, FilterState, SortOrder } from '../common';
+import {
+  DefaultFilter,
+  FilterState,
+  SortOrder
+} from '../common';
+import React, { useState } from 'react';
 
 import styles from './styles.module.css'
 
@@ -40,7 +44,7 @@ function Filter(props: FilterProps) {
                   id="geo-location"
                   placeholder="Nacogdoches, TX"
                   value={form.geoLocation}
-                  onChange={event => setForm({...form, geoLocation: event.target.value})}
+                  onChange={event => setForm({ ...form, geoLocation: event.target.value })}
                 />
               </div>
             </div>
@@ -61,7 +65,7 @@ function Filter(props: FilterProps) {
                   id="radius"
                   placeholder="15"
                   value={form.radius || ''}
-                  onChange={event => setForm({...form, radius: Number(event.target.value)})}
+                  onChange={event => setForm({ ...form, radius: Number(event.target.value) })}
                 />
               </div>
             </div>
@@ -82,7 +86,7 @@ function Filter(props: FilterProps) {
                   id="price-from"
                   placeholder="£1,000,000"
                   value={form.priceFrom || ''}
-                  onChange={event => setForm({...form, priceFrom: Number(event.target.value)})}
+                  onChange={event => setForm({ ...form, priceFrom: Number(event.target.value) })}
                 />
               </div>
             </div>
@@ -99,7 +103,7 @@ function Filter(props: FilterProps) {
                   className="form-select"
                   id="sortorder"
                   value={form.sortOrder}
-                  onChange={event => setForm({...form, sortOrder: event.target.value as SortOrder })}
+                  onChange={event => setForm({ ...form, sortOrder: event.target.value as SortOrder })}
                 >
                   <option>Choose...</option>
                   {form.sortOrders.map(order => (
@@ -128,7 +132,7 @@ function Filter(props: FilterProps) {
                   id="meets-rule"
                   placeholder="1.5"
                   value={form.meetsRule || ''}
-                  onChange={event => setForm({...form, meetsRule: Number(event.target.value)})}
+                  onChange={event => setForm({ ...form, meetsRule: Number(event.target.value) })}
                 />
               </div>
             </div>
@@ -145,7 +149,7 @@ function Filter(props: FilterProps) {
                   type="checkbox"
                   id="only-rent"
                   checked={form.rentOnly}
-                  onChange={event => setForm({...form, rentOnly: event.target.checked })}
+                  onChange={event => setForm({ ...form, rentOnly: event.target.checked })}
                 />
               </div>
             </div>
@@ -162,7 +166,7 @@ function Filter(props: FilterProps) {
                   type="checkbox"
                   id="only-rent"
                   checked={form.includeLand}
-                  onChange={event => setForm({...form, includeLand: event.target.checked })}
+                  onChange={event => setForm({ ...form, includeLand: event.target.checked })}
                 />
               </div>
             </div>

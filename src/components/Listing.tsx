@@ -1,5 +1,5 @@
-import React from 'react';
 import classnames from 'classnames';
+import React from 'react';
 import { Property } from '../common';
 
 type ListingProps = {
