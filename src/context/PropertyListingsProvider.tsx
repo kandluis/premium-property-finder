@@ -332,7 +332,7 @@ export function PropertyListingsProvider({ children }: any) {
     setState({...state, initialLoad: false, loading: true, filteredListings: [] });
     const newProperties = await filterAndFetchProperties(
       state.propertyListings, state.filter, filter);
-    if (filter !== DefaultFilter) {
+    if (filter !== state.filter) {
       setFilterParams(filter, 'replace');
     }
     setState({...state, filter, ...newProperties });
