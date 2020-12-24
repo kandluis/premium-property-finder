@@ -49,9 +49,6 @@ interface FilterState {
   sortOrder: SortOrder,
 
   readonly sortOrders: Array<string>,
-
-  // Used to indicate the filter data is still loading.
-  loading: boolean,
 }
 
 const DefaultFilter: FilterState = {
@@ -63,7 +60,6 @@ const DefaultFilter: FilterState = {
   includeLand: false,
   sortOrder: '',
   sortOrders: ['Ascending Price', 'Descending Price', 'Ascending Ratio', 'Descending Ratio'],
-  loading: false,
 };
 
 interface Property {

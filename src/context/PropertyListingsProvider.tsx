@@ -11,8 +11,6 @@ import {
   Location, LocationBox, boundingBox, Database, dbFetch, dbUpdate, get, getJsonResponse, getLatLong,
 } from '../utilities';
 import { useQueryParam, JsonParam } from 'use-query-params';
-import Msgpack from 'msgpack-lite';
-import Base65536 from 'base65536';
 
 
 /**
@@ -238,6 +236,8 @@ interface PropertyListingsState {
   filteredListings: Array<Property>,
   propertyListings: Array<Property>,
   updateFilter: (filter: FilterState) => void,
+  initialLoad: boolean,
+  loading: boolean,
 };
 export interface PropertyListingsProps {
 };
@@ -247,99 +247,106 @@ const DefaultState: PropertyListingsState = {
   filteredListings: [],
   propertyListings: [],
   updateFilter: (filter: FilterState) => { return; },
+  initialLoad: true,
+  loading: false,
 };
 
 const PropertyListingsContext = React.createContext(DefaultState);
 
-
 const FilterParams = {
   encode(value: FilterState): string {
-    return Base65536.encode(Msgpack.encode(value));
+    return btoa(JSON.stringify(value, undefined, 1));
   },
   decode(value: string| (string | null)[] | null | undefined ): FilterState {
     if (!value || Array.isArray(value)) {
       return DefaultState.filter;
     }
-    return Msgpack.decode(Base65536.decode(value));
+    return JSON.parse(atob(value));
   }
 }
 
-export function PropertyListingsProvider({ children }: any) {
-  const [filterParams, setFilterParams] = useQueryParam('filter', FilterParams);
-  let startState = DefaultState;
-  if (filterParams) {
-    startState = {...startState, filter: filterParams as FilterState};
+async function filterAndFetchProperties(
+  propertyListings: Property[],
+  prevFilter: FilterState,
+  filter: FilterState): Promise<{propertyListings:Property[]; filteredListings: Property[]}> {
+  const prevGeoLocation = prevFilter.geoLocation;
+  const prevRadius = prevFilter.radius;
+  const {
+    geoLocation,
+    includeLand,
+    meetsRule,
+    priceFrom,
+    radius,
+    rentOnly,
+    sortOrder,
+  } = filter;
+  // New location so we need to fetch new property listings.
+  if (prevGeoLocation !== geoLocation || prevRadius != radius) {
+    const properties = await fetchProperties(geoLocation, (radius) || defaultRadiusSearch);
+    const newListings = await attachRentestimates(properties);
+    if (newListings) {
+      propertyListings = newListings;
+    }
   }
-  const [state, setState] = useState({...startState});
-
-  const applyFilter = async (filter: FilterState): Promise<void> => {
-    const prevGeoLocation = state.filter.geoLocation;
-    const prevRadius = state.filter.radius;
-    const {
-      geoLocation,
-      includeLand,
-      meetsRule,
-      priceFrom,
-      radius,
-      rentOnly,
-      sortOrder,
-    } = filter;
-    let { propertyListings } = state;
-    // New location so we need to fetch new property listings.
-    if (prevGeoLocation !== geoLocation || prevRadius != radius) {
-      // Loading!
-      setState({...state, filter: {...filter, loading: true}});
-      const properties = await fetchProperties(geoLocation, (radius) || defaultRadiusSearch);
-      const newListings = await attachRentestimates(properties);
-      if (newListings) {
-        propertyListings = newListings;
+  let filteredListings = propertyListings;
+  if (priceFrom) {
+    filteredListings = propertyListings.filter((item) => {
+      return item.price && item.price >= priceFrom
+    });
+  }
+  if (rentOnly) {
+    filteredListings = filteredListings.filter((item) => {
+      return item.rentzestimate && item.rentzestimate > 0;
+    });
+  }
+  if (!includeLand) {
+    filteredListings = filteredListings.filter((item) => {
+      return item.beds && item.baths;
+    });
+  }
+  if (meetsRule) {
+    filteredListings = filteredListings.filter((item) => {
+      if (!item.rentzestimate) {
+        return !rentOnly;
       }
-    }
-    let filteredListings = propertyListings;
-    if (priceFrom) {
-      filteredListings = propertyListings.filter((item) => {
-        return item.price && item.price >= priceFrom
-      });
-    }
-    if (rentOnly) {
-      filteredListings = filteredListings.filter((item) => {
-        return item.rentzestimate && item.rentzestimate > 0;
-      });
-    }
-    if (!includeLand) {
-      filteredListings = filteredListings.filter((item) => {
-        return item.beds && item.baths;
-      });
-    }
-    if (meetsRule) {
-      filteredListings = filteredListings.filter((item) => {
-        if (!item.rentzestimate) {
-          return !rentOnly;
-        }
-        if (item.rentzestimate <= 0) {
-          return !rentOnly;
-        }
-        if (!item.price) {
-          return !rentOnly;
-        }
-        const ratio = 100 * item.rentzestimate / item.price;
-        return ratio >= meetsRule;
-      });
-    }
-    if (sortOrder !== '') {
-      filteredListings = filteredListings.sort(sortFn(sortOrder));
-    }
+      if (item.rentzestimate <= 0) {
+        return !rentOnly;
+      }
+      if (!item.price) {
+        return !rentOnly;
+      }
+      const ratio = 100 * item.rentzestimate / item.price;
+      return ratio >= meetsRule;
+    });
+  }
+  if (sortOrder !== '') {
+    filteredListings = filteredListings.sort(sortFn(sortOrder));
+  }
+  return { propertyListings, filteredListings };
+}
 
-    const filterState = {...filter, loading: false};
-    setFilterParams(filterState, 'replace');
-    setState({...state, filter: filterState, filteredListings, propertyListings });
+export function PropertyListingsProvider({ children }: any) {
+  const [state, setState] = useState(DefaultState);
+  const applyFilter = async (filter: FilterState): Promise<void> => {
+    // Loading!
+    setState({...state, initialLoad: false, loading: true, filteredListings: [] });
+    const newProperties = await filterAndFetchProperties(
+      state.propertyListings, state.filter, filter);
+    if (filter !== DefaultFilter) {
+      setFilterParams(filter, 'replace');
+    }
+    setState({...state, filter, ...newProperties });
   }
   const debouncedFilter = debounce(applyFilter, 500);
-  const {filter, filteredListings, propertyListings } = state;
+  const [filterParams, setFilterParams] = useQueryParam('filter', FilterParams);
+  let { filter } = state;
+  if (state.initialLoad && filterParams) {
+    filter = filterParams as FilterState;
+    debouncedFilter(filter as FilterState);
+  }
   return (
     <PropertyListingsContext.Provider value={{
-      propertyListings,
-      filteredListings,
+      ...state,
       filter,
       updateFilter: debouncedFilter
     }} >

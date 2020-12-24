@@ -17,13 +17,14 @@ function Home(props: RouteComponentProps): React.ReactElement {
       <div className="container">
         <PropertyListingsProvider>
           <PropertyListingsConsumer>
-            {({ filter, filteredListings, updateFilter }) => (
+            {({ loading, filter, filteredListings, updateFilter }) => (
               <>
                 <Filter
                   updateFilter={updateFilter}
+                  filter={filter}
                 />
                 <h3> 
-                  {!filter.loading
+                  {!loading
                     ? `Num Results: ${filteredListings.length}`
                     : "Loading results..."
                   }
