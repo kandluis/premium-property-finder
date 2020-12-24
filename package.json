@@ -36,6 +36,7 @@
     "spectre.css": "^0.5.9",
     "spherical-geometry-js": "^2.0.0",
     "use-query-params": "^1.1.9",
+    "utilities": "^1.0.5",
     "xml2js": "^0.4.23"
   },
   "devDependencies": {

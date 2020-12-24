@@ -55,7 +55,7 @@ async function getLatLong(location: string): Promise<Location | null> {
 
   @returns: The response, in JSON format from the url.
 */
-async function getJsonResponse(url: string, format: 'json' | 'xml' = 'json', useProxy: boolean = false) : Promise<any> {
+async function getJsonResponse(url: string, format: 'json' | 'xml' = 'json', useProxy: boolean = false, options: any = {}) : Promise<any> {
   let fullUrl = url;
   if (useProxy) {
     fullUrl = `${proxyUrl}/${url}`;
@@ -66,6 +66,7 @@ async function getJsonResponse(url: string, format: 'json' | 'xml' = 'json', use
     return JSON.parse(data);
   }
   const blob = await fetch(fullUrl, {
+    ...options,
     headers: {
       'Api-Key': DB_SECRET,
     },

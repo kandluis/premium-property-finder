@@ -2,9 +2,11 @@ import classnames from 'classnames';
 import {
   DefaultFilter,
   FilterState,
-  SortOrder
+  SortOrder,
 } from '../common';
-import React, { useState } from 'react';
+import { urlShortnerEndpoint } from '../constants';
+import React, { useState, useEffect } from 'react';
+import { get, getJsonResponse } from '../utilities';
 
 import styles from './styles.module.css'
 
@@ -13,11 +15,24 @@ type FilterProps {
   filter: FilterState,
 };
 
-
 function Filter(props: FilterProps) {
-  const [form, setForm] = useState(props.filter);
+  const [form, setForm] = useState<FilterState>(props.filter);
+  const [shareUrl, setShareUrl] = useState<null | string>(null);
+  const onShareClick = async () => {
+    const json = await getJsonResponse(urlShortnerEndpoint, 'json', true, {
+      method: 'POST',
+      body: JSON.stringify({url: window.location.href }),
+    });
+    setShareUrl(get(json, 'data.link') as string | null);
+  }
   const containerClasses = classnames('container', 'mb-1', styles.container);
   const formClasses = classnames('form-horizontal', styles.form);
+  useEffect(() => {
+    props.updateFilter(form);
+  }, [form.includeLand, form.meetsRule, form.radius, form.rentOnly, form.sortOrder]);
+  useEffect(() => {
+    setShareUrl(null);
+  }, [form])
   return (
     <div className={containerClasses}>
       <form
@@ -173,7 +188,25 @@ function Filter(props: FilterProps) {
           </div>
         </div>
         <div className="columns text-center">
-          <input type="submit" value="Submit" />
+          <div className="column col-2 col-xs-5" >
+            <input type="submit" value="Submit" />
+          </div>
+          <div className="column col-2 col-xs-5" >
+            { (shareUrl)
+              ? <textarea
+                  readOnly={true}
+                  onChange={(event) => {
+                    event.preventDefault();
+                    event.target.select();
+                    document.execCommand('copy');
+                    event.target.focus();
+                  }}
+                >
+                  {shareUrl}
+                </textarea>
+              : <input type="button" value="Share" onClick={onShareClick} />
+            }
+          </div>
         </div>
       </form>
     </div>
