@@ -6,10 +6,14 @@ import {
 import debounce from 'lodash.debounce';
 import plimit from 'p-limit';
 import pthrottle from 'p-throttle';
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Location, LocationBox, boundingBox, Database, dbFetch, dbUpdate, get, getJsonResponse, getLatLong,
 } from '../utilities';
+import { useQueryParam, JsonParam } from 'use-query-params';
+import Msgpack from 'msgpack-lite';
+import Base65536 from 'base65536';
+
 
 /**
   For each property, attempts to fetch the Zillow rental estimate.
@@ -235,7 +239,8 @@ interface PropertyListingsState {
   propertyListings: Array<Property>,
   updateFilter: (filter: FilterState) => void,
 };
-interface PropertyListingsProps {};
+export interface PropertyListingsProps {
+};
 
 const DefaultState: PropertyListingsState = {
   filter: DefaultFilter,
@@ -246,27 +251,30 @@ const DefaultState: PropertyListingsState = {
 
 const PropertyListingsContext = React.createContext(DefaultState);
 
-export class PropertyListingsProvider extends React.Component<PropertyListingsProps, PropertyListingsState> {
-  constructor(props: PropertyListingsProps) {
-    super(props);
-    this.applyFilter = debounce(this.applyFilter, 500);
 
-    this.state = {...DefaultState, updateFilter: this.updateFilter}
+const FilterParams = {
+  encode(value: FilterState): string {
+    return Base65536.encode(Msgpack.encode(value));
+  },
+  decode(value: string| (string | null)[] | null | undefined ): FilterState {
+    if (!value || Array.isArray(value)) {
+      return DefaultState.filter;
+    }
+    return Msgpack.decode(Base65536.decode(value));
   }
+}
 
-  updateFilter = (filter: FilterState): void => {
-    // This execution is debounced.
-    this.applyFilter(filter);
+export function PropertyListingsProvider({ children }: any) {
+  const [filterParams, setFilterParams] = useQueryParam('filter', FilterParams);
+  let startState = DefaultState;
+  if (filterParams) {
+    startState = {...startState, filter: filterParams as FilterState};
   }
+  const [state, setState] = useState({...startState});
 
-  /**
-    Applies the provided filter to the component.
-
-    @param filter - The filter provided by the user.
-  */
-  async applyFilter(filter: FilterState): Promise<void> {
-    const prevGeoLocation = this.state.filter.geoLocation;
-    const prevRadius = this.state.filter.radius;
+  const applyFilter = async (filter: FilterState): Promise<void> => {
+    const prevGeoLocation = state.filter.geoLocation;
+    const prevRadius = state.filter.radius;
     const {
       geoLocation,
       includeLand,
@@ -276,11 +284,11 @@ export class PropertyListingsProvider extends React.Component<PropertyListingsPr
       rentOnly,
       sortOrder,
     } = filter;
-    let { propertyListings } = this.state;
+    let { propertyListings } = state;
     // New location so we need to fetch new property listings.
     if (prevGeoLocation !== geoLocation || prevRadius != radius) {
       // Loading!
-      this.setState({ filter: {...filter, loading: true}});
+      setState({...state, filter: {...filter, loading: true}});
       const properties = await fetchProperties(geoLocation, (radius) || defaultRadiusSearch);
       const newListings = await attachRentestimates(properties);
       if (newListings) {
@@ -322,28 +330,22 @@ export class PropertyListingsProvider extends React.Component<PropertyListingsPr
       filteredListings = filteredListings.sort(sortFn(sortOrder));
     }
 
-    this.setState({
-      filter: {...filter, loading: false},
+    const filterState = {...filter, loading: false};
+    setFilterParams(filterState, 'replace');
+    setState({...state, filter: filterState, filteredListings, propertyListings });
+  }
+  const debouncedFilter = debounce(applyFilter, 500);
+  const {filter, filteredListings, propertyListings } = state;
+  return (
+    <PropertyListingsContext.Provider value={{
       propertyListings,
       filteredListings,
-    });
-  }
-
-  render() {
-    const { children } = this.props;
-    const { propertyListings, filteredListings, filter } = this.state;
-    return (
-      <PropertyListingsContext.Provider
-        value={{
-          ...this.state,
-          filteredListings: filteredListings,
-          updateFilter: this.updateFilter,
-        }}
-      >
-        {children}
-      </PropertyListingsContext.Provider>
-    );
-  }
+      filter,
+      updateFilter: debouncedFilter
+    }} >
+      {children}
+    </PropertyListingsContext.Provider>
+  );
 }
 
 export const PropertyListingsConsumer = PropertyListingsContext.Consumer;
