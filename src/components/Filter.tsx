@@ -4,7 +4,7 @@ import {
   FilterState,
   SortOrder,
 } from '../common';
-import { urlShortnerEndpoint } from '../constants';
+import { CUTTLY_API_KEY, urlShortnerEndpoint } from '../constants';
 import React, { useState, useEffect } from 'react';
 import { get, getJsonResponse } from '../utilities';
 
@@ -19,11 +19,9 @@ function Filter(props: FilterProps) {
   const [form, setForm] = useState<FilterState>(props.filter);
   const [shareUrl, setShareUrl] = useState<null | string>(null);
   const onShareClick = async () => {
-    const json = await getJsonResponse(urlShortnerEndpoint, 'json', true, {
-      method: 'POST',
-      body: JSON.stringify({url: window.location.href }),
-    });
-    setShareUrl(get(json, 'data.link') as string | null);
+    const url = `${urlShortnerEndpoint}?key=${CUTTLY_API_KEY}&short=${window.location.href}`;
+    const json = await getJsonResponse(url, 'json', true);
+    setShareUrl(get(json, 'url.shortLink') as string | null);
   }
   const containerClasses = classnames('container', 'mb-1', styles.container);
   const formClasses = classnames('form-horizontal', styles.form);

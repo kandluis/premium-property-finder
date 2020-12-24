@@ -7,10 +7,11 @@ export const zillowApiBaseUrl = 'https://www.zillow.com/webservice';
 export const rentBitsApiBaseUrl = 'https://service.rentbits.com/api/v1/search';
 export const proxyUrl = 'https://property-server.herokuapp.com/proxy';
 export const dbEndpoint = 'https://property-server.herokuapp.com/api';
-export const urlShortnerEndpoint = 'https://bitly.com/data/anon_shorten';
+export const urlShortnerEndpoint = 'https://cutt.ly/api/api.php';
 
 export const MAPQUEST_API_KEY: string = process.env.REACT_APP_MAPQUEST_API_KEY || '';
 export const ZILLOW_API_KEY: string = process.env.REACT_APP_ZILLOW_API_KEY || '';
 export const DB_SECRET: string = process.env.REACT_APP_SECRET || '';
+export const CUTTLY_API_KEY: string = process.env.REACT_APP_CUTTLY || '';
 
 export const defaultRadiusSearch = 8;

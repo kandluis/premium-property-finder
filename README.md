@@ -10,6 +10,7 @@ This should install all the required dependencies. If this is a fresh pull from 
 REACT_APP_MAPQUEST_API_KEY=<TODO>
 REACT_APP_ZILLOW_API_KEY=<TODO>
 REACT_APP_SECRET=<TODO>
+REACT_APP_CUTTLY=<TODO>
 ```
 where each of the above correspond to your keys.
 
