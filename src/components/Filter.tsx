@@ -10,7 +10,7 @@ import { get, getJsonResponse } from '../utilities';
 
 import styles from './styles.module.css'
 
-type FilterProps {
+type FilterProps = {
   updateFilter: (filter: FilterState) => void,
   filter: FilterState,
 };
