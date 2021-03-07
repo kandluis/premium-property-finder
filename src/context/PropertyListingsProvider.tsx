@@ -31,45 +31,6 @@ import {
 
 
 /**
-  For each property, attempts to fetch the Zillow rental estimate.
-
-  @param newProperties - The list of properties for which we wish to get a rental estimate.
-
-  @returns: An Database with the rental information for the properties.
-*/
-async function fetchRentalZestimates(newProperties: Array<Property>): Promise<Database> {
-  const limit = plimit(20);
-  const apiName = 'GetDeepSearchResults';
-  const zillowUrl = `${zillowApiBaseUrl}/${apiName}.htm?zws-id=${ZILLOW_API_KEY}`;
-  const requests = newProperties.map((property) => {
-    if (!property.address || !property.zipCode) {
-      return null;
-    }
-    const url = `${zillowUrl}&address=${encodeURIComponent(property.address)}&citystatezip=${property.zipCode}&rentzestimate=true`;
-    return limit(() => getJsonResponse(url, 'xml', true));
-  }).filter((request: Promise<any> | null) => request);
-  const zillowData = await Promise.all(requests);
-  const newDB: Database = {};
-  zillowData.forEach((results) => {
-    if (!Array.isArray(results)) {
-      return;
-    }
-    const found = results.filter(
-      (item) => get(item, 'rentzestimate.0.amount.0._'),
-    );
-    if (found.length == 0) {
-      return;
-    }
-    newDB[Number(get(found[0], 'zpid.0'))] = {
-      rentzestimate: Number(get(found[0], 'rentzestimate.0.amount.0._')),
-      zestimate: Number(get(found[0], 'zestimate.0.amount.0._')),
-    };
-  });
-  return newDB;
-}
-
-
-/**
   Calculates the median known rental values in the given area using the rent bits API.
 
   @param box - The bounding box in which to search for property estimates.
@@ -160,12 +121,8 @@ async function attachRentestimates(properties: Array<Property>): Promise<Array<P
     return item.zpid && item.address && item.zipCode && item.price && !(item.zpid in rentalDB);
   });
   if (newProperties.length > 0) {
-    const zillowEstimates = await fetchRentalZestimates(newProperties);
-    const remainingProperties = newProperties.filter((item: Property) => {
-      return !(item.zpid && item.zpid in zillowEstimates);
-    });
-    const rentBitsEstimates = await fetchRentalBitsEstimates(remainingProperties);
-    rentalDB = { ...rentalDB, ...zillowEstimates, ...rentBitsEstimates };
+    const rentBitsEstimates = await fetchRentalBitsEstimates(newProperties);
+    rentalDB = { ...rentalDB, ...rentBitsEstimates };
     dbUpdate(rentalDB);
   }
   properties = properties.map((property) => {
