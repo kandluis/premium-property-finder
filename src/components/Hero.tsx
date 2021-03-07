@@ -1,10 +1,10 @@
 import React from 'react';
 
 import classnames from 'classnames';
-import styles from './styles.module.css';
+import * as style from "./styles.module.css";
 
 function Hero(): React.ReactElement {
-  const classes = classnames('hero', 'hero-lg', 'mb-3', styles.hero);
+  const classes = classnames('hero', 'hero-lg', 'mb-3', style.hero);
   return (
     <div className={classes}>
       <div className="hero-body text-center text-light">
