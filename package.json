@@ -44,6 +44,7 @@
     "@babel/preset-env": "^7.13.9",
     "@babel/preset-react": "^7.12.13",
     "@parcel/transformer-sass": "^2.0.0-nightly.620",
+    "@tsconfig/recommended": "^1.0.1",
     "@types/accounting": "^0.4.1",
     "@types/classnames": "^2.2.11",
     "@types/lodash.debounce": "^4.0.6",
