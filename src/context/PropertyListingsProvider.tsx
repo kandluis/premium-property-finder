@@ -77,7 +77,8 @@ async function fetchRentalBitsEstimates(properties: Array<Property>): Promise<Da
   const zips = properties.filter((item) => item.zipCode).map((item) => item.zipCode) as number[];
   const uniqueZips = Array.from(new Set(zips));
   const rents: { [key: number]: number } = {};
-  const throttled = pthrottle(getRentBitsEstimate, 5, 1000);
+  const throttle = pthrottle({ limit: 5, interval: 3000 });
+  const throttled = throttle(getRentBitsEstimate);
   const fetch = uniqueZips.map(async (zipCode: number) => {
     const location = await getLatLong(`${zipCode}`);
     if (location === null) {
