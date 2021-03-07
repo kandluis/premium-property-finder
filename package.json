@@ -2,7 +2,7 @@
   "name": "premium-property-finder",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "index.html",
   "scripts": {
     "start": "parcel ./src/index.html",
     "prebuild-dev": "shx rm -rf dist/*",

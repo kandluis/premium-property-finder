@@ -8,7 +8,7 @@ import { CUTTLY_API_KEY, urlShortnerEndpoint } from '../constants';
 import React, { useState, useEffect } from 'react';
 import { get, getJsonResponse } from '../utilities';
 
-import styles from './styles.module.css'
+import * as style from "./styles.module.css";
 
 type FilterProps = {
   updateFilter: (filter: FilterState) => void,
@@ -27,8 +27,8 @@ function Filter(props: FilterProps) {
     }
     setShareUrl(shortUrl);
   }
-  const containerClasses = classnames('container', 'mb-1', styles.container);
-  const formClasses = classnames('form-horizontal', styles.form);
+  const containerClasses = classnames('container', 'mb-1', style.container);
+  const formClasses = classnames('form-horizontal', style.form);
   useEffect(() => {
     props.updateFilter(form);
   }, [form.includeLand, form.meetsRule, form.radius, form.rentOnly, form.sortOrder]);
