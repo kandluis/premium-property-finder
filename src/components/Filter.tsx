@@ -111,6 +111,27 @@ function Filter(props: FilterProps) {
           <div className="column col-2 col-xs-12">
             <div className="form-group">
               <div className="col-3 col-sm-12">
+                <label className="form-label" htmlFor="price-most">
+                  Price At Most
+                </label>
+              </div>
+              <div className="col-8 col-sm-12">
+                <input
+                  className="form-input"
+                  min="0"
+                  max="10000000"
+                  type="number"
+                  id="price-most"
+                  placeholder="£1,000,000"
+                  value={form.priceMost || ''}
+                  onChange={event => setForm({ ...form, priceMost: Number(event.target.value) })}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="column col-2 col-xs-12">
+            <div className="form-group">
+              <div className="col-3 col-sm-12">
                 <label className="form-label" htmlFor="sortorder">
                   Sort Order
                 </label>

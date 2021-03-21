@@ -188,7 +188,7 @@ function parseResult(item: ZillowProperty): Property {
 
   @returns The located properties.
 */
-async function fetchProperties(location: string, radius: number): Promise<Array<Property>> {
+async function fetchProperties(location: string, radius: number, min: number | null, max: number): Promise<Array<Property>> {
   const coords = await getLatLong(location);
   if (coords === null) {
     return [];
@@ -199,6 +199,12 @@ async function fetchProperties(location: string, radius: number): Promise<Array<
   };
   const searchQueryState = {
     mapBounds: boundingBox(lat, lng, radius * 2),
+    filterState: {
+      price: {
+        min: min || 0,
+        max: max 
+      }
+    }
   };
   const zillowUrl = `${zillowBaseUrl}?searchQueryState=${JSON.stringify(searchQueryState)}&wants=${JSON.stringify(wants)}`;
   const data = await getJsonResponse(`${zillowUrl}`, 'json', true);
@@ -254,6 +260,7 @@ async function filterAndFetchProperties(
     includeLand,
     meetsRule,
     priceFrom,
+    priceMost,
     radius,
     rentOnly,
     newConstruction,
@@ -261,7 +268,7 @@ async function filterAndFetchProperties(
   } = filter;
   // New location so we need to fetch new property listings.
   if (prevGeoLocation !== geoLocation || prevRadius != radius) {
-    const properties = await fetchProperties(geoLocation, (radius) || defaultRadiusSearch);
+    const properties = await fetchProperties(geoLocation, (radius) || defaultRadiusSearch, priceFrom, priceMost);
     const newListings = await attachRentestimates(properties);
     if (newListings) {
       propertyListings = newListings;
