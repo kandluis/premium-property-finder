@@ -27,7 +27,7 @@ type Location = {
 };
 async function getLatLong(location: string): Promise<Location | null> {
   const geoCodeUrl = `${geocodingBaseUrl}?key=${MAPQUEST_API_KEY}&location=${location.toLowerCase()}`;
-  const latLongData = await getJsonResponse(geoCodeUrl);
+  const latLongData = await getJsonResponse(geoCodeUrl, /*format=*/"json", /*use_proxy=*/true);
   const statusCode = get(latLongData, 'info.statuscode') as number;
   if (statusCode !== 0) {
     console.log(`Failed to retrieve lat/long data from ${location}. Status code: ${statusCode}`);

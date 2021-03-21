@@ -171,6 +171,9 @@ function parseResult(item: ZillowProperty): Property {
     item.city = addressComponents[addressComponents.length - 3];
     item.address = addressComponents.slice(0, addressComponents.length - 3).join(' ');
   }
+  if (item.listingType) {
+    item.type = item.listingType
+  }
   return item;
 }
 
