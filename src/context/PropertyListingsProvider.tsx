@@ -256,6 +256,7 @@ async function filterAndFetchProperties(
     priceFrom,
     radius,
     rentOnly,
+    newConstruction,
     sortOrder,
   } = filter;
   // New location so we need to fetch new property listings.
@@ -276,6 +277,11 @@ async function filterAndFetchProperties(
     filteredListings = filteredListings.filter((item) => {
       return item.rentzestimate && item.rentzestimate > 0;
     });
+  }
+  if (newConstruction) {
+    filteredListings = filteredListings.filter((item) => {
+      return item.type && item.type == "NEW_CONSTRUCTION";
+    })
   }
   if (!includeLand) {
     filteredListings = filteredListings.filter((item) => {

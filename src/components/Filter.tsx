@@ -31,7 +31,7 @@ function Filter(props: FilterProps) {
   const formClasses = classnames('form-horizontal', style.form);
   useEffect(() => {
     props.updateFilter(form);
-  }, [form.includeLand, form.meetsRule, form.radius, form.rentOnly, form.sortOrder]);
+  }, [form.includeLand, form.meetsRule, form.radius, form.rentOnly, form.newConstruction, form.sortOrder]);
   useEffect(() => {
     setShareUrl(null);
   }, [form])
@@ -167,6 +167,23 @@ function Filter(props: FilterProps) {
                   id="only-rent"
                   checked={form.rentOnly}
                   onChange={event => setForm({ ...form, rentOnly: event.target.checked })}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="column col-2 col-xs-5">
+            <div className="form-group">
+              <div className="col-10 col-sm-12">
+                <label className="form-label" htmlFor="only-rent">
+                  Only New Construction
+                </label>
+              </div>
+              <div className="col-4 col-sm-12">
+                <input
+                  type="checkbox"
+                  id="only-new-construction"
+                  checked={form.newConstruction}
+                  onChange={event => setForm({ ...form, newConstruction: event.target.checked })}
                 />
               </div>
             </div>

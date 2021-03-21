@@ -45,6 +45,7 @@ interface FilterState {
   priceFrom: number | null,
   radius: number | null,
   rentOnly: boolean,
+  newConstruction: boolean,
   includeLand: boolean,
   sortOrder: SortOrder,
 
@@ -57,6 +58,7 @@ const DefaultFilter: FilterState = {
   priceFrom: null,
   radius: null,
   rentOnly: false,
+  newConstruction: false,
   includeLand: false,
   sortOrder: '',
   sortOrders: ['Ascending Price', 'Descending Price', 'Ascending Ratio', 'Descending Ratio'],
@@ -77,6 +79,7 @@ interface Property {
   statusText?: string,
   zipCode?: number,
   zpid?: number,
+  type?: string,
 }
 
 export {
