@@ -2,6 +2,15 @@
 
 This code is used to deploy a server on heroku (see `../README.md`). In general, the server is used to cache results across requests using Redis + a permanent database.
 
+## Development
+
+When changing code, things get transpiled from Typescript to Javascript. Run the following command when you change code:
+
+```
+npm run postinstall
+npm run start
+```
+
 ## Frequently Encountered Issues
 
 ### Redis Add-On Is Deleted
