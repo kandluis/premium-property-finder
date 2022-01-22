@@ -45,7 +45,18 @@ REDISCLOUD_URL=<TODO>
 DATABASE_URL=<TODO>
 ```
 
-Generally, these should point to your local versions of these services. If you're hosting them online, it should point to those.
+YOu can get the production values of these variables by running:
+```sh
+heroku config:get REDISCLOUD_URL
+heroku config:get DATABASE_URL
+```
+
+Generally, these should point to whatever version of the database you want to use.
+
+Then you can run, from `server/`:
+```sh
+npm run start
+````
 
 # Deploying Back-end server
 ```

@@ -291,7 +291,7 @@ const router = express.Router()
   // Refresh the database before starting.
   await refresh();
 
-  const port = Number(process.env.PORT || 5000);
+  const port = Number(process.env.PORT || 0);
 
   // Back-end server. 
   app.use('/', router)
