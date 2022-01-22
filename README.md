@@ -45,6 +45,8 @@ REDISCLOUD_URL=<TODO>
 DATABASE_URL=<TODO>
 ```
 
+Generally, these should point to your local versions of these services. If you're hosting them online, it should point to those.
+
 # Deploying Back-end server
 ```
 npm run deploy-server
