@@ -5,8 +5,8 @@ export const zillowBaseUrl = 'https://www.zillow.com/search/GetSearchPageState.h
 export const zillowApiBaseUrl = 'https://www.zillow.com/webservice';
 // URL used for Rent Bits rental estimates.proxyUrl
 export const rentBitsApiBaseUrl = 'https://service.rentbits.com/api/v1/search';
-export const proxyUrl = 'https://property-server.herokuapp.com/proxy';
-export const dbEndpoint = 'https://property-server.herokuapp.com/api';
+export const proxyUrl = 'http://localhost:50822/proxy';
+export const dbEndpoint = 'http://localhost:50822/api';
 export const urlShortnerEndpoint = 'https://cutt.ly/api/api.php';
 
 export const MAPQUEST_API_KEY: string = process.env.REACT_APP_MAPQUEST_API_KEY || '';
