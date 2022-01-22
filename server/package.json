@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "Property Finder Database",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "build-ts": "tsc -p .",
     "postinstall": "npm run build-ts",

@@ -5,8 +5,9 @@
   },
   "compilerOptions": {
     "target": "es6",
-    "module": "commonjs",
-    "outDir": "dist/"
+    "module": "es6",
+    "outDir": "dist/",
+    "moduleResolution": "node",
   },                
   "files": [
     "server.ts"

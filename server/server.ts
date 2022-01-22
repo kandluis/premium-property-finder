@@ -293,7 +293,7 @@ const router = express.Router()
   await refresh();
 
   const port = await getPort({
-    port: Number(process.env.PORT)
+    port: Number(process.env.PORT) || 5000
   });
 
   // Back-end server. 

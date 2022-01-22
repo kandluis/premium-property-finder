@@ -11,6 +11,20 @@ npm run postinstall
 npm run start
 ```
 
+## Current Routes
+
+The server has several routes.
+
+- `/api` [GET] - This is a heartbeat endpoint.
+- `/proxy/<URL>` [GET, POST] - This removes CORS headers by forwarding incoming messages. This enables us to scrape requests from domains we don't own.
+- `/api/<ACTION>` [POST] - Main APIs, by default POST requests. Actions include:
+  - refresh: Refreshes the Redis in-memory store to match persistent storage.
+  - set: Allow simple requests directly pushing the data.
+  - get: Retrieve stored data.
+  - infodb: Gets persistent storage version.
+  - infocache: Gets redis cache info.
+  - flush: Flushes the redisc client.
+
 ## Frequently Encountered Issues
 
 ### Redis Add-On Is Deleted
