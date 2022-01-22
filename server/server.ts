@@ -2,6 +2,7 @@ import bodyParser from 'body-parser';
 // @ts-ignore
 import {createServer} from 'cors-anywhere';
 import express from 'express';
+import getPort from 'get-port';
 import pg from 'pg';
 import redis from 'redis';
 import url from 'url';
@@ -291,7 +292,9 @@ const router = express.Router()
   // Refresh the database before starting.
   await refresh();
 
-  const port = Number(process.env.PORT || 0);
+  const port = await getPort({
+    port: Number(process.env.PORT)
+  });
 
   // Back-end server. 
   app.use('/', router)
