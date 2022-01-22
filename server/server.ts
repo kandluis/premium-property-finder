@@ -5,6 +5,7 @@ import express from 'express';
 import pg from 'pg';
 import redis from 'redis';
 import url from 'url';
+import 'dotenv/config';
 
 type StoredData = {
   [zpid: number]: {
