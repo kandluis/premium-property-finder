@@ -3,7 +3,7 @@ import React from 'react';
 import { Filter } from '../components/Filter';
 import { Hero } from '../components/Hero';
 import { Listing } from '../components/Listing';
-import { RouteComponentProps } from '@reach/router';
+import { RouteComponentProps } from 'react-router-dom';
 import {
   PropertyListingsProvider,
   PropertyListingsConsumer,
