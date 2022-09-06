@@ -4,8 +4,7 @@ import {createServer} from 'cors-anywhere';
 import express from 'express';
 import getPort from 'get-port';
 import pg from 'pg';
-import redis from 'redis';
-import url from 'url';
+import {createClient} from 'redis';
 import 'dotenv/config';
 
 type StoredData = {
@@ -33,32 +32,26 @@ const pgPool = new pg.Pool({
 if (!process.env.REDISCLOUD_URL) {
   throw Error('Need to define REDISCLOUD_URL in .env file.');
 }
-const redisURL = url.parse(process.env.REDISCLOUD_URL);
-if (!redisURL.hostname) {
-  throw Error(`Invalid redis url: ${redisURL.query || ''}`);
-}
-const redisClient = redis.createClient(
-  Number(redisURL.port),
-  redisURL.hostname || '',
-  { no_ready_check: true },
-);
-if (redisURL.auth) {
-  redisClient.auth(redisURL.auth.split(':')[1]);
-}
+const redisClient = createClient({ url: process.env.REDISCLOUD_URL });
+await redisClient.connect()
 
 /**
   Handle shutdown of server gracefully by closing all connections to backends.
 */
-function end(): void {
-  pgPool.end()
-    .then(() => {
-      redisClient.end(true);
-      process.exit(0);
-    })
-    .catch(() => process.exit(0));
+async function end(): Promise<void> {
+  try {
+    await pgPool.end();
+    await redisClient.quit(); 
+  } catch (err) {
+    console.log(`Error closing connection: ${err}`)
+  }
 }
-process.once('SIGTERM', end);
-process.once('SIGINT', end);
+process.once('SIGTERM', () => {
+  end().finally(() => process.exit(0));
+});
+process.once('SIGINT', () => {
+  end().finally(() => process.exit(0));
+});
 
 /**
 Fetches properties from persistence storage in string format.
@@ -125,11 +118,11 @@ async function persist(data: StoredData, version: number | undefined | null) : P
 
   @returns - Whether or not the refresh operation succeeded.
 */
-async function refresh(): Promise<boolean> {
+async function refresh(): Promise<string | null> {
   const db = await fetch();
   if (db == null) {
     // Don't refresh on failure.
-    return false;
+    return null;
   }
   return redisClient.set(tableName, db);
 }
@@ -155,7 +148,8 @@ function allowCrossDomains(
   // intercept OPTIONS method
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
-  } else if (req.header('Api-Key') !== process.env.SECRET) {
+  } else if (!('LOCAL_DEBUG' in process.env) 
+    && req.header('Api-Key') !== process.env.SECRET) {
     res.sendStatus(403);
   } else {
     next();
@@ -182,7 +176,7 @@ const cors_proxy = createServer({
 })
 
 
-let inCache = false;
+let inCache: string | null = null;
 
 const app = express()
   .use(bodyParser.json({limit: '50mb'}))
@@ -201,7 +195,13 @@ const router = express.Router()
   .get('/api', (req, res) => {
     res.send('alive');
   })
-  .post('/api/:action', async (request, response) => {
+  .all('/api/:action', async (request, response) => {
+    if (request.method !== 'GET' && request.method !== 'POST') {
+      response.sendStatus(403);
+    }
+    if (request.method === 'GET' && !('LOCAL_DEBUG' in process.env)) {
+      response.sendStatus(404);
+    }
     switch (request.params.action) {
       case 'refresh': {
         response.json({
@@ -220,7 +220,7 @@ const router = express.Router()
           .then(null)
           .catch(null);
         const blob = JSON.stringify(data);
-        inCache = redisClient.set(tableName, blob)
+        inCache = await redisClient.set(tableName, blob)
         response.json({
           message: inCache,
         });
@@ -228,15 +228,20 @@ const router = express.Router()
       }
       case 'get': {
         if (inCache) {
-          redisClient.get(tableName, (err, reply) => {
-            if (reply != null) {
-              response.json(JSON.parse(reply));
-            } else {
+          try {
+            const reply = await redisClient.get(tableName);
+            if (!reply) {
               response.json({
-                message: err,
+                message: `Null reply from redis for table: ${tableName}`
               });
+            } else {
+              response.json(JSON.parse(reply));
             }
-          });
+          } catch (err) {
+            response.json({
+              message: err,
+            });
+          }
         } else {
           const data = await fetch();
           if (data === null) {
@@ -253,29 +258,27 @@ const router = express.Router()
         break;
       }
       case 'infocache': {
-        redisClient.info((err, reply) => {
-          if (reply != null) {
-            response.send(reply);
-          } else {
-            response.send({
-              message: err,
-            });
-          }
-        });
+        try {
+          const reply = await redisClient.info();
+          response.send(reply);
+        } catch (err) {
+          response.send({
+            message: err,
+          });
+        }
         break;
       }
       case 'flush': {
-        redisClient.flushdb((err, reply) => {
-          if (reply != null) {
-            response.json({
-              message: reply,
-            });
-          } else {
-            response.json({
-              message: err,
-            });
-          }
-        });
+        try {
+          const reply = await redisClient.flushDb();
+          response.json({
+            message: reply,
+          });
+        } catch (err) {
+          response.json({
+            message: err,
+          });
+        }
         break;
       }
       default: {
