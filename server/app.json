@@ -3,5 +3,6 @@
   "description": "Node.js app using Redis Cloud at Heroku for Property Storage",
   "repository": "https://github.com/kandluis/premium-property-finder",
   "keywords": ["node", "express", "redis", "redis cloud"],
-  "addons": [ "rediscloud:30" ]
+  "addons": [ "rediscloud:30" ],
+  "stack": "heroku-22",
 }

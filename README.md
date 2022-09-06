@@ -64,7 +64,8 @@ npm run start
 ````
 
 # Deploying Back-end server
-```
+You can run, from the top level:
+```sh
 npm run deploy-server
 ```
 
