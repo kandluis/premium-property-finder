@@ -31,7 +31,7 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.3.0",
     "spectre.css": "^0.5.9",
-    "spherical-geometry-js": "^2.1.0",
+    "spherical-geometry-js": "^3.0.0",
     "use-query-params": "^2.1.0",
     "utilities": "^1.0.6",
     "xml2js": "^0.4.23"
@@ -62,7 +62,7 @@
     "eslint-plugin-promise": "^6.0.1",
     "eslint-plugin-react": "^7.31.7",
     "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-standard": "^4.1.0",
+    "eslint-plugin-standard": "^5.0.0",
     "events": "^3.3.0",
     "parcel": "^2.7.0",
     "parcel-plugin-static-files-copy": "^2.6.0",
