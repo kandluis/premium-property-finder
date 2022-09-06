@@ -13,8 +13,7 @@ import {
   zillowBaseUrl,
 } from '../constants';
 import debounce from 'lodash.debounce';
-import plimit from 'p-limit';
-import pthrottle from 'p-throttle';
+import pThrottle from 'p-throttle';
 import React, { useState } from 'react';
 import { useQueryParam } from 'use-query-params';
 import {
@@ -77,7 +76,7 @@ async function fetchRentalBitsEstimates(properties: Array<Property>): Promise<Da
   const zips = properties.filter((item) => item.zipCode).map((item) => item.zipCode) as number[];
   const uniqueZips = Array.from(new Set(zips));
   const rents: { [key: number]: number } = {};
-  const throttle = pthrottle({ limit: 5, interval: 3000 });
+  const throttle = pThrottle({ limit: 5, interval: 3000 });
   const throttled = throttle(getRentBitsEstimate);
   const fetch = uniqueZips.map(async (zipCode: number) => {
     const location = await getLatLong(`${zipCode}`);
