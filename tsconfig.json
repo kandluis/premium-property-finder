@@ -22,7 +22,8 @@
     ],                      
     "allowSyntheticDefaultImports": true, 
     "esModuleInterop": true,
-    "downlevelIteration": true,               
+    "downlevelIteration": true,
+    "skipLibCheck": true,          
   },
   "include": [
     "src/**/*"
