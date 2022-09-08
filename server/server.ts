@@ -1,15 +1,15 @@
+import asyncHandler from 'express-async-handler';
 import bodyParser from 'body-parser';
-// @ts-ignore
-import {createServer} from 'cors-anywhere';
+import { createServer } from 'cors-anywhere';
 import express from 'express';
 import getPort from 'get-port';
 import pg from 'pg';
-import {createClient} from 'redis';
+import { createClient } from 'redis';
 import 'dotenv/config';
 
 type StoredData = {
   [zpid: number]: {
-    [propName: string]: any
+    [propName: string]: string
   }
 }
 type Row = {
@@ -33,7 +33,7 @@ if (!process.env.REDISCLOUD_URL) {
   throw Error('Need to define REDISCLOUD_URL in .env file.');
 }
 const redisClient = createClient({ url: process.env.REDISCLOUD_URL });
-await redisClient.connect()
+await redisClient.connect();
 
 /**
   Handle shutdown of server gracefully by closing all connections to backends.
@@ -41,9 +41,9 @@ await redisClient.connect()
 async function end(): Promise<void> {
   try {
     await pgPool.end();
-    await redisClient.quit(); 
+    await redisClient.quit();
   } catch (err) {
-    console.log(`Error closing connection: ${err}`)
+    console.log(`Error closing connection: ${err as string}`);
   }
 }
 process.once('SIGTERM', () => {
@@ -139,7 +139,9 @@ async function refresh(): Promise<string | null> {
   @parameter next - The next() callback.
 */
 function allowCrossDomains(
-  req: express.Request, res: express.Response, next: express.NextFunction,
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction,
 ): void {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET,POST');
@@ -148,7 +150,7 @@ function allowCrossDomains(
   // intercept OPTIONS method
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
-  } else if (!('LOCAL_DEBUG' in process.env) 
+  } else if (!('LOCAL_DEBUG' in process.env)
     && req.header('Api-Key') !== process.env.SECRET) {
     res.sendStatus(403);
   } else {
@@ -157,7 +159,7 @@ function allowCrossDomains(
 }
 
 // Set-up proxy router.
-const cors_proxy = createServer({
+const corsProxyServer = createServer({
   requireHeader: ['origin', 'x-requested-with'],
   removeHeaders: [
     'cookie',
@@ -173,29 +175,28 @@ const cors_proxy = createServer({
     // Do not add X-Forwarded-For, etc. headers, because Heroku already adds it.
     xfwd: false,
   },
-})
-
+});
 
 let inCache: string | null = null;
 
 const app = express()
-  .use(bodyParser.json({limit: '50mb'}))
+  .use(bodyParser.json({ limit: '50mb' }))
   .use(bodyParser.urlencoded({ limit: '50mb', extended: true }))
   .use(allowCrossDomains);
 
 const router = express.Router()
   .get('/proxy/:proxyUrl*', (req, res) => {
     req.url = req.url.replace('/proxy/', '/');
-    cors_proxy.emit('request', req, res);
+    corsProxyServer.emit('request', req, res);
   })
   .post('/proxy/:proxyUrl*', (req, res) => {
     req.url = req.url.replace('/proxy/', '/');
-    cors_proxy.emit('request', req, res);
+    corsProxyServer.emit('request', req, res);
   })
   .get('/api', (req, res) => {
     res.send('alive');
   })
-  .all('/api/:action', async (request, response) => {
+  .all('/api/:action', asyncHandler(async (request, response) => {
     if (request.method !== 'GET' && request.method !== 'POST') {
       response.sendStatus(403);
     }
@@ -220,7 +221,7 @@ const router = express.Router()
           .then(null)
           .catch(null);
         const blob = JSON.stringify(data);
-        inCache = await redisClient.set(tableName, blob)
+        inCache = await redisClient.set(tableName, blob);
         response.json({
           message: inCache,
         });
@@ -232,7 +233,7 @@ const router = express.Router()
             const reply = await redisClient.get(tableName);
             if (!reply) {
               response.json({
-                message: `Null reply from redis for table: ${tableName}`
+                message: `Null reply from redis for table: ${tableName}`,
               });
             } else {
               response.json(JSON.parse(reply));
@@ -287,21 +288,19 @@ const router = express.Router()
         });
       }
     }
-  });
-
-
+  }));
 
 (async () => {
   // Refresh the database before starting.
   await refresh();
 
   const port = await getPort({
-    port: Number(process.env.PORT) || 5000
+    port: Number(process.env.PORT) || 5000,
   });
 
-  // Back-end server. 
+  // Back-end server.
   app.use('/', router)
-     .listen(port, () => {
+    .listen(port, () => {
       console.log(`Listening on ${port}`);
     });
 })()

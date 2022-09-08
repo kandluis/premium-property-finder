@@ -3,6 +3,12 @@
   "parserOptions": {
     "allowAsStatement": true
   },
+  "strict": true,
+  "baseUrl": "./" /* Base directory to resolve non-absolute module names. */,
+  "paths": {
+    "*": ["*", "./types/*"]
+  },
+  "forceConsistentCasingInFileNames": true,
   "compilerOptions": {
     "target": "es2022",
     "module": "es2022",
@@ -10,7 +16,9 @@
     "moduleResolution": "node",
     "skipLibCheck": true,
   },                
-  "files": [
-    "server.ts"
+  "include": ["."],
+  "typeRoots": [
+    "./types",
+    "./node_modules/@types"
   ]
 }
