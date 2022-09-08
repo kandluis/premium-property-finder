@@ -1,6 +1,5 @@
 type SortOrder = 'ascendingprice' | 'descendingprice' | 'ascendingratio' | 'descendingratio' | '';
 
-
 /**
   Constructs a sorting function to sort by the specified order.
 
@@ -10,32 +9,32 @@ type SortOrder = 'ascendingprice' | 'descendingprice' | 'ascendingratio' | 'desc
 */
 function sortFn(order: SortOrder): (a: Property, b: Property) => number {
   switch (order) {
-    case "ascendingprice":
+    case 'ascendingprice':
       return (a: Property, b: Property) => {
         const aPrice = a.price || 0;
         const bPrice = b.price || 0;
         return aPrice - bPrice;
       };
-    case "descendingprice":
+    case 'descendingprice':
       return (a: Property, b: Property) => {
         const aPrice = a.price || 0;
         const bPrice = b.price || 0;
         return bPrice - aPrice;
-      }
-    case "ascendingratio":
+      };
+    case 'ascendingratio':
       return (a: Property, b: Property) => {
         const aRatio = (a.rentzestimate || 0) / (a.price || 1);
         const bRatio = (b.rentzestimate || 0) / (b.price || 1);
         return aRatio - bRatio;
-      }
-    case "descendingratio":
+      };
+    case 'descendingratio':
       return (a: Property, b: Property) => {
         const aRatio = (a.rentzestimate || 0) / (a.price || 1);
         const bRatio = (b.rentzestimate || 0) / (b.price || 1);
         return bRatio - aRatio;
-      }
+      };
     default:
-      return (a:Property, b: Property) => { return 0 };
+      return (a:Property, b: Property) => 0;
   }
 }
 

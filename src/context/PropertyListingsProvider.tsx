@@ -1,10 +1,8 @@
 import accounting from 'accounting';
-import {
-  DefaultFilter,
-  FilterState,
-  Property,
-  sortFn,
-} from '../common';
+import debounce from 'lodash.debounce';
+import pThrottle from 'p-throttle';
+import React, { useState } from 'react';
+import { useQueryParam } from 'use-query-params';
 import {
   defaultRadiusSearch,
   rentBitsApiBaseUrl,
@@ -12,10 +10,12 @@ import {
   zillowApiBaseUrl,
   zillowBaseUrl,
 } from '../constants';
-import debounce from 'lodash.debounce';
-import pThrottle from 'p-throttle';
-import React, { useState } from 'react';
-import { useQueryParam } from 'use-query-params';
+import {
+  DefaultFilter,
+  FilterState,
+  Property,
+  sortFn,
+} from '../common';
 import {
   boundingBox,
   Database,
@@ -27,7 +27,6 @@ import {
   Location,
   LocationBox,
 } from '../utilities';
-
 
 /**
   Calculates the median known rental values in the given area using the rent bits API.
@@ -46,7 +45,7 @@ async function getRentBitsEstimate({ lat, lng }: Location): Promise<number | nul
     console.log(e);
     return null;
   }
-  const results = get(res, 'data') as (Array<{ price?: string }> | null)
+  const results = get(res, 'data') as (Array<{ price?: string }> | null);
   if (results === null) {
     return null;
   }
@@ -102,7 +101,7 @@ async function fetchRentalBitsEstimates(properties: Array<Property>): Promise<Da
       rentzestimate: estimate,
       zestimate: 0,
     };
-  })
+  });
   return newDB;
 }
 
@@ -116,10 +115,8 @@ async function fetchRentalBitsEstimates(properties: Array<Property>): Promise<Da
 async function attachRentestimates(properties: Array<Property>): Promise<Array<Property>> {
   let rentalDB = await dbFetch();
   // Filter out any properties we won't even look at.
-  // eg. no address/zip or no price. 
-  const newProperties = properties.filter((item: Property) => {
-    return item.zpid && item.address && item.zipCode && item.price && !(item.zpid in rentalDB);
-  });
+  // eg. no address/zip or no price.
+  const newProperties = properties.filter((item: Property) => item.zpid && item.address && item.zipCode && item.price && !(item.zpid in rentalDB));
   if (newProperties.length > 0) {
     const rentBitsEstimates = await fetchRentalBitsEstimates(newProperties);
     rentalDB = { ...rentalDB, ...rentBitsEstimates };
@@ -129,7 +126,7 @@ async function attachRentestimates(properties: Array<Property>): Promise<Array<P
     if (!property.zpid) {
       return property;
     }
-    return { ...property, ...rentalDB[property.zpid] as Property }
+    return { ...property, ...rentalDB[property.zpid] as Property };
   });
   return properties;
 }
@@ -140,7 +137,7 @@ interface ZillowProperty {
 /**
   Parses a single property result fetched from the Zillow API for an area.ZillowDB
 
-  @param item - The JSON object corresponding to a single property fetched from Zillow. 
+  @param item - The JSON object corresponding to a single property fetched from Zillow.
 
   @returns The parsed Property object.
  */
@@ -171,7 +168,7 @@ function parseResult(item: ZillowProperty): Property {
     item.address = addressComponents.slice(0, addressComponents.length - 3).join(' ');
   }
   if (item.listingType) {
-    item.type = item.listingType
+    item.type = item.listingType;
   }
   return item;
 }
@@ -201,9 +198,9 @@ async function fetchProperties(location: string, radius: number, min: number | n
     filterState: {
       price: {
         min: min || 0,
-        max: max 
-      }
-    }
+        max,
+      },
+    },
   };
   const zillowUrl = `${zillowBaseUrl}?searchQueryState=${JSON.stringify(searchQueryState)}&wants=${JSON.stringify(wants)}`;
   const data = await getJsonResponse(`${zillowUrl}`, 'json', true);
@@ -213,7 +210,6 @@ async function fetchProperties(location: string, radius: number, min: number | n
   return propertyListings;
 }
 
-
 interface PropertyListingsState {
   filter: FilterState,
   filteredListings: Array<Property>,
@@ -221,15 +217,15 @@ interface PropertyListingsState {
   updateFilter: (filter: FilterState) => void,
   initialLoad: boolean,
   loading: boolean,
-};
+}
 export interface PropertyListingsProps {
-};
+}
 
 const DefaultState: PropertyListingsState = {
   filter: DefaultFilter,
   filteredListings: [],
   propertyListings: [],
-  updateFilter: (filter: FilterState) => { return; },
+  updateFilter: (filter: FilterState) => { },
   initialLoad: true,
   loading: false,
 };
@@ -245,13 +241,14 @@ const FilterParams = {
       return DefaultState.filter;
     }
     return JSON.parse(atob(value));
-  }
-}
+  },
+};
 
 async function filterAndFetchProperties(
   propertyListings: Property[],
   prevFilter: FilterState,
-  filter: FilterState): Promise<{ propertyListings: Property[]; filteredListings: Property[] }> {
+  filter: FilterState,
+): Promise<{ propertyListings: Property[]; filteredListings: Property[] }> {
   const prevGeoLocation = prevFilter.geoLocation;
   const prevRadius = prevFilter.radius;
   const {
@@ -275,24 +272,16 @@ async function filterAndFetchProperties(
   }
   let filteredListings = propertyListings;
   if (priceFrom) {
-    filteredListings = propertyListings.filter((item) => {
-      return item.price && item.price >= priceFrom
-    });
+    filteredListings = propertyListings.filter((item) => item.price && item.price >= priceFrom);
   }
   if (rentOnly) {
-    filteredListings = filteredListings.filter((item) => {
-      return item.rentzestimate && item.rentzestimate > 0;
-    });
+    filteredListings = filteredListings.filter((item) => item.rentzestimate && item.rentzestimate > 0);
   }
   if (newConstruction) {
-    filteredListings = filteredListings.filter((item) => {
-      return item.type && item.type == "NEW_CONSTRUCTION";
-    })
+    filteredListings = filteredListings.filter((item) => item.type && item.type == 'NEW_CONSTRUCTION');
   }
   if (!includeLand) {
-    filteredListings = filteredListings.filter((item) => {
-      return item.beds && item.baths;
-    });
+    filteredListings = filteredListings.filter((item) => item.beds && item.baths);
   }
   if (meetsRule) {
     filteredListings = filteredListings.filter((item) => {
@@ -319,27 +308,29 @@ export function PropertyListingsProvider({ children }: any) {
   const [state, setState] = useState(DefaultState);
   const applyFilter = async (filter: FilterState): Promise<void> => {
     // Loading!
-    setState({ ...state, initialLoad: false, loading: true, filteredListings: [] });
-    const newProperties = await filterAndFetchProperties(
-      state.propertyListings, state.filter, filter);
+    setState({
+      ...state, initialLoad: false, loading: true, filteredListings: [],
+    });
+    const newProperties = await filterAndFetchProperties(state.propertyListings, state.filter, filter);
     if (filter !== state.filter) {
       setFilterParams(filter, 'replace');
     }
     setState({ ...state, filter, ...newProperties });
-  }
+  };
   const debouncedFilter = debounce(applyFilter, 500);
   const [filterParams, setFilterParams] = useQueryParam('filter', FilterParams);
   let { filter } = state;
   if (state.initialLoad && filterParams) {
-    filter = filterParams as FilterState;
-    debouncedFilter(filter as FilterState);
+    filter = filterParams;
+    debouncedFilter(filter);
   }
   return (
     <PropertyListingsContext.Provider value={{
       ...state,
       filter,
-      updateFilter: debouncedFilter
-    }} >
+      updateFilter: debouncedFilter,
+    }}
+    >
       {children}
     </PropertyListingsContext.Provider>
   );

@@ -45,7 +45,16 @@ function Listing({ property }: ListingProps): React.ReactElement {
           </div>
         </div>
         <div className="card-body">
-          Beds: {beds || 'N/A'}, Baths: {baths || 'N/A'} , Rent to Price: {(rentzestimate && price) ? (100 * rentzestimate / price).toFixed(2) : 'N/A'}
+          Beds:
+          {' '}
+          {beds || 'N/A'}
+          , Baths:
+          {' '}
+          {baths || 'N/A'}
+          {' '}
+          , Rent to Price:
+          {' '}
+          {(rentzestimate && price) ? (100 * rentzestimate / price).toFixed(2) : 'N/A'}
           %
         </div>
         <div className="card-footer">

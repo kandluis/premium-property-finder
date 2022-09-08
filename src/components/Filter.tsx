@@ -1,14 +1,14 @@
 import classnames from 'classnames';
+import React, { useState, useEffect } from 'react';
 import {
   DefaultFilter,
   FilterState,
   SortOrder,
 } from '../common';
 import { CUTTLY_API_KEY, urlShortnerEndpoint } from '../constants';
-import React, { useState, useEffect } from 'react';
 import { get, getJsonResponse } from '../utilities';
 
-import * as style from "./styles.module.css";
+import * as style from './styles.module.css';
 
 type FilterProps = {
   updateFilter: (filter: FilterState) => void,
@@ -26,7 +26,7 @@ function Filter(props: FilterProps) {
       navigator.clipboard.writeText(shortUrl);
     }
     setShareUrl(shortUrl);
-  }
+  };
   const containerClasses = classnames('container', 'mb-1', style.container);
   const formClasses = classnames('form-horizontal', style.form);
   useEffect(() => {
@@ -34,7 +34,7 @@ function Filter(props: FilterProps) {
   }, [form.includeLand, form.meetsRule, form.radius, form.rentOnly, form.newConstruction, form.sortOrder]);
   useEffect(() => {
     setShareUrl(null);
-  }, [form])
+  }, [form]);
   return (
     <div className={containerClasses}>
       <form
@@ -61,7 +61,7 @@ function Filter(props: FilterProps) {
                   id="geo-location"
                   placeholder="Nacogdoches, TX"
                   value={form.geoLocation}
-                  onChange={event => setForm({ ...form, geoLocation: event.target.value })}
+                  onChange={(event) => setForm({ ...form, geoLocation: event.target.value })}
                 />
               </div>
             </div>
@@ -82,7 +82,7 @@ function Filter(props: FilterProps) {
                   id="radius"
                   placeholder="15"
                   value={form.radius || ''}
-                  onChange={event => setForm({ ...form, radius: Number(event.target.value) })}
+                  onChange={(event) => setForm({ ...form, radius: Number(event.target.value) })}
                 />
               </div>
             </div>
@@ -103,7 +103,7 @@ function Filter(props: FilterProps) {
                   id="price-from"
                   placeholder="£1,000,000"
                   value={form.priceFrom || ''}
-                  onChange={event => setForm({ ...form, priceFrom: Number(event.target.value) })}
+                  onChange={(event) => setForm({ ...form, priceFrom: Number(event.target.value) })}
                 />
               </div>
             </div>
@@ -124,7 +124,7 @@ function Filter(props: FilterProps) {
                   id="price-most"
                   placeholder="£1,000,000"
                   value={form.priceMost || ''}
-                  onChange={event => setForm({ ...form, priceMost: Number(event.target.value) })}
+                  onChange={(event) => setForm({ ...form, priceMost: Number(event.target.value) })}
                 />
               </div>
             </div>
@@ -141,10 +141,10 @@ function Filter(props: FilterProps) {
                   className="form-select"
                   id="sortorder"
                   value={form.sortOrder}
-                  onChange={event => setForm({ ...form, sortOrder: event.target.value as SortOrder })}
+                  onChange={(event) => setForm({ ...form, sortOrder: event.target.value as SortOrder })}
                 >
                   <option>Choose...</option>
-                  {form.sortOrders.map(order => (
+                  {form.sortOrders.map((order) => (
                     <option key={order} value={order.replace(' ', '').toLowerCase()}>
                       {order}
                     </option>
@@ -170,7 +170,7 @@ function Filter(props: FilterProps) {
                   id="meets-rule"
                   placeholder="1.5"
                   value={form.meetsRule || ''}
-                  onChange={event => setForm({ ...form, meetsRule: Number(event.target.value) })}
+                  onChange={(event) => setForm({ ...form, meetsRule: Number(event.target.value) })}
                 />
               </div>
             </div>
@@ -187,7 +187,7 @@ function Filter(props: FilterProps) {
                   type="checkbox"
                   id="only-rent"
                   checked={form.rentOnly}
-                  onChange={event => setForm({ ...form, rentOnly: event.target.checked })}
+                  onChange={(event) => setForm({ ...form, rentOnly: event.target.checked })}
                 />
               </div>
             </div>
@@ -204,7 +204,7 @@ function Filter(props: FilterProps) {
                   type="checkbox"
                   id="only-new-construction"
                   checked={form.newConstruction}
-                  onChange={event => setForm({ ...form, newConstruction: event.target.checked })}
+                  onChange={(event) => setForm({ ...form, newConstruction: event.target.checked })}
                 />
               </div>
             </div>
@@ -221,30 +221,31 @@ function Filter(props: FilterProps) {
                   type="checkbox"
                   id="only-rent"
                   checked={form.includeLand}
-                  onChange={event => setForm({ ...form, includeLand: event.target.checked })}
+                  onChange={(event) => setForm({ ...form, includeLand: event.target.checked })}
                 />
               </div>
             </div>
           </div>
         </div>
         <div className="columns text-center">
-          <div className="column col-2 col-xs-5" >
+          <div className="column col-2 col-xs-5">
             <input type="submit" value="Submit" />
           </div>
-          <div className="column col-2 col-xs-5" >
+          <div className="column col-2 col-xs-5">
             { (shareUrl)
-              ? <input
-                  type='text'
-                  readOnly={true}
+              ? (
+                <input
+                  type="text"
+                  readOnly
                   value={shareUrl}
                 />
-              : <input type="button" value="Share" onClick={onShareClick} />
-            }
+              )
+              : <input type="button" value="Share" onClick={onShareClick} />}
           </div>
         </div>
       </form>
     </div>
-  )
+  );
 }
 
 export { Filter };

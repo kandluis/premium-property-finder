@@ -1,9 +1,9 @@
 import React from 'react';
 
+import { RouteComponentProps } from 'react-router-dom';
 import { Filter } from '../components/Filter';
 import { Hero } from '../components/Hero';
 import { Listing } from '../components/Listing';
-import { RouteComponentProps } from 'react-router-dom';
 import {
   PropertyListingsProvider,
   PropertyListingsConsumer,
@@ -16,17 +16,18 @@ function Home(props: RouteComponentProps): React.ReactElement {
       <div className="container">
         <PropertyListingsProvider>
           <PropertyListingsConsumer>
-            {({ loading, filter, filteredListings, updateFilter }) => (
+            {({
+              loading, filter, filteredListings, updateFilter,
+            }) => (
               <>
                 <Filter
                   updateFilter={updateFilter}
                   filter={filter}
                 />
-                <h3> 
+                <h3>
                   {!loading
                     ? `Num Results: ${filteredListings.length}`
-                    : "Loading results..."
-                  }
+                    : 'Loading results...'}
                 </h3>
                 <div className="columns">
                   {filteredListings.map((property, idx) => (

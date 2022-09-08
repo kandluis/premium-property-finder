@@ -10,8 +10,8 @@
     "build": "parcel build --dist-dir ./dist --public-url ./ --no-source-maps ./src/index.html",
     "push-gh-pages": "push-dir --dir=dist --branch=gh-pages --cleanup --verbose",
     "deploy-server": "git subtree push --prefix server/ heroku master",
-    "lint": "eslint --ext ts,tsx src",
-    "lint:fix": "eslint --ext ts,tsx src --fix"
+    "lint": "eslint --ext ts,tsx ./src",
+    "lint:fix": "eslint --ext ts,tsx ./src --fix"
   },
   "keywords": [],
   "author": "",

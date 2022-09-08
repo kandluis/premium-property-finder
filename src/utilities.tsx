@@ -1,6 +1,8 @@
 import { computeOffset, LatLng } from 'spherical-geometry-js';
 import { parseStringPromise } from 'xml2js';
-import { dbEndpoint, DB_SECRET, proxyUrl, geocodingBaseUrl, MAPQUEST_API_KEY } from './constants';
+import {
+  dbEndpoint, DB_SECRET, proxyUrl, geocodingBaseUrl, MAPQUEST_API_KEY,
+} from './constants';
 
 /**
   Utility function to extract elements from an object.
@@ -27,7 +29,7 @@ type Location = {
 };
 async function getLatLong(location: string): Promise<Location | null> {
   const geoCodeUrl = `${geocodingBaseUrl}?key=${MAPQUEST_API_KEY}&location=${location.toLowerCase()}`;
-  const latLongData = await getJsonResponse(geoCodeUrl, /*format=*/"json", /*use_proxy=*/true);
+  const latLongData = await getJsonResponse(geoCodeUrl, /* format= */'json', /* use_proxy= */true);
   const statusCode = get(latLongData, 'info.statuscode') as number;
   if (statusCode !== 0) {
     console.log(`Failed to retrieve lat/long data from ${location}. Status code: ${statusCode}`);
@@ -55,7 +57,7 @@ async function getLatLong(location: string): Promise<Location | null> {
 
   @returns: The response, in JSON format from the url.
 */
-async function getJsonResponse(url: string, format: 'json' | 'xml' = 'json', useProxy: boolean = false, options: any = {}) : Promise<any> {
+async function getJsonResponse(url: string, format: 'json' | 'xml' = 'json', useProxy = false, options: any = {}) : Promise<any> {
   let fullUrl = url;
   if (useProxy) {
     fullUrl = `${proxyUrl}/${url}`;
@@ -77,8 +79,10 @@ async function getJsonResponse(url: string, format: 'json' | 'xml' = 'json', use
   } else if (format === 'xml') {
     const parsedText = await blob.text();
     parsedData = await parseStringPromise(parsedText);
-    parsedData = get(parsedData,
-      'SearchResults:searchresults.response.0.results.0.result');
+    parsedData = get(
+      parsedData,
+      'SearchResults:searchresults.response.0.results.0.result',
+    );
   }
   try {
     sessionStorage.setItem(storageKey, JSON.stringify(parsedData));
