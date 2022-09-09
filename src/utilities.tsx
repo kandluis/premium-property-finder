@@ -1,4 +1,3 @@
-import fetch, { RequestInit } from 'node-fetch';
 import { computeOffset, LatLng } from 'spherical-geometry-js';
 import { parseStringPromise } from 'xml2js';
 import {
@@ -11,7 +10,7 @@ type Location = {
 };
 type LatLongResponse = {
   info: {
-    statusCode: number;
+    statuscode: number;
   };
   results: [{
     locations: [{
@@ -118,9 +117,9 @@ async function getJsonResponse(
 */
 async function getLatLong(location: string): Promise<Location | null> {
   const geoCodeUrl = `${geocodingBaseUrl}?key=${MAPQUEST_API_KEY}&location=${location.toLowerCase()}`;
-  const { info: { statusCode }, results } = await getJsonResponse(geoCodeUrl, /* format= */'json', /* use_proxy= */true) as LatLongResponse;
-  if (statusCode !== 0) {
-    console.log(`Failed to retrieve lat/long data from ${location}. Status code: ${statusCode}`);
+  const { info: { statuscode }, results } = await getJsonResponse(geoCodeUrl, /* format= */'json', /* use_proxy= */true) as LatLongResponse;
+  if (statuscode !== 0) {
+    console.log(`Failed to retrieve lat/long data from ${location}. Status code: ${statuscode}`);
     return null;
   }
   if (results.length === 0 || results[0].locations.length === 0) {

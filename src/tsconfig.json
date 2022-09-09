@@ -29,6 +29,7 @@
     "skipLibCheck": true,          
   },
   "include": [
-    "src/**/*"
+    "**/*.tsx",
+    "**/*.ts",
   ]
 }
