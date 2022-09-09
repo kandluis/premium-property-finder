@@ -1,8 +1,24 @@
+import fetch, { RequestInit } from 'node-fetch';
 import { computeOffset, LatLng } from 'spherical-geometry-js';
 import { parseStringPromise } from 'xml2js';
 import {
   dbEndpoint, DB_SECRET, proxyUrl, geocodingBaseUrl, MAPQUEST_API_KEY,
 } from './constants';
+
+type Location = {
+  lat: number;
+  lng: number
+};
+type LatLongResponse = {
+  info: {
+    statuscode: number
+  };
+  results: [{
+    locations: [{
+      latLng: Location
+    }]
+  }]
+};
 
 /**
   Utility function to extract elements from an object.
@@ -14,34 +30,6 @@ import {
 */
 function get(object: unknown, path: string): unknown | null {
   return path.split('.').reduce((xs, x) => ((xs != null && xs[x] != null) ? xs[x] : null), object);
-}
-
-/**
-  Fetches the lat/long of a location.
-
-  @param location - The geo location. Could be zip code, address, state, etc.
-
-  @returns: The coordinates of the location.
-*/
-type Location = {
-  lat: number;
-  lng: number
-};
-async function getLatLong(location: string): Promise<Location | null> {
-  const geoCodeUrl = `${geocodingBaseUrl}?key=${MAPQUEST_API_KEY}&location=${location.toLowerCase()}`;
-  const latLongData = await getJsonResponse(geoCodeUrl, /* format= */'json', /* use_proxy= */true);
-  const statusCode = get(latLongData, 'info.statuscode') as number;
-  if (statusCode !== 0) {
-    console.log(`Failed to retrieve lat/long data from ${location}. Status code: ${statusCode}`);
-    return null;
-  }
-  const primaryResult = get(latLongData, 'results.0.locations.0') as {latLng: {lat: number, lng: number}} | null;
-  if (primaryResult === null) {
-    console.log(`Successful response with empty locations for location: ${location}`);
-    return null;
-  }
-  const { lat, lng } = primaryResult.latLng;
-  return { lat: Number(lat), lng: Number(lng) };
 }
 
 /**
@@ -57,7 +45,7 @@ async function getLatLong(location: string): Promise<Location | null> {
 
   @returns: The response, in JSON format from the url.
 */
-async function getJsonResponse(url: string, format: 'json' | 'xml' = 'json', useProxy = false, options: any = {}) : Promise<any> {
+async function getJsonResponse(url: string, format: 'json' | 'xml' = 'json', useProxy = false, options?: RequestInit = {}) : Promise<LatLongResponse> {
   let fullUrl = url;
   if (useProxy) {
     fullUrl = `${proxyUrl}/${url}`;
@@ -65,7 +53,7 @@ async function getJsonResponse(url: string, format: 'json' | 'xml' = 'json', use
   const storageKey = `getJsonReponse(${fullUrl})`;
   const data = sessionStorage.getItem(storageKey);
   if (data != null) {
-    return JSON.parse(data);
+    return JSON.parse(data) as LatLongResponse;
   }
   const blob = await fetch(fullUrl, {
     ...options,
@@ -75,14 +63,14 @@ async function getJsonResponse(url: string, format: 'json' | 'xml' = 'json', use
   });
   let parsedData = null;
   if (format === 'json') {
-    parsedData = await blob.json();
+    parsedData = await blob.json() as LatLongResponse;
   } else if (format === 'xml') {
     const parsedText = await blob.text();
     parsedData = await parseStringPromise(parsedText);
     parsedData = get(
       parsedData,
       'SearchResults:searchresults.response.0.results.0.result',
-    );
+    ) as LatLongResponse;
   }
   try {
     sessionStorage.setItem(storageKey, JSON.stringify(parsedData));
@@ -90,6 +78,29 @@ async function getJsonResponse(url: string, format: 'json' | 'xml' = 'json', use
     console.log(e);
   }
   return parsedData;
+}
+
+/**
+  Fetches the lat/long of a location.
+
+  @param location - The geo location. Could be zip code, address, state, etc.
+
+  @returns: The coordinates of the location.
+*/
+async function getLatLong(location: string): Promise<Location | null> {
+  const geoCodeUrl = `${geocodingBaseUrl}?key=${MAPQUEST_API_KEY}&location=${location.toLowerCase()}`;
+  const { info: { statusCode } } = await getJsonResponse(geoCodeUrl, /* format= */'json', /* use_proxy= */true);
+  if (statusCode !== 0) {
+    console.log(`Failed to retrieve lat/long data from ${location}. Status code: ${statusCode}`);
+    return null;
+  }
+  if (latLongData.results.length === 0 || latLongData.results[0].locations.length === 0) {
+    console.log(`Successful response with empty locations for location: ${location}`);
+    return null;
+  }
+  const primaryResult = latLongData.results[0].locations[0];
+  const { lat, lng } = primaryResult.latLng;
+  return { lat: Number(lat), lng: Number(lng) };
 }
 
 interface LocationBox {
@@ -159,7 +170,7 @@ async function dbFetch(): Promise<Database> {
 }
 
 function dbUpdate(db: Database): void {
-  void fetch(`${dbEndpoint}/set`, {
+  fetch(`${dbEndpoint}/set`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

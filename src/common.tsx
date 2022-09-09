@@ -1,5 +1,50 @@
 type SortOrder = 'ascendingprice' | 'descendingprice' | 'ascendingratio' | 'descendingratio' | '';
 
+interface Property {
+  address?: string,
+  area?: number,
+  baths?: number,
+  beds?: number,
+  city?: string,
+  detailUrl?: string,
+  imgSrc?: string,
+  lotArea?: string,
+  price?: number,
+  rentzestimate?: number
+  state?: string,
+  statusText?: string,
+  zipCode?: number,
+  zpid?: number,
+  type?: string,
+}
+
+interface FilterState {
+  geoLocation: string,
+  meetsRule: number | null,
+  priceFrom: number | null,
+  priceMost: number,
+  radius: number | null,
+  rentOnly: boolean,
+  newConstruction: boolean,
+  includeLand: boolean,
+  sortOrder: SortOrder,
+
+  readonly sortOrders: Array<string>,
+}
+
+const DefaultFilter: FilterState = {
+  geoLocation: '',
+  meetsRule: null,
+  priceFrom: null,
+  priceMost: 200000,
+  radius: null,
+  rentOnly: false,
+  newConstruction: false,
+  includeLand: false,
+  sortOrder: '',
+  sortOrders: ['Ascending Price', 'Descending Price', 'Ascending Ratio', 'Descending Ratio'],
+};
+
 /**
   Constructs a sorting function to sort by the specified order.
 
@@ -36,51 +81,6 @@ function sortFn(order: SortOrder): (a: Property, b: Property) => number {
     default:
       return (a:Property, b: Property) => 0;
   }
-}
-
-interface FilterState {
-  geoLocation: string,
-  meetsRule: number | null,
-  priceFrom: number | null,
-  priceMost: number,
-  radius: number | null,
-  rentOnly: boolean,
-  newConstruction: boolean,
-  includeLand: boolean,
-  sortOrder: SortOrder,
-
-  readonly sortOrders: Array<string>,
-}
-
-const DefaultFilter: FilterState = {
-  geoLocation: '',
-  meetsRule: null,
-  priceFrom: null,
-  priceMost: 200000,
-  radius: null,
-  rentOnly: false,
-  newConstruction: false,
-  includeLand: false,
-  sortOrder: '',
-  sortOrders: ['Ascending Price', 'Descending Price', 'Ascending Ratio', 'Descending Ratio'],
-};
-
-interface Property {
-  address?: string,
-  area?: number,
-  baths?: number,
-  beds?: number,
-  city?: string,
-  detailUrl?: string,
-  imgSrc?: string,
-  lotArea?: string,
-  price?: number,
-  rentzestimate?: number
-  state?: string,
-  statusText?: string,
-  zipCode?: number,
-  zpid?: number,
-  type?: string,
 }
 
 export {

@@ -12,7 +12,10 @@ module.exports = {
     'plugin:react/recommended',
     'plugin:react-hooks/recommended',
     'airbnb',
-    'airbnb/hooks'
+    'airbnb/hooks',
+    'plugin:import/errors',
+    'plugin:import/warnings',
+    'plugin:import/typescript',
   ],
   globals: {
     Atomics: 'readonly',
@@ -37,5 +40,16 @@ module.exports = {
     react: { version: 'detect' }
   },
   rules: {
+    'no-console': 'off',
+    'import/extensions': [
+      'error',
+      'ignorePackages',
+      {
+        'js': 'never',
+        'jsx': 'never',
+        'ts': 'never',
+        'tsx': 'never'
+      }
+    ]
   }
 }
