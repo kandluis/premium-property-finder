@@ -6,8 +6,6 @@ import { useQueryParam } from 'use-query-params';
 import {
   defaultRadiusSearch,
   rentBitsApiBaseUrl,
-  ZILLOW_API_KEY,
-  zillowApiBaseUrl,
   zillowBaseUrl,
 } from '../constants';
 import {
@@ -24,8 +22,7 @@ import {
   get,
   getJsonResponse,
   getLatLong,
-  Location,
-  LocationBox,
+  Location,  
 } from '../utilities';
 
 /**
