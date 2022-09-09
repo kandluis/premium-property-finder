@@ -52,7 +52,7 @@ const DefaultFilter: FilterState = {
 
   @returns - The sorting function.
 */
-function sortFn(order: SortOrder): (a: Property, b: Property) => number {
+function sortFn(order: SortOrder): (_1: Property, _2: Property) => number {
   switch (order) {
     case 'ascendingprice':
       return (a: Property, b: Property) => {
@@ -79,7 +79,7 @@ function sortFn(order: SortOrder): (a: Property, b: Property) => number {
         return bRatio - aRatio;
       };
     default:
-      return (a:Property, b: Property) => 0;
+      return (_1:Property, _2: Property) => 0;
   }
 }
 

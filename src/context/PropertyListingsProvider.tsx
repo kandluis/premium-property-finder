@@ -1,7 +1,7 @@
 import accounting from 'accounting';
 import debounce from 'lodash.debounce';
 import pThrottle from 'p-throttle';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQueryParam } from 'use-query-params';
 import {
   defaultRadiusSearch,
@@ -19,10 +19,12 @@ import {
   Database,
   dbFetch,
   dbUpdate,
-  get,
   getJsonResponse,
   getLatLong,
-  Location,  
+  Location,
+  RentBitsResponse,
+  ZillowProperty,
+  ZillowResponse,
 } from '../utilities';
 
 /**
@@ -35,24 +37,23 @@ import {
 async function getRentBitsEstimate({ lat, lng }: Location): Promise<number | null> {
   const box = boundingBox(lat, lng, 5);
   const url = `${rentBitsApiBaseUrl}?bounds=${box.south},${box.north},${box.west},${box.east}`;
-  let res;
+  let res = null;
   try {
-    res = await getJsonResponse(url, 'json', true);
+    res = await getJsonResponse(url, 'json', true) as RentBitsResponse;
   } catch (e) {
     console.log(e);
     return null;
   }
-  const results = get(res, 'data') as (Array<{ price?: string }> | null);
-  if (results === null) {
+  if (res.data === null) {
     return null;
   }
-  const prices = results.map((item) => {
+  const prices = res.data.map((item: { price? : string}) => {
     if (!item.price) {
       return null;
     }
     return accounting.unformat(item.price.replace('.', '').replace(',', ''));
   }).filter((x) => x) as Array<number>;
-  if (prices.length == 0) {
+  if (prices.length === 0) {
     return null;
   }
   const mid = Math.floor(prices.length / 2);
@@ -86,10 +87,10 @@ async function fetchRentalBitsEstimates(properties: Array<Property>): Promise<Da
     rents[zipCode] = rent;
     return true;
   });
-  const _ = await Promise.all(fetch);
+  await Promise.all(fetch);
   // At this point we know that rents will have the right values set.
   const newDB: Database = {};
-  properties.forEach((prop: Property, index: number) => {
+  properties.forEach((prop: Property) => {
     if (!prop.zpid || !prop.zipCode) {
       return;
     }
@@ -113,24 +114,24 @@ async function attachRentestimates(properties: Array<Property>): Promise<Array<P
   let rentalDB = await dbFetch();
   // Filter out any properties we won't even look at.
   // eg. no address/zip or no price.
-  const newProperties = properties.filter((item: Property) => item.zpid && item.address && item.zipCode && item.price && !(item.zpid in rentalDB));
+  const newProperties = properties.filter(
+    (item: Property) => item.zpid && item.address && item.zipCode && item.price
+      && !(item.zpid in rentalDB),
+  );
   if (newProperties.length > 0) {
     const rentBitsEstimates = await fetchRentalBitsEstimates(newProperties);
     rentalDB = { ...rentalDB, ...rentBitsEstimates };
     dbUpdate(rentalDB);
   }
-  properties = properties.map((property) => {
+  const mergedProperties = properties.map((property) => {
     if (!property.zpid) {
       return property;
     }
     return { ...property, ...rentalDB[property.zpid] as Property };
   });
-  return properties;
+  return mergedProperties;
 }
 
-interface ZillowProperty {
-  [propName: string]: any,
-}
 /**
   Parses a single property result fetched from the Zillow API for an area.ZillowDB
 
@@ -139,33 +140,34 @@ interface ZillowProperty {
   @returns The parsed Property object.
  */
 function parseResult(item: ZillowProperty): Property {
+  const parsedItem = item;
   if (item.zpid) {
-    item.zpid = Number(item.zpid);
+    parsedItem.zpid = Number(item.zpid);
   }
   if (item.price) {
-    item.price = accounting.unformat(item.price.replace('.', '').replace(',', ''));
+    parsedItem.price = accounting.unformat(item.price.replace('.', '').replace(',', '')) as string;
   }
   if (item.area) {
-    item.area = Number(item.area);
+    parsedItem.area = Number(item.area);
   }
   if (item.baths) {
-    item.baths = Number(item.baths);
+    parsedItem.baths = Number(item.baths);
   }
   if (item.beds) {
-    item.beds = Number(item.beds);
+    parsedItem.beds = Number(item.beds);
   }
   if (item.address && item.detailUrl) {
     // /something/address-seperated-by-city-state-zip.
     const addressComponents = item.detailUrl.split('/')[2].split('-');
-    item.zipCode = Number(addressComponents[addressComponents.length - 1]);
-    item.state = addressComponents[addressComponents.length - 2];
+    parsedItem.zipCode = Number(addressComponents[addressComponents.length - 1]);
+    parsedItem.state = addressComponents[addressComponents.length - 2];
     // This is not always valid. If a city is two words, we'll only get the
     // last one! :o
-    item.city = addressComponents[addressComponents.length - 3];
-    item.address = addressComponents.slice(0, addressComponents.length - 3).join(' ');
+    parsedItem.city = addressComponents[addressComponents.length - 3];
+    parsedItem.address = addressComponents.slice(0, addressComponents.length - 3).join(' ');
   }
   if (item.listingType) {
-    item.type = item.listingType;
+    parsedItem.type = item.listingType;
   }
   return item;
 }
@@ -181,7 +183,8 @@ function parseResult(item: ZillowProperty): Property {
 
   @returns The located properties.
 */
-async function fetchProperties(location: string, radius: number, min: number | null, max: number): Promise<Array<Property>> {
+async function fetchProperties(location: string, radius: number, min: number | null, max: number)
+: Promise<Array<Property>> {
   const coords = await getLatLong(location);
   if (coords === null) {
     return [];
@@ -200,11 +203,12 @@ async function fetchProperties(location: string, radius: number, min: number | n
     },
   };
   const zillowUrl = `${zillowBaseUrl}?searchQueryState=${JSON.stringify(searchQueryState)}&wants=${JSON.stringify(wants)}`;
-  const data = await getJsonResponse(`${zillowUrl}`, 'json', true);
-  const propertyListings = get(data, 'cat1.searchResults.mapResults') as Array<ZillowProperty>;
-  let parsedListings = propertyListings.map((item) => parseResult(item));
-  parsedListings = parsedListings.filter((item) => (item.zpid && item.price && item.price > 0));
-  return propertyListings;
+  const data = await getJsonResponse(`${zillowUrl}`, 'json', true) as ZillowResponse;
+  const propertyListings = data.cat1.searchResults.mapResults;
+  return propertyListings
+    .map((item) => parseResult(item))
+    .filter((item) => (item.zpid && item.price && item.price > 0));
+  // return propertyListings;
 }
 
 interface PropertyListingsState {
@@ -215,14 +219,13 @@ interface PropertyListingsState {
   initialLoad: boolean,
   loading: boolean,
 }
-export interface PropertyListingsProps {
-}
-
 const DefaultState: PropertyListingsState = {
   filter: DefaultFilter,
   filteredListings: [],
   propertyListings: [],
-  updateFilter: (filter: FilterState) => { },
+  updateFilter: (_filter: FilterState) => {
+    // no-op filter
+  },
   initialLoad: true,
   loading: false,
 };
@@ -237,7 +240,7 @@ const FilterParams = {
     if (!value || Array.isArray(value)) {
       return DefaultState.filter;
     }
-    return JSON.parse(atob(value));
+    return JSON.parse(atob(value)) as FilterState;
   },
 };
 
@@ -260,25 +263,35 @@ async function filterAndFetchProperties(
     sortOrder,
   } = filter;
   // New location so we need to fetch new property listings.
-  if (prevGeoLocation !== geoLocation || prevRadius != radius) {
+  let allListings = propertyListings;
+  if (prevGeoLocation !== geoLocation || prevRadius !== radius) {
+    // eslint-disable-next-line max-len
     const properties = await fetchProperties(geoLocation, (radius) || defaultRadiusSearch, priceFrom, priceMost);
     const newListings = await attachRentestimates(properties);
     if (newListings) {
-      propertyListings = newListings;
+      allListings = newListings;
     }
   }
-  let filteredListings = propertyListings;
+  let filteredListings = allListings;
   if (priceFrom) {
-    filteredListings = propertyListings.filter((item) => item.price && item.price >= priceFrom);
+    filteredListings = filteredListings.filter(
+      (item) => item.price && item.price >= priceFrom,
+    );
   }
   if (rentOnly) {
-    filteredListings = filteredListings.filter((item) => item.rentzestimate && item.rentzestimate > 0);
+    filteredListings = filteredListings.filter(
+      (item) => item.rentzestimate && item.rentzestimate > 0,
+    );
   }
   if (newConstruction) {
-    filteredListings = filteredListings.filter((item) => item.type && item.type == 'NEW_CONSTRUCTION');
+    filteredListings = filteredListings.filter(
+      (item) => item.type && item.type === 'NEW_CONSTRUCTION',
+    );
   }
   if (!includeLand) {
-    filteredListings = filteredListings.filter((item) => item.beds && item.baths);
+    filteredListings = filteredListings.filter(
+      (item) => item.beds && item.baths,
+    );
   }
   if (meetsRule) {
     filteredListings = filteredListings.filter((item) => {
@@ -291,23 +304,29 @@ async function filterAndFetchProperties(
       if (!item.price) {
         return !rentOnly;
       }
-      const ratio = 100 * item.rentzestimate / item.price;
+      const ratio = 100 * (item.rentzestimate / item.price);
       return ratio >= meetsRule;
     });
   }
   if (sortOrder !== '') {
     filteredListings = filteredListings.sort(sortFn(sortOrder));
   }
-  return { propertyListings, filteredListings };
+  return { allListings, filteredListings };
 }
 
-export function PropertyListingsProvider({ children }: any) {
+interface PropertyListingProps {
+  children: React.ReactNode;
+}
+
+export function PropertyListingsProvider({ children }: PropertyListingProps) {
   const [state, setState] = useState(DefaultState);
+  const [filterParams, setFilterParams] = useQueryParam('filter', FilterParams);
   const applyFilter = async (filter: FilterState): Promise<void> => {
     // Loading!
     setState({
       ...state, initialLoad: false, loading: true, filteredListings: [],
     });
+    // eslint-disable-next-line max-len
     const newProperties = await filterAndFetchProperties(state.propertyListings, state.filter, filter);
     if (filter !== state.filter) {
       setFilterParams(filter, 'replace');
@@ -315,19 +334,18 @@ export function PropertyListingsProvider({ children }: any) {
     setState({ ...state, filter, ...newProperties });
   };
   const debouncedFilter = debounce(applyFilter, 500);
-  const [filterParams, setFilterParams] = useQueryParam('filter', FilterParams);
   let { filter } = state;
   if (state.initialLoad && filterParams) {
     filter = filterParams;
-    debouncedFilter(filter);
+    const _ = debouncedFilter(filter);
   }
+  const propertyListingsValue = useMemo(() => ({
+    ...state,
+    filter,
+    updateFilter: debouncedFilter,
+  }), [state, filter, debouncedFilter]);
   return (
-    <PropertyListingsContext.Provider value={{
-      ...state,
-      filter,
-      updateFilter: debouncedFilter,
-    }}
-    >
+    <PropertyListingsContext.Provider value={propertyListingsValue}>
       {children}
     </PropertyListingsContext.Provider>
   );

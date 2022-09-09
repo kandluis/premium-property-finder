@@ -1,10 +1,10 @@
 import React from 'react';
 
-import classnames from 'classnames';
-import * as style from './styles.module.css';
+import classnames, { Argument } from 'classnames';
+import styles from './styles.module.css';
 
-function Hero(): React.ReactElement {
-  const classes = classnames('hero', 'hero-lg', 'mb-3', style.hero);
+export default function Hero(): React.ReactElement {
+  const classes = classnames('hero', 'hero-lg', 'mb-3', styles.hero as Argument);
   return (
     <div className={classes}>
       <div className="hero-body text-center text-light">
@@ -14,5 +14,3 @@ function Hero(): React.ReactElement {
     </div>
   );
 }
-
-export { Hero };

@@ -6,7 +6,7 @@ type ListingProps = {
   property: Property,
 }
 
-function Listing({ property }: ListingProps): React.ReactElement {
+export default function Listing({ property }: ListingProps): React.ReactElement {
   const {
     address,
     baths,
@@ -24,7 +24,7 @@ function Listing({ property }: ListingProps): React.ReactElement {
     <div className={columnClasses} style={{ margin: '1rem 0' }}>
       <div className={cardClasses}>
         <div className="card-image">
-          <img className="img-responsive" src={imgSrc || ''} alt={(address) ? `${address}, ${city} ${state}` : ''} />
+          <img className="img-responsive" src={imgSrc || ''} alt={`${address || 'Unknown'}, ${city || 'Unknown'} ${state || 'NA'}`} />
         </div>
         <div className="card-header">
           <div className="card-title h5">
@@ -54,7 +54,7 @@ function Listing({ property }: ListingProps): React.ReactElement {
           {' '}
           , Rent to Price:
           {' '}
-          {(rentzestimate && price) ? (100 * rentzestimate / price).toFixed(2) : 'N/A'}
+          {(rentzestimate && price) ? ((100 * rentzestimate) / price).toFixed(2) : 'N/A'}
           %
         </div>
         <div className="card-footer">
@@ -71,5 +71,3 @@ function Listing({ property }: ListingProps): React.ReactElement {
     </div>
   );
 }
-
-export { Listing };

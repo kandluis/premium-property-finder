@@ -30,6 +30,23 @@ type ParseStringData = {
   };
 };
 
+interface ZillowProperty {
+  [propName: string]: string;
+}
+interface ZillowResponse {
+  cat1: {
+    searchResults: {
+      mapResults: [ ZillowProperty ];
+    };
+  };
+}
+
+interface RentBitsResponse {
+  data: [{
+    price: string;
+  }];
+}
+
 /**
   Utility function to extract elements from an object.
 
@@ -55,7 +72,12 @@ function get(object: unknown, path: string): unknown | null {
 
   @returns: The response, in JSON format from the url.
 */
-async function getJsonResponse(url: string, format: 'json' | 'xml' = 'json', useProxy = false, options?: RequestInit = {}) : Promise<LatLongResponse> {
+async function getJsonResponse(
+  url: string,
+  format: 'json' | 'xml' = 'json',
+  useProxy = false,
+  options?: RequestInit = {},
+) : Promise<LatLongResponse | ZillowResponse | RentBitsResponse> {
   let fullUrl = url;
   if (useProxy) {
     fullUrl = `${proxyUrl}/${url}`;
@@ -63,7 +85,7 @@ async function getJsonResponse(url: string, format: 'json' | 'xml' = 'json', use
   const storageKey = `getJsonReponse(${fullUrl})`;
   const data = sessionStorage.getItem(storageKey);
   if (data != null) {
-    return JSON.parse(data) as LatLongResponse;
+    return JSON.parse(data) as LatLongResponse | ZillowResponse | RentBitsResponse;
   }
   const blob = await fetch(fullUrl, {
     ...options,
@@ -73,7 +95,7 @@ async function getJsonResponse(url: string, format: 'json' | 'xml' = 'json', use
   });
   let parsedData = null;
   if (format === 'json') {
-    parsedData = await blob.json() as LatLongResponse;
+    parsedData = await blob.json() as LatLongResponse | ZillowResponse | RentBitsResponse;
   } else if (format === 'xml') {
     const parsedText = await blob.text();
     parsedData = await parseStringPromise(parsedText) as ParseStringData;
@@ -96,7 +118,7 @@ async function getJsonResponse(url: string, format: 'json' | 'xml' = 'json', use
 */
 async function getLatLong(location: string): Promise<Location | null> {
   const geoCodeUrl = `${geocodingBaseUrl}?key=${MAPQUEST_API_KEY}&location=${location.toLowerCase()}`;
-  const { info: { statusCode }, results } = await getJsonResponse(geoCodeUrl, /* format= */'json', /* use_proxy= */true);
+  const { info: { statusCode }, results } = await getJsonResponse(geoCodeUrl, /* format= */'json', /* use_proxy= */true) as LatLongResponse;
   if (statusCode !== 0) {
     console.log(`Failed to retrieve lat/long data from ${location}. Status code: ${statusCode}`);
     return null;
@@ -197,4 +219,7 @@ export {
   getLatLong,
   Location,
   LocationBox,
+  RentBitsResponse,
+  ZillowProperty,
+  ZillowResponse,
 };

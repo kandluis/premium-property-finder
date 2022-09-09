@@ -1,37 +1,36 @@
 import classnames from 'classnames';
 import React, { useState, useEffect } from 'react';
 import {
-  DefaultFilter,
   FilterState,
   SortOrder,
 } from '../common';
 import { CUTTLY_API_KEY, urlShortnerEndpoint } from '../constants';
 import { get, getJsonResponse } from '../utilities';
 
-import * as style from './styles.module.css';
+import styles from './styles.module.css';
 
 type FilterProps = {
   updateFilter: (filter: FilterState) => void,
   filter: FilterState,
 };
 
-function Filter(props: FilterProps) {
-  const [form, setForm] = useState<FilterState>(props.filter);
+export default function Filter({ filter, updateFilter }: FilterProps) {
+  const [form, setForm] = useState<FilterState>(filter);
   const [shareUrl, setShareUrl] = useState<null | string>(null);
   const onShareClick = async () => {
     const url = `${urlShortnerEndpoint}?key=${CUTTLY_API_KEY}&short=${window.location.href}`;
     const json = await getJsonResponse(url, 'json', true);
     const shortUrl = get(json, 'url.shortLink') as string | null;
     if (shortUrl) {
-      navigator.clipboard.writeText(shortUrl);
+      await navigator.clipboard.writeText(shortUrl);
     }
     setShareUrl(shortUrl);
   };
-  const containerClasses = classnames('container', 'mb-1', style.container);
-  const formClasses = classnames('form-horizontal', style.form);
+  const containerClasses = classnames('container', 'mb-1', styles.container);
+  const formClasses = classnames('form-horizontal', styles.form);
   useEffect(() => {
-    props.updateFilter(form);
-  }, [form.includeLand, form.meetsRule, form.radius, form.rentOnly, form.newConstruction, form.sortOrder]);
+    updateFilter(form);
+  }, [form, updateFilter]);
   useEffect(() => {
     setShareUrl(null);
   }, [form]);
@@ -42,7 +41,7 @@ function Filter(props: FilterProps) {
         noValidate
         onSubmit={(event) => {
           event.preventDefault();
-          props.updateFilter(form);
+          updateFilter(form);
         }}
       >
         <p className="mb-1">Refine your results</p>
@@ -141,7 +140,9 @@ function Filter(props: FilterProps) {
                   className="form-select"
                   id="sortorder"
                   value={form.sortOrder}
-                  onChange={(event) => setForm({ ...form, sortOrder: event.target.value as SortOrder })}
+                  onChange={(event) => setForm(
+                    { ...form, sortOrder: event.target.value as SortOrder },
+                  )}
                 >
                   <option>Choose...</option>
                   {form.sortOrders.map((order) => (
@@ -240,12 +241,20 @@ function Filter(props: FilterProps) {
                   value={shareUrl}
                 />
               )
-              : <input type="button" value="Share" onClick={onShareClick} />}
+              : (
+                <input
+                  type="button"
+                  value="Share"
+                  onClick={() => {
+                    const _ = (async () => {
+                      await onShareClick();
+                    })();
+                  }}
+                />
+              )}
           </div>
         </div>
       </form>
     </div>
   );
 }
-
-export { Filter };

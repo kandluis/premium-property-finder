@@ -1,8 +1,8 @@
 import React from 'react';
 
-import { Filter } from '../components/Filter';
-import { Hero } from '../components/Hero';
-import { Listing } from '../components/Listing';
+import Filter from '../components/Filter';
+import Hero from '../components/Hero';
+import Listing from '../components/Listing';
 import {
   PropertyListingsProvider,
   PropertyListingsConsumer,
