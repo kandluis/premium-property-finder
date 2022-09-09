@@ -7,17 +7,27 @@ import {
 
 type Location = {
   lat: number;
-  lng: number
+  lng: number;
 };
 type LatLongResponse = {
   info: {
-    statuscode: number
+    statusCode: number;
   };
   results: [{
     locations: [{
-      latLng: Location
-    }]
-  }]
+      latLng: Location;
+    }];
+  }];
+};
+type ParseStringData = {
+  'SearchResults:searchresults' : {
+    response : [{
+      results: [
+      {
+        result: LatLongResponse;
+      }];
+    }];
+  };
 };
 
 /**
@@ -66,11 +76,8 @@ async function getJsonResponse(url: string, format: 'json' | 'xml' = 'json', use
     parsedData = await blob.json() as LatLongResponse;
   } else if (format === 'xml') {
     const parsedText = await blob.text();
-    parsedData = await parseStringPromise(parsedText);
-    parsedData = get(
-      parsedData,
-      'SearchResults:searchresults.response.0.results.0.result',
-    ) as LatLongResponse;
+    parsedData = await parseStringPromise(parsedText) as ParseStringData;
+    parsedData = parsedData['SearchResults:searchresults'].response[0].results[0].result;
   }
   try {
     sessionStorage.setItem(storageKey, JSON.stringify(parsedData));
@@ -89,16 +96,16 @@ async function getJsonResponse(url: string, format: 'json' | 'xml' = 'json', use
 */
 async function getLatLong(location: string): Promise<Location | null> {
   const geoCodeUrl = `${geocodingBaseUrl}?key=${MAPQUEST_API_KEY}&location=${location.toLowerCase()}`;
-  const { info: { statusCode } } = await getJsonResponse(geoCodeUrl, /* format= */'json', /* use_proxy= */true);
+  const { info: { statusCode }, results } = await getJsonResponse(geoCodeUrl, /* format= */'json', /* use_proxy= */true);
   if (statusCode !== 0) {
     console.log(`Failed to retrieve lat/long data from ${location}. Status code: ${statusCode}`);
     return null;
   }
-  if (latLongData.results.length === 0 || latLongData.results[0].locations.length === 0) {
+  if (results.length === 0 || results[0].locations.length === 0) {
     console.log(`Successful response with empty locations for location: ${location}`);
     return null;
   }
-  const primaryResult = latLongData.results[0].locations[0];
+  const primaryResult = results[0].locations[0];
   const { lat, lng } = primaryResult.latLng;
   return { lat: Number(lat), lng: Number(lng) };
 }
@@ -169,8 +176,8 @@ async function dbFetch(): Promise<Database> {
   return result;
 }
 
-function dbUpdate(db: Database): void {
-  fetch(`${dbEndpoint}/set`, {
+async function dbUpdate(db: Database): void {
+  await fetch(`${dbEndpoint}/set`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

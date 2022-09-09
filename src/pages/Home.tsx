@@ -1,6 +1,5 @@
 import React from 'react';
 
-import { RouteComponentProps } from 'react-router-dom';
 import { Filter } from '../components/Filter';
 import { Hero } from '../components/Hero';
 import { Listing } from '../components/Listing';
@@ -9,7 +8,7 @@ import {
   PropertyListingsConsumer,
 } from '../context/PropertyListingsProvider';
 
-function Home(props: RouteComponentProps): React.ReactElement {
+export default function Home(): React.ReactElement {
   return (
     <>
       <Hero />
@@ -30,8 +29,8 @@ function Home(props: RouteComponentProps): React.ReactElement {
                     : 'Loading results...'}
                 </h3>
                 <div className="columns">
-                  {filteredListings.map((property, idx) => (
-                    <Listing property={property} key={idx} />
+                  {filteredListings.map((property) => (
+                    <Listing property={property} key={property.zpid} />
                   ))}
                 </div>
               </>
@@ -42,5 +41,3 @@ function Home(props: RouteComponentProps): React.ReactElement {
     </>
   );
 }
-
-export { Home };
