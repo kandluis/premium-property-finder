@@ -49,7 +49,6 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
   const [localForm, setLocalForm] = useQueryParam('local', LocalParser);
 
   const onShareClick = async () => {
-    // TODO(luis): confirm this works.
     const urlReq = `${urlShortnerEndpoint}?key=${CUTTLY_API_KEY}&short=${encodeURIComponent(window.location.href)}`;
     const { url } = await getJsonResponse(urlReq, 'json', true) as CuttlyApiResponse;
     if (url.status === 7) {

@@ -1,4 +1,4 @@
-type SortOrder = 'ascendingprice' | 'descendingprice' | 'ascendingratio' | 'descendingratio' | '';
+type SortOrder = 'ascendingprice' | 'descendingprice' | 'ascendingratio' | 'descendingratio';
 
 interface Property {
   address?: string,
@@ -46,7 +46,7 @@ const DefaultLocalSettings: LocalFilterSettings = {
   rentOnly: false,
   newConstruction: false,
   includeLand: false,
-  sortOrder: '', // TODO: can we apply a default?
+  sortOrder: 'Descending Ratio',
   sortOrders: ['Ascending Price', 'Descending Price', 'Ascending Ratio', 'Descending Ratio'],
 };
 

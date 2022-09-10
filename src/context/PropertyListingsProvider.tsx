@@ -211,7 +211,6 @@ async function fetchProperties(
   return propertyListings
     .map((item) => parseResult(item))
     .filter((item) => (item.zpid && item.price && item.price > 0));
-  // TODO(luis): return propertyListings;
 }
 
 /**
