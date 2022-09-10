@@ -25,6 +25,7 @@
     "lodash.debounce": "^4.0.8",
     "msgpack-lite": "^0.1.26",
     "p-throttle": "^5.0.0",
+    "push-dir": "^0.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.3.0",
