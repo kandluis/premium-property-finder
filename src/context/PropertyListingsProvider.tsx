@@ -1,16 +1,14 @@
 import accounting from 'accounting';
 import debounce from 'lodash.debounce';
 import pThrottle from 'p-throttle';
-import React, { useState, useMemo } from 'react';
-import { useQueryParam } from 'use-query-params';
+import React, { useMemo, useCallback, useState } from 'react';
 import {
-  defaultRadiusSearch,
   rentBitsApiBaseUrl,
   zillowBaseUrl,
 } from '../constants';
 import {
-  DefaultFilter,
-  FilterState,
+  LocalFilterSettings,
+  FetchPropertiesRequest,
   Property,
   sortFn,
 } from '../common';
@@ -183,9 +181,14 @@ function parseResult(item: ZillowProperty): Property {
 
   @returns The located properties.
 */
-async function fetchProperties(location: string, radius: number, min: number | null, max: number)
+async function fetchProperties(
+  geoLocation: string,
+  radius: number,
+  priceFrom: number,
+  priceMost: number,
+)
 : Promise<Array<Property>> {
-  const coords = await getLatLong(location);
+  const coords = await getLatLong(geoLocation);
   if (coords === null) {
     return [];
   }
@@ -197,8 +200,8 @@ async function fetchProperties(location: string, radius: number, min: number | n
     mapBounds: boundingBox(lat, lng, radius * 2),
     filterState: {
       price: {
-        min: min || 0,
-        max,
+        min: priceFrom,
+        max: priceMost,
       },
     },
   };
@@ -208,76 +211,27 @@ async function fetchProperties(location: string, radius: number, min: number | n
   return propertyListings
     .map((item) => parseResult(item))
     .filter((item) => (item.zpid && item.price && item.price > 0));
-  // return propertyListings;
+  // TODO(luis): return propertyListings;
 }
 
-interface PropertyListingsState {
-  filter: FilterState,
-  filteredListings: Array<Property>,
-  propertyListings: Array<Property>,
-  updateFilter: (filter: FilterState) => void,
-  initialLoad: boolean,
-  loading: boolean,
-}
-const DefaultState: PropertyListingsState = {
-  filter: DefaultFilter,
-  filteredListings: [],
-  propertyListings: [],
-  updateFilter: (_filter: FilterState) => {
-    // no-op filter
-  },
-  initialLoad: true,
-  loading: false,
-};
+/**
+  Filters the given properties by the provided filter.
 
-const PropertyListingsContext = React.createContext(DefaultState);
+  @param all - A complete list of all properties currently available.
+  @param settings - The locally-filterable options to use for filtering.
 
-const FilterParams = {
-  encode(value: FilterState): string {
-    return btoa(JSON.stringify(value, undefined, 1));
-  },
-  decode(value: string | (string | null)[] | null | undefined): FilterState {
-    if (!value || Array.isArray(value)) {
-      return DefaultState.filter;
-    }
-    return JSON.parse(atob(value)) as FilterState;
-  },
-};
-
-async function filterAndFetchProperties(
-  propertyListings: Property[],
-  prevFilter: FilterState,
-  filter: FilterState,
-): Promise<{ propertyListings: Property[]; filteredListings: Property[] }> {
-  const prevGeoLocation = prevFilter.geoLocation;
-  const prevRadius = prevFilter.radius;
+  @returns The properties matching the filters.
+*/
+function filterProperties(all: [Property], settings: LocalFilterSettings): [Property] {
+  let filteredListings = [...all];
   const {
-    geoLocation,
-    includeLand,
     meetsRule,
-    priceFrom,
-    priceMost,
-    radius,
     rentOnly,
     newConstruction,
+    includeLand,
     sortOrder,
-  } = filter;
-  // New location so we need to fetch new property listings.
-  let allListings = propertyListings;
-  if (prevGeoLocation !== geoLocation || prevRadius !== radius) {
-    // eslint-disable-next-line max-len
-    const properties = await fetchProperties(geoLocation, (radius) || defaultRadiusSearch, priceFrom, priceMost);
-    const newListings = await attachRentestimates(properties);
-    if (newListings) {
-      allListings = newListings;
-    }
-  }
-  let filteredListings = allListings;
-  if (priceFrom) {
-    filteredListings = filteredListings.filter(
-      (item) => item.price && item.price >= priceFrom,
-    );
-  }
+  } = settings;
+
   if (rentOnly) {
     filteredListings = filteredListings.filter(
       (item) => item.rentzestimate && item.rentzestimate > 0,
@@ -311,39 +265,76 @@ async function filterAndFetchProperties(
   if (sortOrder !== '') {
     filteredListings = filteredListings.sort(sortFn(sortOrder));
   }
-  return { allListings, filteredListings };
+  return filteredListings;
 }
 
-interface PropertyListingProps {
+async function filterAndFetchProperties(
+  {
+    geoLocation, radius, priceFrom, priceMost,
+  }: FetchPropertiesRequest,
+): Promise<[Property]> {
+  const properties = await fetchProperties(
+    geoLocation,
+    radius,
+    priceFrom,
+    priceMost,
+  );
+  const withRents = await attachRentestimates(properties);
+  return withRents.filter(
+    (item) => !item.price || (item.price && item.price >= priceFrom),
+  );
+}
+
+interface ProviderProps {
   children: React.ReactNode;
 }
-
-export function PropertyListingsProvider({ children }: PropertyListingProps) {
-  const [state, setState] = useState(DefaultState);
-  const [filterParams, setFilterParams] = useQueryParam('filter', FilterParams);
-  const applyFilter = async (filter: FilterState): Promise<void> => {
-    // Loading!
-    setState({
-      ...state, initialLoad: false, loading: true, filteredListings: [],
-    });
-    // eslint-disable-next-line max-len
-    const newProperties = await filterAndFetchProperties(state.propertyListings, state.filter, filter);
-    if (filter !== state.filter) {
-      setFilterParams(filter, 'replace');
-    }
-    setState({ ...state, filter, ...newProperties });
-  };
-  const debouncedFilter = debounce(applyFilter, 500);
-  let { filter } = state;
-  if (state.initialLoad && filterParams) {
-    filter = filterParams;
-    const _ = debouncedFilter(filter);
+const ContextState = {
+  loading: false,
+  filteredProperties: [] as [Property],
+  localUpdate: (_: LocalFilterSettings) => {
+    // no-op
+  },
+  remoteUpdate: (_: FetchPropertiesRequest) => {
+    // no-op
   }
+  ,
+};
+const ProviderDefaultState = {
+  loading: false,
+  allProperties: [],
+};
+const PropertyListingsContext = React.createContext(ContextState);
+
+export function PropertyListingsProvider({ children }: ProviderProps) {
+  const [filteredProperties, setFilteredProperties] = useState<[Property]>([]);
+  const [state, setState] = useState(ProviderDefaultState);
+
+  const localUpdate = useCallback((settings: LocalFilterSettings): void => {
+    setFilteredProperties(filterProperties(state.allProperties, settings));
+  }, [state.allProperties]);
+
+  const remoteUpdate = useMemo(() => {
+    const fetchFn = async (req: FetchPropertiesRequest): Promise<void> => {
+      setState({
+        allProperties: [],
+        loading: true,
+      });
+      // eslint-disable-next-line max-len
+      const allProperties = await filterAndFetchProperties(req);
+      setState({
+        allProperties,
+        loading: false,
+      });
+    };
+    // Fetch gits triggered on any change. Give 1 sec between keys.
+    return debounce(fetchFn, 1000);
+  }, []);
   const propertyListingsValue = useMemo(() => ({
-    ...state,
-    filter,
-    updateFilter: debouncedFilter,
-  }), [state, filter, debouncedFilter]);
+    loading: state.loading,
+    filteredProperties,
+    localUpdate,
+    remoteUpdate,
+  }), [state.loading, filteredProperties, localUpdate, remoteUpdate]);
   return (
     <PropertyListingsContext.Provider value={propertyListingsValue}>
       {children}

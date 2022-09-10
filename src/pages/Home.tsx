@@ -16,20 +16,20 @@ export default function Home(): React.ReactElement {
         <PropertyListingsProvider>
           <PropertyListingsConsumer>
             {({
-              loading, filter, filteredListings, updateFilter,
+              loading, filteredProperties, remoteUpdate, localUpdate,
             }) => (
               <>
                 <Filter
-                  updateFilter={updateFilter}
-                  filter={filter}
+                  localUpdate={localUpdate}
+                  remoteUpdate={remoteUpdate}
                 />
                 <h3>
                   {!loading
-                    ? `Num Results: ${filteredListings.length}`
+                    ? `Num Results: ${filteredProperties.length}`
                     : 'Loading results...'}
                 </h3>
                 <div className="columns">
-                  {filteredListings.map((property) => (
+                  {filteredProperties.map((property) => (
                     <Listing property={property} key={property.zpid} />
                   ))}
                 </div>

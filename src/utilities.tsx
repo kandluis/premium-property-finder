@@ -45,18 +45,13 @@ interface RentBitsResponse {
     price: string;
   }];
 }
-
-/**
-  Utility function to extract elements from an object.
-
-  @param object - The javascript object from which to extra an element
-  @param path - The path to find
-
-  @returns The extract object at the path, or null if the path is undefined
-*/
-function get(object: unknown, path: string): unknown | null {
-  return path.split('.').reduce((xs, x) => ((xs != null && xs[x] != null) ? xs[x] : null), object);
+interface CuttlyApiResponse {
+  url: {
+    shortLink: string;
+    status: number;
+  };
 }
+type AppResponse = LatLongResponse | ZillowResponse | RentBitsResponse | CuttlyApiResponse;
 
 /**
   Fetches the JSON reponse at the specified URL.
@@ -76,7 +71,7 @@ async function getJsonResponse(
   format: 'json' | 'xml' = 'json',
   useProxy = false,
   options?: RequestInit = {},
-) : Promise<LatLongResponse | ZillowResponse | RentBitsResponse> {
+) : Promise<AppResponse> {
   let fullUrl = url;
   if (useProxy) {
     fullUrl = `${proxyUrl}/${url}`;
@@ -84,7 +79,7 @@ async function getJsonResponse(
   const storageKey = `getJsonReponse(${fullUrl})`;
   const data = sessionStorage.getItem(storageKey);
   if (data != null) {
-    return JSON.parse(data) as LatLongResponse | ZillowResponse | RentBitsResponse;
+    return JSON.parse(data) as AppResponse;
   }
   const blob = await fetch(fullUrl, {
     ...options,
@@ -94,7 +89,7 @@ async function getJsonResponse(
   });
   let parsedData = null;
   if (format === 'json') {
-    parsedData = await blob.json() as LatLongResponse | ZillowResponse | RentBitsResponse;
+    parsedData = await blob.json() as AppResponse;
   } else if (format === 'xml') {
     const parsedText = await blob.text();
     parsedData = await parseStringPromise(parsedText) as ParseStringData;
@@ -210,10 +205,10 @@ async function dbUpdate(db: Database): void {
 
 export {
   boundingBox,
+  CuttlyApiResponse,
   Database,
   dbFetch,
   dbUpdate,
-  get,
   getJsonResponse,
   getLatLong,
   Location,

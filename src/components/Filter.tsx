@@ -1,39 +1,85 @@
 import classnames from 'classnames';
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useQueryParam } from 'use-query-params';
 import {
-  FilterState,
+  DefaultFetchPropertiesRequest,
+  DefaultLocalSettings,
+  FetchPropertiesRequest,
+  LocalFilterSettings,
   SortOrder,
 } from '../common';
 import { CUTTLY_API_KEY, urlShortnerEndpoint } from '../constants';
-import { get, getJsonResponse } from '../utilities';
+import { CuttlyApiResponse, getJsonResponse } from '../utilities';
 
 import styles from './styles.module.css';
 
 type FilterProps = {
-  updateFilter: (filter: FilterState) => void,
-  filter: FilterState,
+  // Callback to update local state.
+  localUpdate: (localSettings: LocalFilterSettings) => void,
+  // Callback to update remote state (need to fetch new properties).
+  remoteUpdate: (remoteSettings: FetchPropertiesRequest) => void,
 };
 
-export default function Filter({ filter, updateFilter }: FilterProps) {
-  const [form, setForm] = useState<FilterState>(filter);
-  const [shareUrl, setShareUrl] = useState<null | string>(null);
-  const onShareClick = async () => {
-    const url = `${urlShortnerEndpoint}?key=${CUTTLY_API_KEY}&short=${window.location.href}`;
-    const json = await getJsonResponse(url, 'json', true);
-    const shortUrl = get(json, 'url.shortLink') as string | null;
-    if (shortUrl) {
-      await navigator.clipboard.writeText(shortUrl);
+const RemoteParser = {
+  encode(value: FetchPropertiesRequest | null | undefined): string {
+    return btoa(JSON.stringify(value, undefined, 1));
+  },
+  decode(value: string | (string | null)[] | null | undefined): FetchPropertiesRequest {
+    if (!value || Array.isArray(value)) {
+      return DefaultFetchPropertiesRequest;
     }
-    setShareUrl(shortUrl);
+    return JSON.parse(atob(value)) as FetchPropertiesRequest;
+  },
+};
+const LocalParser = {
+  encode(value: LocalFilterSettings | null | undefined) {
+    return btoa(JSON.stringify(value, undefined, 1));
+  },
+  decode(value: string | (string | null)[] | null | undefined): LocalFilterSettings {
+    if (!value || Array.isArray(value)) {
+      return DefaultLocalSettings;
+    }
+    return JSON.parse(atob(value)) as LocalFilterSettings;
+  },
+};
+
+export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
+  const [shareUrl, setShareUrl] = useState<null | string>(null);
+  const [remoteForm, setRemoteForm] = useQueryParam('remote', RemoteParser);
+  const [localForm, setLocalForm] = useQueryParam('local', LocalParser);
+  const didMountRef = useRef(false);
+
+  const onShareClick = async () => {
+    // TODO(luis): confirm this works.
+    const urlReq = `${urlShortnerEndpoint}?key=${CUTTLY_API_KEY}&short=${encodeURIComponent(window.location.href)}`;
+    const { url } = await getJsonResponse(urlReq, 'json', true) as CuttlyApiResponse;
+    if (url.status === 7) {
+      await navigator.clipboard.writeText(url.shortLink);
+      setShareUrl(url.shortLink);
+    }
   };
-  const containerClasses = classnames('container', 'mb-1', styles.container);
-  const formClasses = classnames('form-horizontal', styles.form);
+
+  // When form is updated, make appropriate requests.
   useEffect(() => {
-    updateFilter(form);
-  }, [form, updateFilter]);
+    if (didMountRef.current || remoteForm !== DefaultFetchPropertiesRequest) {
+      remoteUpdate(remoteForm);
+    }
+  }, [remoteForm, remoteUpdate]);
+  useEffect(() => {
+    if (didMountRef.current || localForm !== DefaultLocalSettings) {
+      localUpdate(localForm);
+    }
+  }, [localForm, localUpdate]);
+
+  // Also reset sharing link when anything in the form changes.
   useEffect(() => {
     setShareUrl(null);
-  }, [form]);
+    // MUST GO LAST!
+    didMountRef.current = true;
+  }, [remoteForm, localForm]);
+
+  const containerClasses = classnames('container', 'mb-1', styles.container);
+  const formClasses = classnames('form-horizontal', styles.form);
   return (
     <div className={containerClasses}>
       <form
@@ -41,7 +87,7 @@ export default function Filter({ filter, updateFilter }: FilterProps) {
         noValidate
         onSubmit={(event) => {
           event.preventDefault();
-          updateFilter(form);
+          remoteUpdate(remoteForm);
         }}
       >
         <p className="mb-1">Refine your results</p>
@@ -59,8 +105,11 @@ export default function Filter({ filter, updateFilter }: FilterProps) {
                   type="text"
                   id="geo-location"
                   placeholder="Nacogdoches, TX"
-                  value={form.geoLocation}
-                  onChange={(event) => setForm({ ...form, geoLocation: event.target.value })}
+                  value={remoteForm.geoLocation}
+                  onChange={(event) => setRemoteForm((latestForm: FetchPropertiesRequest) => ({
+                    ...latestForm,
+                    geoLocation: event.target.value,
+                  }))}
                 />
               </div>
             </div>
@@ -80,8 +129,11 @@ export default function Filter({ filter, updateFilter }: FilterProps) {
                   type="number"
                   id="radius"
                   placeholder="15"
-                  value={form.radius || ''}
-                  onChange={(event) => setForm({ ...form, radius: Number(event.target.value) })}
+                  value={remoteForm.radius}
+                  onChange={(event) => setRemoteForm((latestForm: FetchPropertiesRequest) => ({
+                    ...latestForm,
+                    radius: Number(event.target.value),
+                  }))}
                 />
               </div>
             </div>
@@ -101,8 +153,11 @@ export default function Filter({ filter, updateFilter }: FilterProps) {
                   type="number"
                   id="price-from"
                   placeholder="£1,000,000"
-                  value={form.priceFrom || ''}
-                  onChange={(event) => setForm({ ...form, priceFrom: Number(event.target.value) })}
+                  value={remoteForm.priceFrom || ''}
+                  onChange={(event) => setRemoteForm((latestForm: FetchPropertiesRequest) => ({
+                    ...latestForm,
+                    priceFrom: Number(event.target.value),
+                  }))}
                 />
               </div>
             </div>
@@ -122,8 +177,11 @@ export default function Filter({ filter, updateFilter }: FilterProps) {
                   type="number"
                   id="price-most"
                   placeholder="£1,000,000"
-                  value={form.priceMost || ''}
-                  onChange={(event) => setForm({ ...form, priceMost: Number(event.target.value) })}
+                  value={remoteForm.priceMost || ''}
+                  onChange={(event) => setRemoteForm((latestForm: FetchPropertiesRequest) => ({
+                    ...latestForm,
+                    priceMost: Number(event.target.value),
+                  }))}
                 />
               </div>
             </div>
@@ -139,13 +197,14 @@ export default function Filter({ filter, updateFilter }: FilterProps) {
                 <select
                   className="form-select"
                   id="sortorder"
-                  value={form.sortOrder}
-                  onChange={(event) => setForm(
-                    { ...form, sortOrder: event.target.value as SortOrder },
-                  )}
+                  value={localForm.sortOrder}
+                  onChange={(event) => setLocalForm((latestForm: LocalFilterSettings) => ({
+                    ...latestForm,
+                    sortOrder: event.target.value as SortOrder,
+                  }))}
                 >
                   <option>Choose...</option>
-                  {form.sortOrders.map((order) => (
+                  {localForm.sortOrders.map((order) => (
                     <option key={order} value={order.replace(' ', '').toLowerCase()}>
                       {order}
                     </option>
@@ -170,8 +229,11 @@ export default function Filter({ filter, updateFilter }: FilterProps) {
                   step="0.1"
                   id="meets-rule"
                   placeholder="1.5"
-                  value={form.meetsRule || ''}
-                  onChange={(event) => setForm({ ...form, meetsRule: Number(event.target.value) })}
+                  value={localForm.meetsRule || ''}
+                  onChange={(event) => setLocalForm((latestForm: LocalFilterSettings) => ({
+                    ...latestForm,
+                    meetsRule: Number(event.target.value),
+                  }))}
                 />
               </div>
             </div>
@@ -187,8 +249,11 @@ export default function Filter({ filter, updateFilter }: FilterProps) {
                 <input
                   type="checkbox"
                   id="only-rent"
-                  checked={form.rentOnly}
-                  onChange={(event) => setForm({ ...form, rentOnly: event.target.checked })}
+                  checked={localForm.rentOnly}
+                  onChange={(event) => setLocalForm((latestForm: LocalFilterSettings) => ({
+                    ...latestForm,
+                    rentOnly: event.target.checked,
+                  }))}
                 />
               </div>
             </div>
@@ -204,8 +269,11 @@ export default function Filter({ filter, updateFilter }: FilterProps) {
                 <input
                   type="checkbox"
                   id="only-new-construction"
-                  checked={form.newConstruction}
-                  onChange={(event) => setForm({ ...form, newConstruction: event.target.checked })}
+                  checked={localForm.newConstruction}
+                  onChange={(event) => setLocalForm((latestForm: LocalFilterSettings) => ({
+                    ...latestForm,
+                    newConstruction: event.target.checked,
+                  }))}
                 />
               </div>
             </div>
@@ -221,8 +289,11 @@ export default function Filter({ filter, updateFilter }: FilterProps) {
                 <input
                   type="checkbox"
                   id="only-rent"
-                  checked={form.includeLand}
-                  onChange={(event) => setForm({ ...form, includeLand: event.target.checked })}
+                  checked={localForm.includeLand}
+                  onChange={(event) => setLocalForm((latestForm: LocalFilterSettings) => ({
+                    ...latestForm,
+                    includeLand: event.target.checked,
+                  }))}
                 />
               </div>
             </div>

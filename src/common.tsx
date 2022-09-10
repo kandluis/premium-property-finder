@@ -18,31 +18,48 @@ interface Property {
   type?: string,
 }
 
-interface FilterState {
-  geoLocation: string,
-  meetsRule: number | null,
-  priceFrom: number | null,
-  priceMost: number,
-  radius: number | null,
-  rentOnly: boolean,
-  newConstruction: boolean,
-  includeLand: boolean,
-  sortOrder: SortOrder,
-
-  readonly sortOrders: Array<string>,
+interface FetchPropertiesRequest {
+  geoLocation: string;
+  radius: number;
+  priceFrom: number;
+  priceMost: number;
 }
-
-const DefaultFilter: FilterState = {
+const DefaultFetchPropertiesRequest: FetchPropertiesRequest = {
   geoLocation: '',
+  radius: 8,
+  priceFrom: 0,
+  priceMost: 250000,
+  sortOrders: ['Ascending Price', 'Descending Price', 'Ascending Ratio', 'Descending Ratio'],
+};
+
+interface LocalFilterSettings {
+  meetsRule: number | null;
+  rentOnly: boolean;
+  newConstruction: boolean;
+  includeLand: boolean;
+  sortOrder: SortOrder;
+
+  readonly sortOrders: Array<string>;
+}
+const DefaultLocalSettings: LocalFilterSettings = {
   meetsRule: null,
-  priceFrom: null,
-  priceMost: 200000,
-  radius: null,
   rentOnly: false,
   newConstruction: false,
   includeLand: false,
-  sortOrder: '',
+  sortOrder: '', // TODO: can we apply a default?
   sortOrders: ['Ascending Price', 'Descending Price', 'Ascending Ratio', 'Descending Ratio'],
+};
+
+interface FilterState {
+  // Changes to these options requires fetching new data.
+  remote: FetchPropertiesRequest;
+  // Changes here requires only local updates.
+  local: LocalFilterSettings;
+}
+
+const DefaultFilter: FilterState = {
+  remote: DefaultFetchPropertiesRequest,
+  local: DefaultLocalSettings,
 };
 
 /**
@@ -84,7 +101,11 @@ function sortFn(order: SortOrder): (_1: Property, _2: Property) => number {
 }
 
 export {
+  DefaultFetchPropertiesRequest,
   DefaultFilter,
+  DefaultLocalSettings,
+  LocalFilterSettings,
+  FetchPropertiesRequest,
   FilterState,
   Property,
   sortFn,

@@ -13,5 +13,3 @@ export const MAPQUEST_API_KEY: string = process.env.REACT_APP_MAPQUEST_API_KEY |
 export const ZILLOW_API_KEY: string = process.env.REACT_APP_ZILLOW_API_KEY || '';
 export const DB_SECRET: string = process.env.REACT_APP_SECRET || '';
 export const CUTTLY_API_KEY: string = process.env.REACT_APP_CUTTLY || '';
-
-export const defaultRadiusSearch = 8;
