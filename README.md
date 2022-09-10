@@ -30,20 +30,20 @@ Update the constants in `src/constants.tsx` to match the location of your backen
 
 Run the following commands:
 
-```
+```sh
 npm run build
 npm run push-gh-pages
 ```
 
 # Heroku Set-up
 Make sure you install the heroku CLI. You can add the remote branch to git using:
-```
+```sh
 git remote add heroku https://git.heroku.com/property-server.git
 ```
 
 If this is a fresh pull, you'll also need to add the following into `server/.env`:
 
-```
+```sh
 REDISCLOUD_URL=<TODO>
 DATABASE_URL=<TODO>
 SECRET=<TODO>
