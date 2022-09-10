@@ -8,7 +8,7 @@ import Home from './pages/Home';
 
 const rootElement = createRoot(document.getElementById('root'));
 rootElement.render(
-  <BrowserRouter>
+  <BrowserRouter basename={process.env.PUBLIC_URL}>
     <QueryParamProvider adapter={ReactRouter6Adapter}>
       <Routes>
         <Route path="/" element={<Home />} />
