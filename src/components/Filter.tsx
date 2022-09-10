@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQueryParam } from 'use-query-params';
 import {
   DefaultFetchPropertiesRequest,
@@ -47,7 +47,6 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
   const [shareUrl, setShareUrl] = useState<null | string>(null);
   const [remoteForm, setRemoteForm] = useQueryParam('remote', RemoteParser);
   const [localForm, setLocalForm] = useQueryParam('local', LocalParser);
-  const didMountRef = useRef(false);
 
   const onShareClick = async () => {
     // TODO(luis): confirm this works.
@@ -61,21 +60,15 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
 
   // When form is updated, make appropriate requests.
   useEffect(() => {
-    if (didMountRef.current || remoteForm !== DefaultFetchPropertiesRequest) {
-      remoteUpdate(remoteForm);
-    }
+    remoteUpdate(remoteForm);
   }, [remoteForm, remoteUpdate]);
   useEffect(() => {
-    if (didMountRef.current || localForm !== DefaultLocalSettings) {
-      localUpdate(localForm);
-    }
+    localUpdate(localForm);
   }, [localForm, localUpdate]);
 
   // Also reset sharing link when anything in the form changes.
   useEffect(() => {
     setShareUrl(null);
-    // MUST GO LAST!
-    didMountRef.current = true;
   }, [remoteForm, localForm]);
 
   const containerClasses = classnames('container', 'mb-1', styles.container);
