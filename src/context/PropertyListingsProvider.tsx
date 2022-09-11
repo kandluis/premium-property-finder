@@ -19,6 +19,7 @@ import {
   dbUpdate,
   getJsonResponse,
   getLatLong,
+  HDPHomeInfo,
   Location,
   RentBitsResponse,
   ZillowProperty,
@@ -95,7 +96,7 @@ async function fetchRentalBitsEstimates(properties: Array<Property>): Promise<Da
     const estimate = rents[prop.zipCode];
     newDB[prop.zpid] = {
       rentzestimate: estimate,
-      zestimate: 0,
+      zestimate: prop.zestimate || 0,
     };
   });
   return newDB;
@@ -108,13 +109,18 @@ async function fetchRentalBitsEstimates(properties: Array<Property>): Promise<Da
 
   @returns: An array of properties with attached rental estimates.
 */
-async function attachRentestimates(properties: Array<Property>): Promise<Array<Property>> {
+async function attachRentestimates(properties: Array<Property>): Promise<Property[]> {
   let rentalDB = await dbFetch();
   // Filter out any properties we won't even look at.
-  // eg. no address/zip or no price.
   const newProperties = properties.filter(
-    (item: Property) => item.zpid && item.address && item.zipCode && item.price
-      && !(item.zpid in rentalDB),
+    (item: Property) => (
+      // Properties we can identify and compute ratio.
+      item.zpid && item.address && item.zipCode && item.price
+      // Properties not already in our database (eg, we don't refresh estimates)
+      && !(item.zpid in rentalDB)
+      // Properties that don't already have rentzestimates.
+      && (!item.rentzestimate)
+    ),
   );
   if (newProperties.length > 0) {
     const rentBitsEstimates = await fetchRentalBitsEstimates(newProperties);
@@ -125,9 +131,44 @@ async function attachRentestimates(properties: Array<Property>): Promise<Array<P
     if (!property.zpid) {
       return property;
     }
-    return { ...property, ...rentalDB[property.zpid] as Property };
+    return { ...property, ...rentalDB[property.zpid] };
   });
   return mergedProperties;
+}
+
+/**
+  Adds a single HDP property result fetched from the Zillow API for an area.
+
+  @param parsedItem - The partially parsed item to which we add HDP data.
+  @param home - The HDP home information object.
+ */
+function addHDPResults(parsedItem: Property, home: HDPHomeInfo): void {
+  const local = parsedItem;
+  local.baths = home.bathrooms;
+  local.beds = home.bedrooms;
+  local.city = home.city;
+  local.homeType = home.homeType;
+  local.livingArea = home.livingArea;
+  local.price = home.price;
+  local.rentzestimate = home.rentZestimate;
+  local.state = home.state;
+  local.zestimate = home.zestimate;
+  local.zipCode = Number(home.zipcode);
+  local.zpid = home.zpid;
+}
+// Adds same fields as above function but when we don't have HDP data.
+function addResults(parsedItem: Property, item: ZillowProperty): void {
+  const local = parsedItem;
+  if (item.baths || item.minBaths) {
+    local.baths = Number(item.baths || item.minBaths);
+  }
+  if (item.beds || item.minBeds) {
+    local.beds = Number(item.beds || item.minBeds);
+  }
+  local.price = accounting.unformat(item.price.replace('.', '').replace(',', ''));
+  if (item.zpid) {
+    local.zpid = Number(item.zpid);
+  }
 }
 
 /**
@@ -138,34 +179,33 @@ async function attachRentestimates(properties: Array<Property>): Promise<Array<P
   @returns The parsed Property object.
  */
 function parseResult(item: ZillowProperty): Property {
-  const parsedItem: Property = { ...item };
-  if (item.zpid) {
-    parsedItem.zpid = Number(item.zpid);
+  const parsedItem: Property = {
+    address: item.address,
+    type: item.listingType,
+    detailUrl: item.detailUrl,
+    imgSrc: item.imgSrc,
+    statusText: item.statusText,
+    price: 0,
+  };
+  // /something/address-seperated-by-city-state-zip.
+  const addressComponents = item.detailUrl.split('/')[2].split('-');
+  // These are best-effort. If we have more data, it gets replaced later.
+  parsedItem.zipCode = Number(addressComponents[addressComponents.length - 1]);
+  parsedItem.state = addressComponents[addressComponents.length - 2];
+  // This is not always valid. If a city is two words, we'll only get the
+  // last one! :o
+  parsedItem.city = addressComponents[addressComponents.length - 3];
+  parsedItem.address = addressComponents.slice(0, addressComponents.length - 3).join(' ');
+  if (item.area || item.minArea) {
+    parsedItem.area = Number(item.area || item.minArea);
   }
-  if (item.price) {
-    parsedItem.price = accounting.unformat(item.price.replace('.', '').replace(',', ''));
+  if (item.lotAreaString) {
+    parsedItem.lotArea = Number(item.lotAreaString);
   }
-  if (item.area) {
-    parsedItem.area = Number(item.area);
-  }
-  if (item.baths) {
-    parsedItem.baths = Number(item.baths);
-  }
-  if (item.beds) {
-    parsedItem.beds = Number(item.beds);
-  }
-  if (item.address && item.detailUrl) {
-    // /something/address-seperated-by-city-state-zip.
-    const addressComponents = item.detailUrl.split('/')[2].split('-');
-    parsedItem.zipCode = Number(addressComponents[addressComponents.length - 1]);
-    parsedItem.state = addressComponents[addressComponents.length - 2];
-    // This is not always valid. If a city is two words, we'll only get the
-    // last one! :o
-    parsedItem.city = addressComponents[addressComponents.length - 3];
-    parsedItem.address = addressComponents.slice(0, addressComponents.length - 3).join(' ');
-  }
-  if (item.listingType) {
-    parsedItem.type = item.listingType;
+  if (item.hdpData) {
+    addHDPResults(parsedItem, item.hdpData.homeInfo);
+  } else {
+    addResults(parsedItem, item);
   }
   return parsedItem;
 }
@@ -224,10 +264,11 @@ async function fetchProperties(
 function filterProperties(all: Property[], settings: LocalFilterSettings): Property[] {
   let filteredListings = [...all];
   const {
-    meetsRule,
-    rentOnly,
-    newConstruction,
+    homeType,
     includeLand,
+    meetsRule,
+    newConstruction,
+    rentOnly,
     sortOrder,
   } = settings;
 
@@ -260,6 +301,9 @@ function filterProperties(all: Property[], settings: LocalFilterSettings): Prope
       const ratio = 100 * (item.rentzestimate / item.price);
       return ratio >= meetsRule;
     });
+  }
+  if (homeType !== 'ALL') {
+    filteredListings = filteredListings.filter((item) => item.homeType === homeType);
   }
   filteredListings = filteredListings.sort(sortFn(sortOrder));
   return filteredListings;

@@ -1,5 +1,6 @@
 import { computeOffset, LatLng } from 'spherical-geometry-js';
 import { parseStringPromise } from 'xml2js';
+import { HomeType } from './common';
 import {
   dbEndpoint, DB_SECRET, proxyUrl, geocodingBaseUrl, MAPQUEST_API_KEY,
 } from './constants';
@@ -27,15 +28,132 @@ type ParseStringData = {
     }[];
   };
 };
+type HDPHomeInfo = {
+  bathrooms: number;
+  bedrooms: number;
+  city: string;
+  country: string;
+  currency: string;
+  daysOnZillow: number;
+  homeStatus: 'FOR_SALE';
+  homeStatusForHDP: 'FOR_SALE';
+  homeType: HomeType;
+  isFeatured: boolean;
+  isNonOwnerOccupied: boolean;
+  isPreforeclosureAuction: boolean;
+  isPremierBuilder: boolean;
+  isUnmappable: boolean;
+  isZillowOwned: boolean;
+  latitude: number;
+  listing_sub_type: {
+    is_FSB:boolean;
+  };
+  livingArea: number;
+  longitude: number;
+  price: number;
+  priceForHDP: number;
+  rentZestimate: number;
+  shouldHighlight: boolean;
+  state: string;
+  unit: string;
+  zestimate: number;
+  zipcode: string;
+  zpid: number;
+};
 
 interface ZillowProperty {
-  [propName: string]: string;
+  // Fields that are always present!
+  address: string;
+  detailUrl: string;
+  has3DModel: boolean;
+  hasAdditionalAttributions: boolean;
+  hasImage: boolean;
+  imgSrc: string;
+  isFavorite: boolean;
+  isFeaturedListing: boolean;
+  latLong: {
+    latitud: number,
+    longitud: number
+  };
+  listingType: string;
+  price: string;
+  statusText: string;
+  statusType: string;
+  variableData: object;
+
+  // Optional fields.
+  area?: number;
+  availabilityDate?: string | null;
+  badgeInfo?: string | null;
+  baths?: number;
+  beds?: number;
+  buildingId?: string;
+  canSaveBuilding?: boolean;
+  communityName?: string;
+  hasVideo?: boolean;
+  hdpData?: {
+    homeInfo: HDPHomeInfo;
+  };
+  isBuilding?: boolean;
+  isCdpResult?: boolean;
+  isHomeRec?: boolean;
+  isPropertyResultCDP: boolean;
+  isUserClaimingOwner?: boolean;
+  isUserConfirmedClaim?: boolean;
+  lotAreaString?: string;
+  lotId?: string;
+  minArea?: number;
+  minBaths?: number;
+  minBeds?: number;
+  pgapt?: string;
+  priceLabel?: string;
+  sgapt?: string;
+  style?: string,
+  unitCount?: number;
+  visited?: boolean;
+  zpid?: string;
+}
+interface categoryTotal {
+  totalResultCount: number;
 }
 interface ZillowResponse {
   cat1: {
+    homeRecCount: number;
+    showForYouContent: number;
     searchResults: {
       mapResults: ZillowProperty[];
     };
+  };
+  categoryTotals: {
+    cat1: categoryTotal;
+    cat2: categoryTotal;
+  };
+  mapState: {
+    customRegionPolygonWkt: null;
+    isCurrentLocationSearch: boolean;
+    schoolPolygonWkt: null;
+    userPosition: Location;
+  };
+  regionState: {
+    regionInfo: string[];
+  };
+  searchPageSeoObject: {
+    baseUrl: string;
+    metaDescription: string;
+    windowTitle: string;
+  };
+  user: {
+    guid: string;
+    hasHousingConnectorPermission: boolean;
+    isBot: boolean;
+    isLoggedIn: boolean;
+    personalizedSearchGaDataTag: string | null;
+    personalizedSearchTraceID: string;
+    savedHomesCount: number,
+    savedSearchCount: number;
+    searchPageRenderedCount: number;
+    userSpecializedSEORegion: boolean;
+    zuid: string
   };
 }
 
@@ -211,6 +329,7 @@ export {
   dbUpdate,
   getJsonResponse,
   getLatLong,
+  HDPHomeInfo,
   Location,
   LocationBox,
   RentBitsResponse,

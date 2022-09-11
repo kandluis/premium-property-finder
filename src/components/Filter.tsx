@@ -5,6 +5,7 @@ import {
   DefaultFetchPropertiesRequest,
   DefaultLocalSettings,
   FetchPropertiesRequest,
+  HomeType,
   LocalFilterSettings,
   SortOrder,
 } from '../common';
@@ -180,12 +181,12 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
           </div>
           <div className="column col-2 col-xs-12">
             <div className="form-group">
-              <div className="col-3 col-sm-12">
+              <div className="col-3 col-sm-8">
                 <label className="form-label" htmlFor="sortorder">
                   Sort Order
                 </label>
               </div>
-              <div className="col-8 col-sm-12">
+              <div className="col-8 col-sm-8">
                 <select
                   className="form-select"
                   id="sortorder"
@@ -206,12 +207,12 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
           </div>
           <div className="column col-2 col-xs-5">
             <div className="form-group">
-              <div className="col-6 col-sm-12">
+              <div className="col-6 col-sm-8">
                 <label className="form-label" htmlFor="meets-rule">
                   Price:Rent Ratio
                 </label>
               </div>
-              <div className="col-4 col-sm-12">
+              <div className="col-4 col-sm-8">
                 <input
                   className="form-input"
                   min="0"
@@ -286,6 +287,32 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
                     includeLand: event.target.checked,
                   }))}
                 />
+              </div>
+            </div>
+          </div>
+          <div className="column col-2 col-xs-12">
+            <div className="form-group">
+              <div className="col-3 col-sm-12">
+                <label className="form-label" htmlFor="hometype">
+                  Home Type
+                </label>
+              </div>
+              <div className="col-8 col-sm-12">
+                <select
+                  className="form-select"
+                  id="hometype"
+                  value={localForm.homeType || ''}
+                  onChange={(event) => setLocalForm((latestForm: LocalFilterSettings) => ({
+                    ...latestForm,
+                    homeType: event.target.value as HomeType,
+                  }))}
+                >
+                  {localForm.homeTypes.map((type) => (
+                    <option key={type} value={type.replace(' ', '_').toUpperCase()}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>

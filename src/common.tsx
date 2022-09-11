@@ -1,21 +1,26 @@
 type SortOrder = 'ascendingprice' | 'descendingprice' | 'ascendingratio' | 'descendingratio';
+type HomeType = 'ALL' | 'SINGLE_FAMILY' | 'LOT' | 'MANUFACTURED' | 'TOWNHOUSE' | 'MULTI_FAMILY';
 
 interface Property {
-  address?: string,
+  address: string,
+  detailUrl: string,
+  imgSrc: string,
+  price: number,
+  statusText: string,
+  type: string,
+
   area?: number,
   baths?: number,
   beds?: number,
   city?: string,
-  detailUrl?: string,
-  imgSrc?: string,
-  lotArea?: string,
-  price?: number,
+  homeType?: HomeType,
+  livingArea?: number;
+  lotArea?: number,
   rentzestimate?: number
   state?: string,
-  statusText?: string,
+  zestimate?: number;
   zipCode?: number,
   zpid?: number,
-  type?: string,
 }
 
 interface FetchPropertiesRequest {
@@ -36,17 +41,21 @@ interface LocalFilterSettings {
   rentOnly: boolean;
   newConstruction: boolean;
   includeLand: boolean;
+  homeType: HomeType;
   sortOrder: SortOrder;
 
   readonly sortOrders: [string, string, string, string];
+  readonly homeTypes: [string, string, string, string, string, string];
 }
 const DefaultLocalSettings: LocalFilterSettings = {
   meetsRule: null,
   rentOnly: false,
   newConstruction: false,
-  includeLand: false,
+  includeLand: true,
   sortOrder: 'descendingratio',
   sortOrders: ['Ascending Price', 'Descending Price', 'Ascending Ratio', 'Descending Ratio'],
+  homeType: 'ALL',
+  homeTypes: ['All', 'Single Family', 'Lot', 'Manufactured', 'Townhouse', 'Multi Family'],
 };
 
 interface FilterState {
@@ -103,6 +112,7 @@ export {
   DefaultFetchPropertiesRequest,
   DefaultFilter,
   DefaultLocalSettings,
+  HomeType,
   LocalFilterSettings,
   FetchPropertiesRequest,
   FilterState,
