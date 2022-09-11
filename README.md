@@ -31,8 +31,7 @@ Update the constants in `src/constants.tsx` to match the location of your backen
 Run the following commands:
 
 ```sh
-npm run build
-npm run push-gh-pages
+npm run deploy
 ```
 
 # Heroku Set-up

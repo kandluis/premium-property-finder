@@ -195,7 +195,6 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
                     sortOrder: event.target.value as SortOrder,
                   }))}
                 >
-                  <option>Choose...</option>
                   {localForm.sortOrders.map((order) => (
                     <option key={order} value={order.replace(' ', '').toLowerCase()}>
                       {order}
