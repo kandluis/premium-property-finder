@@ -1,12 +1,12 @@
 # Development
 Run
-```
+```sh
 npm install
 ```
 
 This should install all the required dependencies. If this is a fresh pull from the directory, you'll also need to provide a few keys. At the top-level (eg, same location as `package.json`), add a file called `.env` which defines the following environment variables:
 
-```
+```sh
 REACT_APP_MAPQUEST_API_KEY=<TODO>
 REACT_APP_ZILLOW_API_KEY=<TODO>
 REACT_APP_SECRET=<TODO>
@@ -16,7 +16,7 @@ where each of the above correspond to your keys.
 
 Then simply run:
 
-```
+```sh
 npm start
 ```
 
