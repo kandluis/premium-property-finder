@@ -29,7 +29,6 @@ const DefaultFetchPropertiesRequest: FetchPropertiesRequest = {
   radius: 8,
   priceFrom: 0,
   priceMost: 250000,
-  sortOrders: ['Ascending Price', 'Descending Price', 'Ascending Ratio', 'Descending Ratio'],
 };
 
 interface LocalFilterSettings {
@@ -39,14 +38,14 @@ interface LocalFilterSettings {
   includeLand: boolean;
   sortOrder: SortOrder;
 
-  readonly sortOrders: Array<string>;
+  readonly sortOrders: [string, string, string, string];
 }
 const DefaultLocalSettings: LocalFilterSettings = {
   meetsRule: null,
   rentOnly: false,
   newConstruction: false,
   includeLand: false,
-  sortOrder: 'Descending Ratio',
+  sortOrder: 'descendingratio',
   sortOrders: ['Ascending Price', 'Descending Price', 'Ascending Ratio', 'Descending Ratio'],
 };
 

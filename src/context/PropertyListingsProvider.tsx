@@ -119,7 +119,7 @@ async function attachRentestimates(properties: Array<Property>): Promise<Array<P
   if (newProperties.length > 0) {
     const rentBitsEstimates = await fetchRentalBitsEstimates(newProperties);
     rentalDB = { ...rentalDB, ...rentBitsEstimates };
-    dbUpdate(rentalDB);
+    await dbUpdate(rentalDB);
   }
   const mergedProperties = properties.map((property) => {
     if (!property.zpid) {
@@ -138,12 +138,12 @@ async function attachRentestimates(properties: Array<Property>): Promise<Array<P
   @returns The parsed Property object.
  */
 function parseResult(item: ZillowProperty): Property {
-  const parsedItem = item;
+  const parsedItem: Property = { ...item };
   if (item.zpid) {
     parsedItem.zpid = Number(item.zpid);
   }
   if (item.price) {
-    parsedItem.price = accounting.unformat(item.price.replace('.', '').replace(',', '')) as string;
+    parsedItem.price = accounting.unformat(item.price.replace('.', '').replace(',', ''));
   }
   if (item.area) {
     parsedItem.area = Number(item.area);
@@ -167,7 +167,7 @@ function parseResult(item: ZillowProperty): Property {
   if (item.listingType) {
     parsedItem.type = item.listingType;
   }
-  return item;
+  return parsedItem;
 }
 
 /**
@@ -221,7 +221,7 @@ async function fetchProperties(
 
   @returns The properties matching the filters.
 */
-function filterProperties(all: [Property], settings: LocalFilterSettings): [Property] {
+function filterProperties(all: Property[], settings: LocalFilterSettings): Property[] {
   let filteredListings = [...all];
   const {
     meetsRule,
@@ -261,9 +261,7 @@ function filterProperties(all: [Property], settings: LocalFilterSettings): [Prop
       return ratio >= meetsRule;
     });
   }
-  if (sortOrder !== '') {
-    filteredListings = filteredListings.sort(sortFn(sortOrder));
-  }
+  filteredListings = filteredListings.sort(sortFn(sortOrder));
   return filteredListings;
 }
 
@@ -271,7 +269,7 @@ async function filterAndFetchProperties(
   {
     geoLocation, radius, priceFrom, priceMost,
   }: FetchPropertiesRequest,
-): Promise<[Property]> {
+): Promise<Property[]> {
   const properties = await fetchProperties(
     geoLocation,
     radius,
@@ -289,7 +287,7 @@ interface ProviderProps {
 }
 const ContextState = {
   loading: false,
-  filteredProperties: [] as [Property],
+  filteredProperties: [] as Property[],
   localUpdate: (_: LocalFilterSettings) => {
     // no-op
   },
@@ -300,12 +298,12 @@ const ContextState = {
 };
 const ProviderDefaultState = {
   loading: false,
-  allProperties: [],
+  allProperties: [] as Property[],
 };
 const PropertyListingsContext = React.createContext(ContextState);
 
 export function PropertyListingsProvider({ children }: ProviderProps) {
-  const [filteredProperties, setFilteredProperties] = useState<[Property]>([]);
+  const [filteredProperties, setFilteredProperties] = useState<Property[]>([] as Property[]);
   const [state, setState] = useState(ProviderDefaultState);
 
   const localUpdate = useCallback((settings: LocalFilterSettings): void => {
@@ -315,7 +313,7 @@ export function PropertyListingsProvider({ children }: ProviderProps) {
   const remoteUpdate = useMemo(() => {
     const fetchFn = async (req: FetchPropertiesRequest): Promise<void> => {
       setState({
-        allProperties: [],
+        allProperties: [] as Property[],
         loading: true,
       });
       // eslint-disable-next-line max-len

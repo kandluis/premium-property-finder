@@ -12,20 +12,19 @@ type LatLongResponse = {
   info: {
     statuscode: number;
   };
-  results: [{
-    locations: [{
+  results: {
+    locations: {
       latLng: Location;
-    }];
-  }];
+    }[];
+  }[];
 };
 type ParseStringData = {
   'SearchResults:searchresults' : {
-    response : [{
-      results: [
-      {
+    response : {
+      results: {
         result: LatLongResponse;
-      }];
-    }];
+      }[];
+    }[];
   };
 };
 
@@ -35,15 +34,15 @@ interface ZillowProperty {
 interface ZillowResponse {
   cat1: {
     searchResults: {
-      mapResults: [ ZillowProperty ];
+      mapResults: ZillowProperty[];
     };
   };
 }
 
 interface RentBitsResponse {
-  data: [{
+  data: {
     price: string;
-  }];
+  }[];
 }
 interface CuttlyApiResponse {
   url: {
@@ -70,7 +69,7 @@ async function getJsonResponse(
   url: string,
   format: 'json' | 'xml' = 'json',
   useProxy = false,
-  options?: RequestInit = {},
+  options: RequestInit = {},
 ) : Promise<AppResponse> {
   let fullUrl = url;
   if (useProxy) {
@@ -87,14 +86,15 @@ async function getJsonResponse(
       'Api-Key': DB_SECRET,
     },
   });
-  let parsedData = null;
-  if (format === 'json') {
-    parsedData = await blob.json() as AppResponse;
-  } else if (format === 'xml') {
+  const fetchParsed = async (): Promise<AppResponse> => {
+    if (format === 'json') {
+      return blob.json() as Promise<AppResponse>;
+    }
     const parsedText = await blob.text();
-    parsedData = await parseStringPromise(parsedText) as ParseStringData;
-    parsedData = parsedData['SearchResults:searchresults'].response[0].results[0].result;
-  }
+    const parsedData = await parseStringPromise(parsedText) as ParseStringData;
+    return parsedData['SearchResults:searchresults'].response[0].results[0].result;
+  };
+  const parsedData = await fetchParsed();
   try {
     sessionStorage.setItem(storageKey, JSON.stringify(parsedData));
   } catch (e) {
@@ -192,7 +192,7 @@ async function dbFetch(): Promise<Database> {
   return result;
 }
 
-async function dbUpdate(db: Database): void {
+async function dbUpdate(db: Database): Promise<void> {
   await fetch(`${dbEndpoint}/set`, {
     method: 'POST',
     headers: {

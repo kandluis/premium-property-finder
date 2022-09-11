@@ -21,7 +21,7 @@ type FilterProps = {
 };
 
 const RemoteParser = {
-  encode(value: FetchPropertiesRequest | null | undefined): string {
+  encode(value: FetchPropertiesRequest): string {
     return btoa(JSON.stringify(value, undefined, 1));
   },
   decode(value: string | (string | null)[] | null | undefined): FetchPropertiesRequest {
@@ -32,7 +32,7 @@ const RemoteParser = {
   },
 };
 const LocalParser = {
-  encode(value: LocalFilterSettings | null | undefined) {
+  encode(value: LocalFilterSettings) {
     return btoa(JSON.stringify(value, undefined, 1));
   },
   decode(value: string | (string | null)[] | null | undefined): LocalFilterSettings {
