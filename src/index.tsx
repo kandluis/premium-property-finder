@@ -11,7 +11,7 @@ rootElement.render(
   <BrowserRouter basename={process.env.PUBLIC_URL}>
     <QueryParamProvider adapter={ReactRouter6Adapter}>
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route exact path="/" element={<Home />} />
       </Routes>
     </QueryParamProvider>
   </BrowserRouter>,
