@@ -24,7 +24,7 @@ To get started. See the `package.json` file for other available types.
 
 # Connecting to Localhost if running back-end locally
 
-Update the constants in `src/constants.tsx` to match the location of your backend.
+Update the constants in `src/constants.tsx` to match the location of your backend. For details on launching the backend, see `server/README.md`.
 
 # Publishing on GH-Pages
 
@@ -34,7 +34,7 @@ Run the following commands:
 npm run deploy
 ```
 
-# Heroku Set-up
+# [DEPRECATED] Heroku Set-up
 Make sure you install the heroku CLI. You can add the remote branch to git using:
 ```sh
 git remote add heroku https://git.heroku.com/property-server.git
@@ -48,7 +48,7 @@ DATABASE_URL=<TODO>
 SECRET=<TODO>
 ```
 
-YOu can get the production values of these variables by running:
+You can get the production values of these variables by running:
 ```sh
 heroku config:get REDISCLOUD_URL
 heroku config:get DATABASE_URL
@@ -62,7 +62,7 @@ Then you can run, from `server/`:
 npm run start
 ````
 
-# Deploying Back-end server
+# [DEPRECATED] Deploying Back-end server
 You can run, from the top level:
 ```sh
 npm run deploy-server
