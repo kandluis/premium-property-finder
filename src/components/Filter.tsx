@@ -145,7 +145,7 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
                   max="10000000"
                   type="number"
                   id="price-from"
-                  placeholder="£1,000,000"
+                  placeholder="$100,000"
                   value={remoteForm.priceFrom || ''}
                   onChange={(event) => setRemoteForm((latestForm: FetchPropertiesRequest) => ({
                     ...latestForm,

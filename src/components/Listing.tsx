@@ -6,6 +6,19 @@ type ListingProps = {
   property: Property,
 }
 
+const currencyFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+});
+
+function openInNewTab(href: string): void {
+  Object.assign(document.createElement('a'), {
+    target: '_blank',
+    rel: 'noopener noreferrer',
+    href,
+  }).click();
+}
+
 export default function Listing({ property }: ListingProps): React.ReactElement {
   const {
     address,
@@ -17,18 +30,26 @@ export default function Listing({ property }: ListingProps): React.ReactElement 
     price,
     rentzestimate,
     state,
+    zestimate,
   } = property;
   const columnClasses = classnames('column', 'col-4', 'col-xs-12', 'mb-5');
   const cardClasses = classnames('card');
   return (
     <div className={columnClasses} style={{ margin: '1rem 0' }}>
-      <div className={cardClasses}>
+      <div
+        className={cardClasses}
+        onClick={() => openInNewTab(`http://www.zillow.com${detailUrl}`)}
+        onKeyPress={() => openInNewTab(`http://www.zillow.com${detailUrl}`)}
+        role="link"
+        tabIndex={0}
+        style={{ cursor: 'pointer' }}
+      >
         <div className="card-image">
-          <img className="img-responsive" src={imgSrc || ''} alt={`${address || 'Unknown'}, ${city || 'Unknown'} ${state || 'NA'}`} />
+          <img className="img-responsive" src={imgSrc} alt={`${address}, ${city || 'Unknown'} ${state || 'NA'}`} />
         </div>
         <div className="card-header">
           <div className="card-title h5">
-            {address || 'None'}
+            {address}
             ,
             {' '}
             {city || 'Unknown'}
@@ -36,12 +57,14 @@ export default function Listing({ property }: ListingProps): React.ReactElement 
             {state || 'NA'}
           </div>
           <div className="card-title h6">
-            Price: $
-            {price || 'N/A'}
+            Price:
+            {' '}
+            {currencyFormatter.format(price)}
+            {(zestimate) ? ` (Zestimate: ${currencyFormatter.format(zestimate)})` : ''}
           </div>
           <div className="card-subtitle text-gray">
-            Rent Estimate: $
-            {rentzestimate || 'N/A'}
+            Rent Estimate:
+            {(rentzestimate) ? ` ${currencyFormatter.format(rentzestimate)}` : ' N/A'}
           </div>
         </div>
         <div className="card-body">
@@ -56,16 +79,6 @@ export default function Listing({ property }: ListingProps): React.ReactElement 
           {' '}
           {(rentzestimate && price) ? ((100 * rentzestimate) / price).toFixed(2) : 'N/A'}
           %
-        </div>
-        <div className="card-footer">
-          <a
-            className="btn btn-primary"
-            href={`http://www.zillow.com${detailUrl || ''}`}
-            target="_blank"
-            rel="noreferrer"
-          >
-            Go to property
-          </a>
         </div>
       </div>
     </div>
