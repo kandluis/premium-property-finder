@@ -28,7 +28,9 @@ Update the constants in `src/constants.tsx` to match the location of your backen
 
 # Publishing on GH-Pages
 
-Run the following commands:
+We've now configured it so that the gh-pages get published on every push to master.
+
+If you'd like to publish without pushing, you can run the following commands:
 
 ```sh
 npm run deploy
