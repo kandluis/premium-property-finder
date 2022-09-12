@@ -279,7 +279,7 @@ function boundingBox(lat: number, lng: number, side: number): LocationBox {
 interface Database {
   [zpid: number]: {
     rentzestimate: number,
-    zestimate: number,
+    zestimate?: number,
   },
 }
 /**

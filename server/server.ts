@@ -24,15 +24,16 @@ type SetOperationBody = StoredData & {
 const tableName = 'properties';
 const pgPool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
+  ssl: (process.env.NODE_ENV === 'production') ? {
     rejectUnauthorized: false,
-  },
+  } : false,
 });
 
 if (!process.env.REDISCLOUD_URL) {
   throw Error('Need to define REDISCLOUD_URL in .env file.');
 }
 const redisClient = createClient({ url: process.env.REDISCLOUD_URL });
+redisClient.on('error', err => { /* no-op to avoid crash. */ });
 await redisClient.connect();
 
 /**
@@ -150,7 +151,7 @@ function allowCrossDomains(
   // intercept OPTIONS method
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
-  } else if (!('LOCAL_DEBUG' in process.env)
+  } else if (process.env.NODE_ENV === 'production'
     && req.header('Api-Key') !== process.env.SECRET) {
     res.sendStatus(403);
   } else {
@@ -160,7 +161,7 @@ function allowCrossDomains(
 
 // Set-up proxy router.
 const corsProxyServer = createServer({
-  requireHeader: ['origin', 'x-requested-with'],
+  requireHeader: (process.env.NODE_ENV === 'production') ? ['origin', 'x-requested-with'] : [],
   removeHeaders: [
     'cookie',
     'cookie2',
@@ -200,7 +201,7 @@ const router = express.Router()
     if (request.method !== 'GET' && request.method !== 'POST') {
       response.sendStatus(403);
     }
-    if (request.method === 'GET' && !('LOCAL_DEBUG' in process.env)) {
+    if (request.method === 'GET' && process.env.NODE_ENV === 'production') {
       response.sendStatus(404);
     }
     switch (request.params.action) {

@@ -4,11 +4,12 @@ This code is used to deploy a server on heroku (see `../README.md`). In general,
 
 # Development
 
+Install the required deps with `npm install`.
+
 When changing code, things get transpiled from Typescript to Javascript. Run the following command when you change code:
 
 ```sh
-npm run postinstall
-npm run start
+npm start
 ```
 
 If this is a fresh pull, you'll also need to add the following into `.env`:
@@ -18,11 +19,11 @@ If this is a fresh pull, you'll also need to add the following into `.env`:
 REDISCLOUD_URL=<TODO>
 # THe URL for the postgres database to connect.
 DATABASE_URL=<TODO>
-# The SECRET must match the front-end. If LOCAL_DEBUG is not set, this secret
+# The SECRET must match the front-end. If NODE_ENV is production, this secret
 # blocks all requests.
 SECRET=<TODO>
-# Enables get/ requests on most routes, disables secret verification.
-LOCAL_DEBUG=1
+# The port to use.
+PORT=60000
 ```
 
 Note that it's impossible to lookup these values in fly.io, so if you've lost them, you probaby want to set-up new databases. The app should work fine with a fresh setup.
@@ -49,6 +50,37 @@ You'll need to setup several secrets with the application. They roughtly map to 
 flyctl secrets set DATABASE_URL=... REDISCLOUD_URL=... SECRET=... 
 ```
 
+Lastly, you'll want to create a table named `properties` (see `server.ts`) in the postgres database. This database should have the schema:
+
+```js
+version: integer
+blob: 
+```
+
+Connect to the instance (see the details about `WireGuard` below):
+```sh
+flyctl postgres connect -a <postgres-app-name>
+```
+You should see a `postgres=#` shell. All commands below are prefixed as a reminder that they are being run in the postgress instance.
+
+Then connect the `premium_property_finder_server` database.
+
+```sh
+# This lists available databases. You might need to create one if not available.
+postgres=# \l
+# Run the below if non-existent. This is the database the app connects to.
+# postgres=# CREATE DATABASE [IF NOT EXISTS] premium_property_finder_server;
+postgres=# \c premium_property_finder_server
+```
+
+Once connected, you can run the following SQL to create a table with an appropriate schama:
+```sql
+CREATE TABLE properties(
+  blob JSON NOT NULL,
+  version INTEGER UNIQUE NOT NULL
+);
+```
+
 ## Subsequent Deployments
 
 You'll need to have `WireGuard` setup and an active connection to your fly.io organization. [This article](https://fly.io/docs/reference/private-networking/) walks you through a step-by-step process to enable this. If done correctly, you can connect to the production back-ends w/o making any changes to the `.env` variables.
@@ -62,7 +94,7 @@ flyclt deploy
 
 ## Current Routes
 
-The server has several routes. Note that `/api` also accepts `GET` requests wihtout requiring a `SECRET` when `LOCAL_DEBUG=1`.
+The server has several routes. Note that `/api` also accepts `GET` requests without requiring a `SECRET` when `NODE_ENV=debug`.
 
 - `/api` [GET] - This is a heartbeat endpoint.
 - `/proxy/<URL>` [GET, POST] - This removes CORS headers by forwarding incoming messages. This enables us to scrape requests from domains we don't own.

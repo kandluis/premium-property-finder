@@ -94,10 +94,11 @@ async function fetchRentalBitsEstimates(properties: Array<Property>): Promise<Da
       return;
     }
     const estimate = rents[prop.zipCode];
-    newDB[prop.zpid] = {
-      rentzestimate: estimate,
-      zestimate: prop.zestimate || 0,
-    };
+    if (estimate) {
+      newDB[prop.zpid] = {
+        rentzestimate: estimate,
+      };
+    }
   });
   return newDB;
 }
@@ -109,25 +110,30 @@ async function fetchRentalBitsEstimates(properties: Array<Property>): Promise<Da
 
   @returns: An array of properties with attached rental estimates.
 */
-async function attachRentestimates(properties: Array<Property>): Promise<Property[]> {
+async function attachRentestimates(properties: Property[]): Promise<Property[]> {
   let rentalDB = await dbFetch();
-  // Filter out any properties we won't even look at.
-  const newProperties = properties.filter(
+  properties.filter(({ rentzestimate }) => rentzestimate).forEach(
+    ({ zpid, rentzestimate }) => {
+      if (zpid && rentzestimate) {
+        rentalDB[zpid] = { ...rentalDB[zpid], rentzestimate };
+      }
+    },
+  );
+  const needRentEstimates = properties.filter(
     (item: Property) => (
       // Properties we can identify and compute ratio.
       item.zpid && item.address && item.zipCode && item.price
       // Properties not already in our database (eg, we don't refresh estimates)
       && !(item.zpid in rentalDB)
-      // Properties that don't already have rentzestimates.
-      && (!item.rentzestimate)
     ),
   );
-  if (newProperties.length > 0) {
-    const rentBitsEstimates = await fetchRentalBitsEstimates(newProperties);
+  if (needRentEstimates.length > 0) {
+    const rentBitsEstimates = await fetchRentalBitsEstimates(needRentEstimates);
     rentalDB = { ...rentalDB, ...rentBitsEstimates };
-    await dbUpdate(rentalDB);
   }
-  const mergedProperties = properties.map((property) => {
+  // Async background update.
+  const _ = dbUpdate(rentalDB);
+  const mergedProperties = properties.map((property: Property) => {
     if (!property.zpid) {
       return property;
     }
