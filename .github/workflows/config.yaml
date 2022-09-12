@@ -12,12 +12,13 @@ jobs:
   deploy-server:
     name: Deploy Server to fly.io 🚀
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./server
     steps:
       - uses: actions/checkout@v2
       - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: |
-        cd server/
-        flyctl deploy --remote-only
+      - run: flyctl deploy --remote-only
 
   deploy-frontend:
     runs-on: ubuntu-latest
