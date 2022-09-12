@@ -21,19 +21,52 @@ type SetOperationBody = StoredData & {
   data?: StoredData,
 }
 
+// 'fn' is only run in debug mode. In production, we return false.
+function DEBUG_ONLY<Args, Return>(
+  fn: (...args: Args[]) => Return,
+): (...args: Args[]) => Return | boolean {
+  function wrapper(...args: Args[]): Return | boolean {
+    if (process.env.NODE_ENV !== 'production') {
+      return fn(...args);
+    }
+    return false;
+  }
+  return wrapper;
+}
+// 'fn' is only run in production mode. In debug, we return false.
+function PROD_ONLY<Args, Return, Default>(
+  fn: (...args: Args[]) => Return,
+  val: Default
+): (...args: Args[]) => Return | Default {
+  function wrapper(...args: Args[]): Return | Default {
+    if (process.env.NODE_ENV === 'production') {
+      return fn(...args);
+    }
+    return val;
+  }
+  return wrapper;
+}
+
 const tableName = 'properties';
 const pgPool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: (process.env.NODE_ENV === 'production') ? {
+  ssl: PROD_ONLY(() => ({
     rejectUnauthorized: false,
-  } : false,
+  }), false)(),
 });
 
 if (!process.env.REDISCLOUD_URL) {
   throw Error('Need to define REDISCLOUD_URL in .env file.');
 }
-const redisClient = createClient({ url: process.env.REDISCLOUD_URL });
-redisClient.on('error', err => { /* no-op to avoid crash. */ });
+const redisClient = createClient({
+  url: process.env.REDISCLOUD_URL,
+  socket: {
+    family: 6,
+  },
+});
+redisClient.on('error', DEBUG_ONLY((err) => console.log(err)));
+redisClient.on('ready', DEBUG_ONLY((_) => console.log('redis is ready !')));
+redisClient.on('connect', DEBUG_ONLY((_) => console.log('connect redis success !')));
 await redisClient.connect();
 
 /**
@@ -151,8 +184,7 @@ function allowCrossDomains(
   // intercept OPTIONS method
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
-  } else if (process.env.NODE_ENV === 'production'
-    && req.header('Api-Key') !== process.env.SECRET) {
+  } else if (PROD_ONLY(() => req.header('Api-Key') !== process.env.SECRET, false)()) {
     res.sendStatus(403);
   } else {
     next();
@@ -161,7 +193,7 @@ function allowCrossDomains(
 
 // Set-up proxy router.
 const corsProxyServer = createServer({
-  requireHeader: (process.env.NODE_ENV === 'production') ? ['origin', 'x-requested-with'] : [],
+  requireHeader: PROD_ONLY(() => ['origin', 'x-requested-with'], [])(),
   removeHeaders: [
     'cookie',
     'cookie2',
@@ -201,7 +233,7 @@ const router = express.Router()
     if (request.method !== 'GET' && request.method !== 'POST') {
       response.sendStatus(403);
     }
-    if (request.method === 'GET' && process.env.NODE_ENV === 'production') {
+    if (PROD_ONLY(() => request.method === 'GET', false)()) {
       response.sendStatus(404);
     }
     switch (request.params.action) {
@@ -293,8 +325,10 @@ const router = express.Router()
 
 (async () => {
   // Refresh the database before starting.
+  console.log('Starting up...');
   await refresh();
 
+  console.log('Getting server port...');
   const port = await getPort({
     port: Number(process.env.PORT) || 5000,
   });

@@ -52,9 +52,9 @@ flyctl secrets set DATABASE_URL=... REDISCLOUD_URL=... SECRET=...
 
 Lastly, you'll want to create a table named `properties` (see `server.ts`) in the postgres database. This database should have the schema:
 
-```js
-version: integer
-blob: 
+```sql
+version: INTEGER
+blob: JSON
 ```
 
 Connect to the instance (see the details about `WireGuard` below):
@@ -74,6 +74,7 @@ postgres=# \c premium_property_finder_server
 ```
 
 Once connected, you can run the following SQL to create a table with an appropriate schama:
+
 ```sql
 CREATE TABLE properties(
   blob JSON NOT NULL,
