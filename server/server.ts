@@ -50,9 +50,7 @@ function PROD_ONLY<Args, Return, Default>(
 const tableName = 'properties';
 const pgPool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: PROD_ONLY(() => ({
-    rejectUnauthorized: false,
-  }), false)(),
+  ssl: false,
 });
 
 if (!process.env.REDISCLOUD_URL) {

@@ -34,7 +34,7 @@ The backend server is used on fly.io. You should have a [postgres](https://fly.i
 
 You'll need these values for `DATABASE_URL` and `REDISCLOUD_URL`. 
 
-## First Deployment 
+## Setting up the App for the first time. 
 
 If this is the first time setting up the app on fly.io. the `flyctl launch` command help in setting up the postgres database.
 
@@ -83,15 +83,20 @@ CREATE TABLE properties(
 ```
 
 ## Subsequent Deployments
+The repo is setup to automatically deploy on every push to master. This means if you have everything setup on `fly.io`, you shouldn't have to do anything. If there are issues, you can debug with:
+
+```sh
+flyclt deploy --local-only --verbose
+```
+
+This requires you have Docker installed.
+
+## Wireguard
 
 You'll need to have `WireGuard` setup and an active connection to your fly.io organization. [This article](https://fly.io/docs/reference/private-networking/) walks you through a step-by-step process to enable this. If done correctly, you can connect to the production back-ends w/o making any changes to the `.env` variables.
 
 
-Then simply run:
 
-```sh
-flyclt deploy
-```
 
 ## Current Routes
 
