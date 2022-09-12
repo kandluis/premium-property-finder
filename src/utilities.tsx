@@ -289,11 +289,6 @@ interface Database {
 */
 async function dbFetch(): Promise<Database> {
   const url = `${dbEndpoint}/get`;
-  const storageKey = `dbFetch(${url})`;
-  const data = sessionStorage.getItem(storageKey);
-  if (data != null) {
-    return JSON.parse(data) as Database;
-  }
   const res = await fetch(url, {
     method: 'POST',
     headers: {
@@ -302,11 +297,6 @@ async function dbFetch(): Promise<Database> {
     },
   });
   const result = await res.json() as Database;
-  try {
-    sessionStorage.setItem(storageKey, JSON.stringify(result));
-  } catch (e) {
-    console.log(e);
-  }
   return result;
 }
 
