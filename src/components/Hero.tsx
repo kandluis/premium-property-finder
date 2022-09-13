@@ -4,7 +4,7 @@ import classnames, { Argument } from 'classnames';
 import styles from './styles.module.css';
 
 export default function Hero(): React.ReactElement {
-  const classes = classnames('hero', 'hero-lg', 'mb-3', styles.hero as Argument);
+  const classes = classnames('hero', 'hero-sm', 'mb-3', styles.hero as Argument);
   return (
     <div className={classes}>
       <div className="hero-body text-center text-light">

@@ -66,6 +66,7 @@ export default function Listing({ property }: ListingProps): React.ReactElement 
           <div className="card-subtitle text-gray">
             Rent Estimate:
             {(rentzestimate) ? ` ${currencyFormatter.format(rentzestimate)}` : ' N/A'}
+            {(livingArea) ? `, ${currencyFormatter.format(price / livingArea)}/ft` : ''}
           </div>
         </div>
         <div className="card-body">
