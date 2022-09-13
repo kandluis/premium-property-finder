@@ -83,7 +83,7 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
           remoteUpdate(remoteForm);
         }}
       >
-        <p className="mb-1">Refine your results</p>
+        <h1>Refine your results</h1>
         <div className="columns text-center">
           <div className="column col-3 col-xs-12">
             <div className="form-group">
@@ -92,7 +92,7 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
                   Location
                 </label>
               </div>
-              <div className="col-9 col-sm-12">
+              <div className="col-8 col-sm-12">
                 <input
                   className="form-input"
                   type="text"
@@ -109,20 +109,21 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
           </div>
           <div className="column col-2 col-xs-5">
             <div className="form-group">
-              <div className="col-6 col-sm-12">
+              <div className="col-5 col-sm-12">
                 <label className="form-label" htmlFor="radius">
-                  Radius (Miles)
+                  Radius
                 </label>
               </div>
               <div className="col-4 col-sm-12">
                 <input
                   className="form-input"
-                  min="1"
-                  max="50"
+                  min="0.25"
+                  max="40"
                   type="number"
                   id="radius"
-                  placeholder="15"
+                  placeholder="3"
                   value={remoteForm.radius}
+                  step="0.25"
                   onChange={(event) => setRemoteForm((latestForm: FetchPropertiesRequest) => ({
                     ...latestForm,
                     radius: Number(event.target.value),
@@ -135,7 +136,7 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
             <div className="form-group">
               <div className="col-3 col-sm-12">
                 <label className="form-label" htmlFor="price-from">
-                  Price from
+                  Low
                 </label>
               </div>
               <div className="col-8 col-sm-12">
@@ -160,7 +161,7 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
             <div className="form-group">
               <div className="col-3 col-sm-12">
                 <label className="form-label" htmlFor="price-most">
-                  Price At Most
+                  High
                 </label>
               </div>
               <div className="col-8 col-sm-12">
@@ -183,12 +184,12 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
           </div>
           <div className="column col-2 col-xs-12">
             <div className="form-group">
-              <div className="col-3 col-sm-8">
+              <div className="col-4 col-sm-8">
                 <label className="form-label" htmlFor="sortorder">
-                  Sort Order
+                  Sort
                 </label>
               </div>
-              <div className="col-8 col-sm-8">
+              <div className="col-8 col-sm-10">
                 <select
                   className="form-select"
                   id="sortorder"
@@ -209,12 +210,12 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
           </div>
           <div className="column col-2 col-xs-5">
             <div className="form-group">
-              <div className="col-6 col-sm-8">
+              <div className="col-4 col-sm-8">
                 <label className="form-label" htmlFor="meets-rule">
-                  Price:Rent Ratio
+                  Min P/R
                 </label>
               </div>
-              <div className="col-4 col-sm-8">
+              <div className="col-5 col-sm-8">
                 <input
                   className="form-input"
                   min="0"
@@ -232,14 +233,14 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
               </div>
             </div>
           </div>
-          <div className="column col-2 col-xs-5">
+          <div className="column col-3 col-xs-5">
             <div className="form-group">
-              <div className="col-10 col-sm-12">
+              <div className="col-4 col-sm-12">
                 <label className="form-label" htmlFor="only-rent">
-                  Only If Rent Estimate Available
+                  Req. Rent
                 </label>
               </div>
-              <div className="col-4 col-sm-12">
+              <div className="col-2 col-sm-12">
                 <input
                   type="checkbox"
                   id="only-rent"
@@ -254,12 +255,12 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
           </div>
           <div className="column col-2 col-xs-5">
             <div className="form-group">
-              <div className="col-10 col-sm-12">
+              <div className="col-6 col-sm-12">
                 <label className="form-label" htmlFor="only-rent">
-                  Only New Construction
+                  New Const.
                 </label>
               </div>
-              <div className="col-4 col-sm-12">
+              <div className="col-2 col-sm-12">
                 <input
                   type="checkbox"
                   id="only-new-construction"
@@ -274,12 +275,12 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
           </div>
           <div className="column col-2 col-xs-5">
             <div className="form-group">
-              <div className="col-10 col-sm-12">
+              <div className="col-5 col-sm-12">
                 <label className="form-label" htmlFor="only-rent">
-                  Include Land
+                  Land
                 </label>
               </div>
-              <div className="col-4 col-sm-12">
+              <div className="col-2 col-sm-12">
                 <input
                   type="checkbox"
                   id="only-rent"
@@ -296,7 +297,7 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
             <div className="form-group">
               <div className="col-3 col-sm-12">
                 <label className="form-label" htmlFor="hometype">
-                  Home Type
+                  Type
                 </label>
               </div>
               <div className="col-8 col-sm-12">

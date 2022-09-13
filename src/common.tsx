@@ -53,7 +53,7 @@ interface FetchPropertiesRequest {
 }
 const DefaultFetchPropertiesRequest: FetchPropertiesRequest = {
   geoLocation: '',
-  radius: 8,
+  radius: 3.5,
   priceFrom: 0,
   priceMost: 1500000,
 };

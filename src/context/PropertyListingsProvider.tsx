@@ -275,7 +275,6 @@ function filterProperties(all: Property[], settings: LocalFilterSettings): Prope
     meetsRule,
     newConstruction,
     rentOnly,
-    sortOrder,
   } = settings;
 
   if (rentOnly) {
@@ -311,7 +310,6 @@ function filterProperties(all: Property[], settings: LocalFilterSettings): Prope
   if (homeType !== 'All') {
     filteredListings = filteredListings.filter((item) => item.homeType === homeType.replace(' ', '_').toUpperCase());
   }
-  filteredListings = filteredListings.sort(sortFn(sortOrder));
   return filteredListings;
 }
 
@@ -357,8 +355,13 @@ export function PropertyListingsProvider({ children }: ProviderProps) {
   const [state, setState] = useState(ProviderDefaultState);
 
   const localUpdate = useCallback((settings: LocalFilterSettings): void => {
+    // This is a round-about way to enable sorts stacking. Since
+    // .sort is stable, if we first sort by 'r/p ratio asc' and then we sort
+    // by 'price asc', then properties with the same price will internally
+    // be sorted by 'r/p ration asc.
+    state.allProperties = state.allProperties.sort(sortFn(settings.sortOrder));
     setFilteredProperties(filterProperties(state.allProperties, settings));
-  }, [state.allProperties]);
+  }, [state]);
 
   const remoteUpdate = useMemo(() => {
     const fetchFn = async (req: FetchPropertiesRequest): Promise<void> => {
