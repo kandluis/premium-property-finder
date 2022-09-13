@@ -27,6 +27,7 @@ export default function Listing({ property }: ListingProps): React.ReactElement 
     city,
     detailUrl,
     imgSrc,
+    livingArea,
     price,
     rentzestimate,
     state,
@@ -60,7 +61,7 @@ export default function Listing({ property }: ListingProps): React.ReactElement 
             Price:
             {' '}
             {currencyFormatter.format(price)}
-            {(zestimate) ? ` (Zestimate: ${currencyFormatter.format(zestimate)})` : ''}
+            {(zestimate) ? ` (~${currencyFormatter.format(zestimate)})` : ''}
           </div>
           <div className="card-subtitle text-gray">
             Rent Estimate:
@@ -75,7 +76,11 @@ export default function Listing({ property }: ListingProps): React.ReactElement 
           {' '}
           {baths || 'N/A'}
           {' '}
-          , Rent to Price:
+          ,
+          {' '}
+          { livingArea || 'N/A'}
+          sqft
+          , R/P:
           {' '}
           {(rentzestimate && price) ? ((100 * rentzestimate) / price).toFixed(2) : 'N/A'}
           %

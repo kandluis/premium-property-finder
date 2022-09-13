@@ -1,5 +1,27 @@
-type SortOrder = 'ascendingprice' | 'descendingprice' | 'ascendingratio' | 'descendingratio';
-type HomeType = 'ALL' | 'SINGLE_FAMILY' | 'LOT' | 'MANUFACTURED' | 'TOWNHOUSE' | 'MULTI_FAMILY';
+const sortOrders = [
+  'Ascending Price',
+  'Descending Price',
+
+  'Ascending Rent/Price Ratio',
+  'Descending Rent/Price Ratio',
+
+  'Ascending Zestimate/Price Ratio',
+  'Descending Zestimate/Price Ratio',
+
+  'Ascending Price/SqFt',
+  'Descending Price/SqFt',
+] as const;
+type SortOrder = typeof sortOrders[number];
+
+const homeTypes = [
+  'All',
+  'Single Family',
+  'Lot',
+  'Manufactured',
+  'Townhouse',
+  'Multi Family',
+] as const;
+type HomeType = typeof homeTypes[number];
 
 interface Property {
   address: string,
@@ -33,7 +55,7 @@ const DefaultFetchPropertiesRequest: FetchPropertiesRequest = {
   geoLocation: '',
   radius: 8,
   priceFrom: 0,
-  priceMost: 250000,
+  priceMost: 1500000,
 };
 
 interface LocalFilterSettings {
@@ -44,18 +66,18 @@ interface LocalFilterSettings {
   homeType: HomeType;
   sortOrder: SortOrder;
 
-  readonly sortOrders: [string, string, string, string];
-  readonly homeTypes: [string, string, string, string, string, string];
+  readonly sortOrders: readonly SortOrder[];
+  readonly homeTypes: readonly HomeType[];
 }
 const DefaultLocalSettings: LocalFilterSettings = {
   meetsRule: null,
   rentOnly: false,
   newConstruction: false,
   includeLand: true,
-  sortOrder: 'descendingratio',
-  sortOrders: ['Ascending Price', 'Descending Price', 'Ascending Ratio', 'Descending Ratio'],
-  homeType: 'ALL',
-  homeTypes: ['All', 'Single Family', 'Lot', 'Manufactured', 'Townhouse', 'Multi Family'],
+  sortOrder: 'Descending Rent/Price Ratio',
+  sortOrders,
+  homeType: 'All',
+  homeTypes,
 };
 
 interface FilterState {
@@ -79,28 +101,52 @@ const DefaultFilter: FilterState = {
 */
 function sortFn(order: SortOrder): (_1: Property, _2: Property) => number {
   switch (order) {
-    case 'ascendingprice':
+    case 'Ascending Price':
       return (a: Property, b: Property) => {
-        const aPrice = a.price || 0;
-        const bPrice = b.price || 0;
+        const aPrice = a.price;
+        const bPrice = b.price;
         return aPrice - bPrice;
       };
-    case 'descendingprice':
+    case 'Descending Price':
       return (a: Property, b: Property) => {
-        const aPrice = a.price || 0;
-        const bPrice = b.price || 0;
+        const aPrice = a.price;
+        const bPrice = b.price;
         return bPrice - aPrice;
       };
-    case 'ascendingratio':
+    case 'Ascending Rent/Price Ratio':
       return (a: Property, b: Property) => {
-        const aRatio = (a.rentzestimate || 0) / (a.price || 1);
-        const bRatio = (b.rentzestimate || 0) / (b.price || 1);
+        const aRatio = (a.rentzestimate || 0) / a.price;
+        const bRatio = (b.rentzestimate || 0) / b.price;
         return aRatio - bRatio;
       };
-    case 'descendingratio':
+    case 'Descending Rent/Price Ratio':
       return (a: Property, b: Property) => {
-        const aRatio = (a.rentzestimate || 0) / (a.price || 1);
-        const bRatio = (b.rentzestimate || 0) / (b.price || 1);
+        const aRatio = (a.rentzestimate || 0) / a.price;
+        const bRatio = (b.rentzestimate || 0) / b.price;
+        return bRatio - aRatio;
+      };
+    case 'Ascending Zestimate/Price Ratio':
+      return (a: Property, b: Property) => {
+        const aRatio = (a.zestimate || 0) / a.price;
+        const bRatio = (b.zestimate || 0) / b.price;
+        return aRatio - bRatio;
+      };
+    case 'Descending Zestimate/Price Ratio':
+      return (a: Property, b: Property) => {
+        const aRatio = (a.zestimate || 0) / a.price;
+        const bRatio = (b.zestimate || 0) / b.price;
+        return bRatio - aRatio;
+      };
+    case 'Ascending Price/SqFt':
+      return (a: Property, b: Property) => {
+        const aRatio = a.price / (a.livingArea || 1);
+        const bRatio = b.price / (b.livingArea || 1);
+        return aRatio - bRatio;
+      };
+    case 'Descending Price/SqFt':
+      return (a: Property, b: Property) => {
+        const aRatio = a.price / (a.livingArea || 1);
+        const bRatio = b.price / (b.livingArea || 1);
         return bRatio - aRatio;
       };
     default:

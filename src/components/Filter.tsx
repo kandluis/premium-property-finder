@@ -145,7 +145,8 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
                   max="10000000"
                   type="number"
                   id="price-from"
-                  placeholder="$100,000"
+                  placeholder="100000"
+                  step="50000"
                   value={remoteForm.priceFrom || ''}
                   onChange={(event) => setRemoteForm((latestForm: FetchPropertiesRequest) => ({
                     ...latestForm,
@@ -169,7 +170,8 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
                   max="10000000"
                   type="number"
                   id="price-most"
-                  placeholder="£1,000,000"
+                  placeholder="1000000"
+                  step="50000"
                   value={remoteForm.priceMost || ''}
                   onChange={(event) => setRemoteForm((latestForm: FetchPropertiesRequest) => ({
                     ...latestForm,
@@ -197,7 +199,7 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
                   }))}
                 >
                   {localForm.sortOrders.map((order) => (
-                    <option key={order} value={order.replace(' ', '').toLowerCase()}>
+                    <option key={order} value={order}>
                       {order}
                     </option>
                   ))}
@@ -308,7 +310,7 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
                   }))}
                 >
                   {localForm.homeTypes.map((type) => (
-                    <option key={type} value={type.replace(' ', '_').toUpperCase()}>
+                    <option key={type} value={type}>
                       {type}
                     </option>
                   ))}

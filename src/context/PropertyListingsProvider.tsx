@@ -308,8 +308,8 @@ function filterProperties(all: Property[], settings: LocalFilterSettings): Prope
       return ratio >= meetsRule;
     });
   }
-  if (homeType !== 'ALL') {
-    filteredListings = filteredListings.filter((item) => item.homeType === homeType);
+  if (homeType !== 'All') {
+    filteredListings = filteredListings.filter((item) => item.homeType === homeType.replace(' ', '_').toUpperCase());
   }
   filteredListings = filteredListings.sort(sortFn(sortOrder));
   return filteredListings;
