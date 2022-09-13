@@ -51,7 +51,7 @@ async function getRentBitsEstimate({ lat, lng }: Location): Promise<number | nul
       return null;
     }
     return accounting.unformat(item.price.replace('.', '').replace(',', ''));
-  }).filter((x) => x) as Array<number>;
+  }).filter((x) => x) as number[];
   if (prices.length === 0) {
     return null;
   }
@@ -67,7 +67,7 @@ async function getRentBitsEstimate({ lat, lng }: Location): Promise<number | nul
 
   @returns: The database containing the estimated prices for each property.
 */
-async function fetchRentalBitsEstimates(properties: Array<Property>): Promise<Database> {
+async function fetchRentalBitsEstimates(properties: Property[]): Promise<Database> {
   // We only do this by zip code to reduce the load on the API.
   const zips = properties.filter((item) => item.zipCode).map((item) => item.zipCode) as number[];
   const uniqueZips = Array.from(new Set(zips));
@@ -112,7 +112,7 @@ async function fetchRentalBitsEstimates(properties: Array<Property>): Promise<Da
 */
 async function attachRentestimates(properties: Property[]): Promise<Property[]> {
   let rentalDB = await dbFetch();
-  properties.filter(({ rentzestimate }) => rentzestimate).forEach(
+  properties.forEach(
     ({ zpid, rentzestimate }) => {
       if (zpid && rentzestimate) {
         rentalDB[zpid] = { ...rentalDB[zpid], rentzestimate };
@@ -233,7 +233,7 @@ async function fetchProperties(
   priceFrom: number,
   priceMost: number,
 )
-: Promise<Array<Property>> {
+: Promise<Property[]> {
   const coords = await getLatLong(geoLocation);
   if (coords === null) {
     return [];
