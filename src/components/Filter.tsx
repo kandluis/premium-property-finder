@@ -114,7 +114,7 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
                   Radius
                 </label>
               </div>
-              <div className="col-4 col-sm-12">
+              <div className="col-5 col-sm-12">
                 <input
                   className="form-input"
                   min="0.25"
