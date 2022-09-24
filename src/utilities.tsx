@@ -72,8 +72,8 @@ interface ZillowProperty {
   isFavorite: boolean;
   isFeaturedListing: boolean;
   latLong: {
-    latitud: number,
-    longitud: number
+    latitude: number,
+    longitude: number
   };
   listingType: string;
   price: string;
@@ -266,13 +266,13 @@ interface LocationBox {
     defining the bounding box.
 */
 function boundingBox(lat: number, lng: number, side: number): LocationBox {
-  const sideLengthInMeters = side * 1.60934 * 1000;
+  const radiusInMeters = (side * 1.60934 * 1000) / 2;
   const center = new LatLng(lat, lng);
   return {
-    north: computeOffset(center, sideLengthInMeters, 0).latitude,
-    east: computeOffset(center, sideLengthInMeters, 90).longitude,
-    south: computeOffset(center, sideLengthInMeters, 180).latitude,
-    west: computeOffset(center, sideLengthInMeters, 270).longitude,
+    north: computeOffset(center, radiusInMeters, 0).latitude,
+    east: computeOffset(center, radiusInMeters, 90).longitude,
+    south: computeOffset(center, radiusInMeters, 180).latitude,
+    west: computeOffset(center, radiusInMeters, 270).longitude,
   };
 }
 

@@ -34,7 +34,7 @@ import {
   @returns: The estimated price or null if not possible to estimate.
 */
 async function getRentBitsEstimate({ lat, lng }: Location): Promise<number | null> {
-  const box = boundingBox(lat, lng, 5);
+  const box = boundingBox(lat, lng, 1);
   const url = `${rentBitsApiBaseUrl}?bounds=${box.south},${box.north},${box.west},${box.east}`;
   let res = null;
   try {
@@ -324,10 +324,7 @@ async function filterAndFetchProperties(
     priceFrom,
     priceMost,
   );
-  const withRents = await attachRentestimates(properties);
-  return withRents.filter(
-    (item) => !item.price || (item.price && item.price >= priceFrom),
-  );
+  return attachRentestimates(properties);
 }
 
 interface ProviderProps {

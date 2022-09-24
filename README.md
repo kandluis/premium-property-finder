@@ -36,39 +36,6 @@ If you'd like to publish without pushing, you can run the following commands:
 npm run deploy
 ```
 
-# [DEPRECATED] Heroku Set-up
-Make sure you install the heroku CLI. You can add the remote branch to git using:
-```sh
-git remote add heroku https://git.heroku.com/property-server.git
-```
-
-If this is a fresh pull, you'll also need to add the following into `server/.env`:
-
-```sh
-REDISCLOUD_URL=<TODO>
-DATABASE_URL=<TODO>
-SECRET=<TODO>
-```
-
-You can get the production values of these variables by running:
-```sh
-heroku config:get REDISCLOUD_URL
-heroku config:get DATABASE_URL
-heroku config:get SECRET
-```
-
-Generally, these should point to whatever version of the database you want to use.
-
-Then you can run, from `server/`:
-```sh
-npm run start
-````
-
-# [DEPRECATED] Deploying Back-end server
-You can run, from the top level:
-```sh
-npm run deploy-server
-```
 
 # Author
 
