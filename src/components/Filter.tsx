@@ -85,7 +85,7 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
       >
         <h1>Refine your results</h1>
         <div className="columns text-center">
-          <div className="column col-3 col-xs-12">
+          <div className="column col-4 col-xs-12">
             <div className="form-group">
               <div className="col-3 col-sm-12">
                 <label className="form-label" htmlFor="geo-location">
@@ -132,7 +132,7 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
               </div>
             </div>
           </div>
-          <div className="column col-2 col-xs-12">
+          <div className="column col-3 col-xs-12">
             <div className="form-group">
               <div className="col-3 col-sm-12">
                 <label className="form-label" htmlFor="price-from">
@@ -157,7 +157,7 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
               </div>
             </div>
           </div>
-          <div className="column col-2 col-xs-12">
+          <div className="column col-3 col-xs-12">
             <div className="form-group">
               <div className="col-3 col-sm-12">
                 <label className="form-label" htmlFor="price-most">
@@ -182,7 +182,9 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
               </div>
             </div>
           </div>
-          <div className="column col-2 col-xs-12">
+        </div>
+        <div className="columns text-center">
+          <div className="column col-5 col-xs-12">
             <div className="form-group">
               <div className="col-4 col-sm-8">
                 <label className="form-label" htmlFor="sortorder">
@@ -228,6 +230,54 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
                   onChange={(event) => setLocalForm((latestForm: LocalFilterSettings) => ({
                     ...latestForm,
                     meetsRule: Number(event.target.value),
+                  }))}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="column col-4 col-xs-12">
+            <div className="form-group">
+              <div className="col-4 col-sm-12">
+                <label className="form-label" htmlFor="hometype">
+                  Type
+                </label>
+              </div>
+              <div className="col-8 col-sm-12">
+                <select
+                  className="form-select"
+                  id="hometype"
+                  value={localForm.homeType || ''}
+                  onChange={(event) => setLocalForm((latestForm: LocalFilterSettings) => ({
+                    ...latestForm,
+                    homeType: event.target.value as HomeType,
+                  }))}
+                >
+                  {localForm.homeTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="columns text-center">
+          <div className="column col-3 col-xs-5">
+            <div className="form-group">
+              <div className="col-4 col-sm-12">
+                <label className="form-label" htmlFor="only-rent">
+                  Inc. Sold
+                </label>
+              </div>
+              <div className="col-2 col-sm-12">
+                <input
+                  type="checkbox"
+                  id="only-rent"
+                  checked={remoteForm.includeRecentlySold}
+                  onChange={(event) => setRemoteForm((latestForm: FetchPropertiesRequest) => ({
+                    ...latestForm,
+                    includeRecentlySold: event.target.checked,
                   }))}
                 />
               </div>
@@ -293,38 +343,12 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
               </div>
             </div>
           </div>
-          <div className="column col-2 col-xs-12">
-            <div className="form-group">
-              <div className="col-3 col-sm-12">
-                <label className="form-label" htmlFor="hometype">
-                  Type
-                </label>
-              </div>
-              <div className="col-8 col-sm-12">
-                <select
-                  className="form-select"
-                  id="hometype"
-                  value={localForm.homeType || ''}
-                  onChange={(event) => setLocalForm((latestForm: LocalFilterSettings) => ({
-                    ...latestForm,
-                    homeType: event.target.value as HomeType,
-                  }))}
-                >
-                  {localForm.homeTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
         </div>
         <div className="columns text-center">
-          <div className="column col-2 col-xs-5">
+          <div className="column col-5 col-xs-5">
             <input type="submit" value="Submit" />
           </div>
-          <div className="column col-2 col-xs-5">
+          <div className="column col-5 col-xs-5">
             { (shareUrl)
               ? (
                 <input

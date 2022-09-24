@@ -31,6 +31,8 @@ export default function Listing({ property }: ListingProps): React.ReactElement 
     price,
     rentzestimate,
     state,
+    lastSold,
+    statusType,
     zestimate,
   } = property;
   const columnClasses = classnames('column', 'col-4', 'col-xs-12', 'mb-5');
@@ -50,7 +52,7 @@ export default function Listing({ property }: ListingProps): React.ReactElement 
         </div>
         <div className="card-header">
           <div className="card-title h5">
-            {address}
+            {(statusType === 'SOLD') ? `[${lastSold!}] ${address}` : address}
             ,
             {' '}
             {city || 'Unknown'}
@@ -58,15 +60,15 @@ export default function Listing({ property }: ListingProps): React.ReactElement 
             {state || 'NA'}
           </div>
           <div className="card-title h6">
-            Price:
-            {' '}
-            {currencyFormatter.format(price)}
-            {(zestimate) ? ` (~${currencyFormatter.format(zestimate)})` : ''}
+            {(price && statusType !== 'SOLD') ? `Price: ${currencyFormatter.format(price)}` : ''}
+            {(price && statusType === 'SOLD') ? `Sold For: ${currencyFormatter.format(price)}` : ''}
+            {(!price && statusType === 'SOLD') ? 'Unknown Sale Price' : ''}
+            {(zestimate) ? ` (est. ${currencyFormatter.format(zestimate)})` : ''}
           </div>
           <div className="card-subtitle text-gray">
             Rent Estimate:
             {(rentzestimate) ? ` ${currencyFormatter.format(rentzestimate)}` : ' N/A'}
-            {(livingArea) ? `, ${currencyFormatter.format(price / livingArea)}/ft` : ''}
+            {(livingArea && price) ? `, ${currencyFormatter.format(price / livingArea)}/ft` : ''}
           </div>
         </div>
         <div className="card-body">
@@ -76,15 +78,15 @@ export default function Listing({ property }: ListingProps): React.ReactElement 
           , Baths:
           {' '}
           {baths || 'N/A'}
-          {' '}
-          ,
+          <br />
+          Living Area:
           {' '}
           { livingArea || 'N/A'}
           sqft
-          , R/P:
-          {' '}
-          {(rentzestimate && price) ? ((100 * rentzestimate) / price).toFixed(2) : 'N/A'}
-          %
+          <br />
+          {(rentzestimate && price) ? `R/P: ${((100 * rentzestimate) / price).toFixed(2)}%` : ''}
+          <br />
+          {(rentzestimate && zestimate) ? `R/P (est.): ${((100 * rentzestimate) / zestimate).toFixed(2)}%` : ''}
         </div>
       </div>
     </div>

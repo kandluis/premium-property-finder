@@ -50,7 +50,6 @@ type HDPHomeInfo = {
   };
   livingArea: number;
   longitude: number;
-  price: number;
   priceForHDP: number;
   rentZestimate: number;
   shouldHighlight: boolean;
@@ -59,6 +58,8 @@ type HDPHomeInfo = {
   zestimate: number;
   zipcode: string;
   zpid: number;
+
+  price?: number;
 };
 
 interface ZillowProperty {
@@ -79,7 +80,10 @@ interface ZillowProperty {
   price: string;
   statusText: string;
   statusType: string;
-  variableData: object;
+  variableData: {
+    type: string;
+    text: string;
+  } | null;
 
   // Optional fields.
   area?: number;

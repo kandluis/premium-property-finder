@@ -143,6 +143,27 @@ async function attachRentestimates(properties: Property[]): Promise<Property[]> 
 }
 
 /**
+ Parses the price label at best effort.
+*/
+function parsePrice(item: ZillowProperty): number {
+  if (item.price.length === 0) {
+    return 0;
+  }
+  let localPrice = item.price;
+  if (localPrice[localPrice.length - 1].toUpperCase() === 'M') {
+    // Only concat 5-zeros since we might include a '.'
+    localPrice = localPrice.replace('M', '').concat('00000');
+    if (localPrice.includes('.')) {
+      localPrice = localPrice.replace('.', '');
+    } else {
+      // The missing zero.
+      localPrice = localPrice.concat('0');
+    }
+  }
+  return accounting.unformat(localPrice.replace(',', ''));
+}
+
+/**
   Adds a single HDP property result fetched from the Zillow API for an area.
 
   @param parsedItem - The partially parsed item to which we add HDP data.
@@ -155,7 +176,9 @@ function addHDPResults(parsedItem: Property, home: HDPHomeInfo): void {
   local.city = home.city;
   local.homeType = home.homeType;
   local.livingArea = home.livingArea;
-  local.price = home.price;
+  if (home.price) {
+    local.price = home.price;
+  }
   local.rentzestimate = home.rentZestimate;
   local.state = home.state;
   local.zestimate = home.zestimate;
@@ -171,7 +194,6 @@ function addResults(parsedItem: Property, item: ZillowProperty): void {
   if (item.beds || item.minBeds) {
     local.beds = Number(item.beds || item.minBeds);
   }
-  local.price = accounting.unformat(item.price.replace('.', '').replace(',', ''));
   if (item.zpid) {
     local.zpid = Number(item.zpid);
   }
@@ -187,12 +209,16 @@ function addResults(parsedItem: Property, item: ZillowProperty): void {
 function parseResult(item: ZillowProperty): Property {
   const parsedItem: Property = {
     address: item.address,
-    type: item.listingType,
     detailUrl: item.detailUrl,
     imgSrc: item.imgSrc,
+    listingType: item.listingType,
+    price: parsePrice(item),
     statusText: item.statusText,
-    price: 0,
+    statusType: item.statusType,
   };
+  if (item.statusType === 'SOLD' && item.variableData) {
+    parsedItem.lastSold = item.variableData.text;
+  }
   // /something/address-seperated-by-city-state-zip.
   const addressComponents = item.detailUrl.split('/')[2].split('-');
   // These are best-effort. If we have more data, it gets replaced later.
@@ -232,6 +258,7 @@ async function fetchProperties(
   radius: number,
   priceFrom: number,
   priceMost: number,
+  includeRecentlySold: boolean,
 )
 : Promise<Property[]> {
   const coords = await getLatLong(geoLocation);
@@ -242,21 +269,34 @@ async function fetchProperties(
   const wants = {
     cat1: ['mapResults'],
   };
-  const searchQueryState = {
+  const searchQueryStateFn = (isRecentlySold: boolean) => ({
     mapBounds: boundingBox(lat, lng, radius * 2),
     filterState: {
       price: {
         min: priceFrom,
         max: priceMost,
       },
+      isAllHomes: { value: true },
+      isRecentlySold: { value: isRecentlySold },
+      isForSaleByAgent: { value: !isRecentlySold },
+      isForSaleByOwner: { value: !isRecentlySold },
+      isNewConstruction: { value: !isRecentlySold },
+      isComingSoon: { value: !isRecentlySold },
+      isAuction: { value: !isRecentlySold },
+      isForSaleForeclosure: { value: !isRecentlySold },
     },
-  };
-  const zillowUrl = `${zillowBaseUrl}?searchQueryState=${JSON.stringify(searchQueryState)}&wants=${JSON.stringify(wants)}`;
-  const data = await getJsonResponse(`${zillowUrl}`, 'json', true) as ZillowResponse;
-  const propertyListings = data.cat1.searchResults.mapResults;
+  });
+  let zillowUrl = `${zillowBaseUrl}?searchQueryState=${JSON.stringify(searchQueryStateFn(false))}&wants=${JSON.stringify(wants)}`;
+  let data = await getJsonResponse(`${zillowUrl}`, 'json', true) as ZillowResponse;
+  let propertyListings = data.cat1.searchResults.mapResults;
+  if (includeRecentlySold) {
+    zillowUrl = `${zillowBaseUrl}?searchQueryState=${JSON.stringify(searchQueryStateFn(true))}&wants=${JSON.stringify(wants)}`;
+    data = await getJsonResponse(`${zillowUrl}`, 'json', true) as ZillowResponse;
+    propertyListings = [...propertyListings, ...data.cat1.searchResults.mapResults];
+  }
   return propertyListings
     .map((item) => parseResult(item))
-    .filter((item) => (item.zpid && item.price && item.price > 0));
+    .filter((item) => (item.zpid));
 }
 
 /**
@@ -284,7 +324,7 @@ function filterProperties(all: Property[], settings: LocalFilterSettings): Prope
   }
   if (newConstruction) {
     filteredListings = filteredListings.filter(
-      (item) => item.type && item.type === 'NEW_CONSTRUCTION',
+      (item) => item.listingType && item.listingType === 'NEW_CONSTRUCTION',
     );
   }
   if (!includeLand) {
@@ -300,10 +340,10 @@ function filterProperties(all: Property[], settings: LocalFilterSettings): Prope
       if (item.rentzestimate <= 0) {
         return !rentOnly;
       }
-      if (!item.price) {
+      if (!item.price && !item.zestimate) {
         return !rentOnly;
       }
-      const ratio = 100 * (item.rentzestimate / item.price);
+      const ratio = 100 * (item.rentzestimate / (item.price || item.rentzestimate));
       return ratio >= meetsRule;
     });
   }
@@ -315,7 +355,7 @@ function filterProperties(all: Property[], settings: LocalFilterSettings): Prope
 
 async function filterAndFetchProperties(
   {
-    geoLocation, radius, priceFrom, priceMost,
+    geoLocation, radius, priceFrom, priceMost, includeRecentlySold,
   }: FetchPropertiesRequest,
 ): Promise<Property[]> {
   const properties = await fetchProperties(
@@ -323,6 +363,7 @@ async function filterAndFetchProperties(
     radius,
     priceFrom,
     priceMost,
+    includeRecentlySold,
   );
   return attachRentestimates(properties);
 }

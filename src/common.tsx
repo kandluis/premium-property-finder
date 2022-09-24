@@ -28,14 +28,16 @@ interface Property {
   detailUrl: string,
   imgSrc: string,
   price: number,
+  statusType: string, // Usually we check just for 'SOLD'. Have seen 'FOR_SALE'.
   statusText: string,
-  type: string,
+  listingType: string, // Usually just 'NEW_CONSTRUCTION'
 
   area?: number,
   baths?: number,
   beds?: number,
   city?: string,
   homeType?: HomeType,
+  lastSold?: string,
   livingArea?: number;
   lotArea?: number,
   rentzestimate?: number
@@ -50,12 +52,14 @@ interface FetchPropertiesRequest {
   radius: number;
   priceFrom: number;
   priceMost: number;
+  includeRecentlySold: boolean;
 }
 const DefaultFetchPropertiesRequest: FetchPropertiesRequest = {
   geoLocation: '',
   radius: 3.5,
   priceFrom: 0,
   priceMost: 1500000,
+  includeRecentlySold: false,
 };
 
 interface LocalFilterSettings {
@@ -103,50 +107,50 @@ function sortFn(order: SortOrder): (_1: Property, _2: Property) => number {
   switch (order) {
     case 'Ascending Price':
       return (a: Property, b: Property) => {
-        const aPrice = a.price;
-        const bPrice = b.price;
+        const aPrice = (a.price || a.zestimate || 0);
+        const bPrice = (b.price || b.zestimate || 0);
         return aPrice - bPrice;
       };
     case 'Descending Price':
       return (a: Property, b: Property) => {
-        const aPrice = a.price;
-        const bPrice = b.price;
+        const aPrice = (a.price || a.zestimate || 0);
+        const bPrice = (b.price || b.zestimate || 0);
         return bPrice - aPrice;
       };
     case 'Ascending Rent/Price Ratio':
       return (a: Property, b: Property) => {
-        const aRatio = (a.rentzestimate || 0) / a.price;
-        const bRatio = (b.rentzestimate || 0) / b.price;
+        const aRatio = (a.rentzestimate || 0) / (a.price || a.zestimate || 0);
+        const bRatio = (b.rentzestimate || 0) / (b.price || b.zestimate || 0);
         return aRatio - bRatio;
       };
     case 'Descending Rent/Price Ratio':
       return (a: Property, b: Property) => {
-        const aRatio = (a.rentzestimate || 0) / a.price;
-        const bRatio = (b.rentzestimate || 0) / b.price;
+        const aRatio = (a.rentzestimate || 0) / (a.price || a.zestimate || 0);
+        const bRatio = (b.rentzestimate || 0) / (b.price || b.zestimate || 0);
         return bRatio - aRatio;
       };
     case 'Ascending Zestimate/Price Ratio':
       return (a: Property, b: Property) => {
-        const aRatio = (a.zestimate || 0) / a.price;
-        const bRatio = (b.zestimate || 0) / b.price;
+        const aRatio = (a.zestimate || a.price) / (a.price);
+        const bRatio = (b.zestimate || b.price) / (b.price);
         return aRatio - bRatio;
       };
     case 'Descending Zestimate/Price Ratio':
       return (a: Property, b: Property) => {
-        const aRatio = (a.zestimate || 0) / a.price;
-        const bRatio = (b.zestimate || 0) / b.price;
+        const aRatio = (a.zestimate || a.price) / (a.price);
+        const bRatio = (b.zestimate || b.price) / (b.price);
         return bRatio - aRatio;
       };
     case 'Ascending Price/SqFt':
       return (a: Property, b: Property) => {
-        const aRatio = a.price / (a.livingArea || 1);
-        const bRatio = b.price / (b.livingArea || 1);
+        const aRatio = (a.price || a.zestimate || 0) / (a.livingArea || 1);
+        const bRatio = (b.price || b.zestimate || 0) / (b.livingArea || 1);
         return aRatio - bRatio;
       };
     case 'Descending Price/SqFt':
       return (a: Property, b: Property) => {
-        const aRatio = a.price / (a.livingArea || 1);
-        const bRatio = b.price / (b.livingArea || 1);
+        const aRatio = (a.price || a.zestimate || 0) / (a.livingArea || 1);
+        const bRatio = (b.price || b.zestimate || 0) / (b.livingArea || 1);
         return bRatio - aRatio;
       };
     default:
