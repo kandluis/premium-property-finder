@@ -5,7 +5,25 @@ on:
     branches:
       - master
 jobs:
+  # JOB to run change detection
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          backend:
+            - 'server/**'
+          frontend:
+            - 'src/**'
+            - 'public/**'
   deploy-server:
+    needs: changes
+    if: ${{ needs.changes.outputs.backend == 'true' }}
     name: Deploy Server to fly.io 🚀
     runs-on: ubuntu-latest
     defaults:
@@ -19,6 +37,8 @@ jobs:
       - run: flyctl deploy --remote-only
 
   deploy-frontend:
+    needs: changes
+    if: ${{ needs.changes.outputs.frontend == 'true' }}
     name: Deploy Front-end to gh-pages
     runs-on: ubuntu-latest
     env:
