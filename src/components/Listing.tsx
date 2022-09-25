@@ -52,7 +52,7 @@ export default function Listing({ property }: ListingProps): React.ReactElement 
         </div>
         <div className="card-header">
           <div className="card-title h5">
-            {(statusType === 'SOLD') ? `[${lastSold!}] ${address}` : address}
+            {(statusType === 'SOLD' && lastSold) ? `[${lastSold}] ${address}` : address}
             ,
             {' '}
             {city || 'Unknown'}
