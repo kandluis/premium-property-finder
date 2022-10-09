@@ -9,6 +9,7 @@ import {
   LocalFilterSettings,
   SortOrder,
 } from '../common';
+import LocationInput from './LocationInput';
 import { CUTTLY_API_KEY, urlShortnerEndpoint } from '../constants';
 import { CuttlyApiResponse, getJsonResponse } from '../utilities';
 
@@ -92,19 +93,14 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
                   Location
                 </label>
               </div>
-              <div className="col-8 col-sm-12">
-                <input
-                  className="form-input"
-                  type="text"
-                  id="geo-location"
-                  placeholder="Nacogdoches, TX"
-                  value={remoteForm.geoLocation}
-                  onChange={(event) => setRemoteForm((latestForm: FetchPropertiesRequest) => ({
-                    ...latestForm,
-                    geoLocation: event.target.value,
-                  }))}
-                />
-              </div>
+              <LocationInput
+                handleInput={(value: string) => setRemoteForm((
+                  latestForm: FetchPropertiesRequest,
+                ) => ({
+                  ...latestForm,
+                  geoLocation: value,
+                }))}
+              />
             </div>
           </div>
           <div className="column col-2 col-xs-5">
