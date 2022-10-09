@@ -49,6 +49,7 @@ interface Property {
 
 interface FetchPropertiesRequest {
   geoLocation: string;
+  commuteLocation: string;
   radius: number;
   priceFrom: number;
   priceMost: number;
@@ -56,6 +57,7 @@ interface FetchPropertiesRequest {
 }
 const DefaultFetchPropertiesRequest: FetchPropertiesRequest = {
   geoLocation: '',
+  commuteLocation: '',
   radius: 3.5,
   priceFrom: 0,
   priceMost: 1500000,

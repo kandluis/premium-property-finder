@@ -44,9 +44,12 @@ const getPlaceInfo = throttle(async ({
 
 type LocationInputProps = {
   handleInput: (value: string) => void;
+  defaultValue: string;
 };
 
-export default function LocationInput({ handleInput }: LocationInputProps): ReactElement {
+export default function LocationInput(
+  { handleInput, defaultValue }: LocationInputProps,
+): ReactElement {
   const {
     ready,
     value,
@@ -54,6 +57,7 @@ export default function LocationInput({ handleInput }: LocationInputProps): Reac
     setValue,
     clearSuggestions,
   }: HookReturn = usePlacesAutocomplete({
+    defaultValue,
     debounce: 300,
   });
   const [placeDetails, setPlaceDetails] = useState<PlaceInfo[]>([]);
@@ -86,7 +90,7 @@ export default function LocationInput({ handleInput }: LocationInputProps): Reac
   }, [data]);
 
   return (
-    <div className="col-8 col-sm-12" ref={ref}>
+    <div className="col-10 col-sm-12" ref={ref}>
       <input
         className="form-input"
         type="text"

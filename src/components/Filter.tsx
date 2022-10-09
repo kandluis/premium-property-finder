@@ -1,6 +1,7 @@
 import classnames from 'classnames';
 import React, { useEffect, useState } from 'react';
 import { useQueryParam } from 'use-query-params';
+import styled from 'styled-components';
 import {
   DefaultFetchPropertiesRequest,
   DefaultLocalSettings,
@@ -14,6 +15,12 @@ import { CUTTLY_API_KEY, urlShortnerEndpoint } from '../constants';
 import { CuttlyApiResponse, getJsonResponse } from '../utilities';
 
 import styles from './styles.module.css';
+
+const FormRow = styled.div`
+  padding-top: 10px;
+  padding-bottom: 10px;
+  text-align: left;
+`;
 
 type FilterProps = {
   // Callback to update local state.
@@ -85,23 +92,38 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
         }}
       >
         <h1>Refine your results</h1>
-        <div className="columns text-center">
-          <div className="column col-4 col-xs-12">
-            <div className="form-group">
-              <div className="col-3 col-sm-12">
-                <label className="form-label" htmlFor="geo-location">
-                  Location
-                </label>
-              </div>
-              <LocationInput
-                handleInput={(value: string) => setRemoteForm((
-                  latestForm: FetchPropertiesRequest,
-                ) => ({
-                  ...latestForm,
-                  geoLocation: value,
-                }))}
-              />
+        <FormRow className="columns text-center">
+          <div className="column col-3 col-xs-12">
+            <div className="col-sm-12">
+              <label className="form-label" htmlFor="geo-location">
+                Search Center
+              </label>
             </div>
+            <LocationInput
+              handleInput={(value: string) => setRemoteForm((
+                latestForm: FetchPropertiesRequest,
+              ) => ({
+                ...latestForm,
+                geoLocation: value,
+              }))}
+              defaultValue={remoteForm.geoLocation}
+            />
+          </div>
+          <div className="column col-3 col-xs-12">
+            <div className="col-sm-12">
+              <label className="form-label" htmlFor="geo-location">
+                Commute Location
+              </label>
+            </div>
+            <LocationInput
+              handleInput={(value: string) => setRemoteForm((
+                latestForm: FetchPropertiesRequest,
+              ) => ({
+                ...latestForm,
+                commuteLocation: value,
+              }))}
+              defaultValue={remoteForm.commuteLocation}
+            />
           </div>
           <div className="column col-2 col-xs-5">
             <div className="form-group">
@@ -128,39 +150,14 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
               </div>
             </div>
           </div>
-          <div className="column col-3 col-xs-12">
-            <div className="form-group">
-              <div className="col-3 col-sm-12">
-                <label className="form-label" htmlFor="price-from">
-                  Low
-                </label>
-              </div>
-              <div className="col-8 col-sm-12">
-                <input
-                  className="form-input"
-                  min="0"
-                  max="10000000"
-                  type="number"
-                  id="price-from"
-                  placeholder="100000"
-                  step="50000"
-                  value={remoteForm.priceFrom || ''}
-                  onChange={(event) => setRemoteForm((latestForm: FetchPropertiesRequest) => ({
-                    ...latestForm,
-                    priceFrom: Number(event.target.value),
-                  }))}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="column col-3 col-xs-12">
+          <div className="column col-4 col-xs-12">
             <div className="form-group">
               <div className="col-3 col-sm-12">
                 <label className="form-label" htmlFor="price-most">
                   High
                 </label>
               </div>
-              <div className="col-8 col-sm-12">
+              <div className="col-4 col-sm-12">
                 <input
                   className="form-input"
                   min="0"
@@ -178,8 +175,8 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
               </div>
             </div>
           </div>
-        </div>
-        <div className="columns text-center">
+        </FormRow>
+        <FormRow className="columns text-center">
           <div className="column col-5 col-xs-12">
             <div className="form-group">
               <div className="col-4 col-sm-8">
@@ -257,8 +254,8 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
               </div>
             </div>
           </div>
-        </div>
-        <div className="columns text-center">
+        </FormRow>
+        <FormRow className="columns text-center">
           <div className="column col-3 col-xs-5">
             <div className="form-group">
               <div className="col-4 col-sm-12">
@@ -339,8 +336,8 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
               </div>
             </div>
           </div>
-        </div>
-        <div className="columns text-center">
+        </FormRow>
+        <FormRow className="columns text-center">
           <div className="column col-5 col-xs-5">
             <input type="submit" value="Submit" />
           </div>
@@ -365,7 +362,7 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
                 />
               )}
           </div>
-        </div>
+        </FormRow>
       </form>
     </div>
   );
