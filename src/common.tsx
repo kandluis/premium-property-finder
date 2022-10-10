@@ -10,6 +10,8 @@ const sortOrders = [
 
   'Ascending Price/SqFt',
   'Descending Price/SqFt',
+
+  'Shortest Commute',
 ] as const;
 type SortOrder = typeof sortOrders[number];
 
@@ -155,6 +157,19 @@ function sortFn(order: SortOrder): (_1: Property, _2: Property) => number {
         const aRatio = (a.price || a.zestimate || 0) / (a.livingArea || 1);
         const bRatio = (b.price || b.zestimate || 0) / (b.livingArea || 1);
         return bRatio - aRatio;
+      };
+    case 'Shortest Commute':
+      return (a: Property, b: Property) => {
+        if (a.travelTime && b.travelTime) {
+          return a.travelTime - b.travelTime;
+        }
+        if (!a.travelTime && b.travelTime) {
+          return b.travelTime;
+        }
+        if (a.travelTime && !b.travelTime) {
+          return -a.travelTime;
+        }
+        return 0;
       };
     default:
       return (_1:Property, _2: Property) => 0;
