@@ -27,6 +27,8 @@ import {
   ZillowResponse,
 } from '../utilities';
 
+type ProgressFn = (_action: number | ((_prev: number) => number)) => void;
+
 /**
   Calculates the median known rental values in the given area using the rent bits API.
 
@@ -111,8 +113,12 @@ async function fetchRentalBitsEstimates(properties: Property[]): Promise<Databas
 
   @returns: An array of properties with attached rental estimates.
 */
-async function attachRentestimates(properties: Property[]): Promise<Property[]> {
+async function attachRentestimates(
+  properties: Property[],
+  progressFn: ProgressFn,
+): Promise<Property[]> {
   let rentalDB = await dbFetch();
+  progressFn(0.3);
   properties.forEach(
     ({ zpid, rentzestimate }) => {
       if (zpid && rentzestimate) {
@@ -132,8 +138,10 @@ async function attachRentestimates(properties: Property[]): Promise<Property[]> 
     const rentBitsEstimates = await fetchRentalBitsEstimates(needRentEstimates);
     rentalDB = { ...rentalDB, ...rentBitsEstimates };
   }
+  progressFn(0.4);
   // Async background update.
   const _ = dbUpdate(rentalDB);
+  progressFn(0.5);
   const mergedProperties = properties.map((property: Property) => {
     if (!property.zpid) {
       return property;
@@ -260,12 +268,14 @@ async function fetchProperties(
   priceFrom: number,
   priceMost: number,
   includeRecentlySold: boolean,
+  progressFn: ProgressFn,
 )
 : Promise<Property[]> {
   const coords = await getLatLong(geoLocation);
   if (coords === null) {
     return [];
   }
+  progressFn(0.05);
   const { lat, lng } = coords;
   const wants = {
     cat1: ['mapResults'],
@@ -289,15 +299,19 @@ async function fetchProperties(
   });
   let zillowUrl = `${zillowBaseUrl}?searchQueryState=${JSON.stringify(searchQueryStateFn(false))}&wants=${JSON.stringify(wants)}`;
   let data = await getJsonResponse(`${zillowUrl}`, 'json', true) as ZillowResponse;
+  progressFn(0.1);
   let propertyListings = data.cat1.searchResults.mapResults;
   if (includeRecentlySold) {
     zillowUrl = `${zillowBaseUrl}?searchQueryState=${JSON.stringify(searchQueryStateFn(true))}&wants=${JSON.stringify(wants)}`;
     data = await getJsonResponse(`${zillowUrl}`, 'json', true) as ZillowResponse;
     propertyListings = [...propertyListings, ...data.cat1.searchResults.mapResults];
   }
-  return propertyListings
+  progressFn(0.15);
+  const ret = propertyListings
     .map((item) => parseResult(item))
     .filter((item) => (item.zpid));
+  progressFn(0.25);
+  return ret;
 }
 
 /**
@@ -401,7 +415,11 @@ type DistanceMatrixResponse = {
   @returns: An array of properties equivalent to `props` but with attached
     travel times estimates if available.
 */
-async function attachCommuteTimes(props: Property[], destination: string): Promise<Property[]> {
+async function attachCommuteTimes(
+  props: Property[],
+  destination: string,
+  progressFn: ProgressFn,
+): Promise<Property[]> {
   const genOrigin = ({
     address, city, state, zipCode,
   }: Property) => (city && state && zipCode ? `${address} ${city}, ${state} ${zipCode}` : null);
@@ -426,15 +444,19 @@ async function attachCommuteTimes(props: Property[], destination: string): Promi
     });
     startIdx += 25;
   }
-  const service = new window.google.maps.DistanceMatrixService();
-  const get = (req: any): Promise<DistanceMatrixResponse> => new Promise((resolve, reject) => { // eslint-disable-line
+  const throttle = pThrottle({
+    limit: 1, interval: 2000, strict: true,
+  });
+  const get = throttle((req: any, idx: number): Promise<DistanceMatrixResponse> => new Promise((resolve, reject) => { // eslint-disable-line
+    const service = new window.google.maps.DistanceMatrixService();
     service.getDistanceMatrix(req, (response, status) => { // eslint-disable-line
+      progressFn(0.5 + idx / requests.length);
       if (status !== 'OK' || !response) {
         return reject(status);
       }
       return resolve(response);
     });
-  });
+  }));
   const result = await Promise.allSettled(requests.map(get));
   return props.map((prop: Property, idx: number) => {
     const resp = result[Math.floor(idx / 25)];
@@ -456,6 +478,7 @@ async function filterAndFetchProperties(
     geoLocation, radius, priceFrom, priceMost, includeRecentlySold,
     commuteLocation,
   }: FetchPropertiesRequest,
+  progressFn: ProgressFn,
 ): Promise<Property[]> {
   const properties = await fetchProperties(
     geoLocation,
@@ -463,12 +486,13 @@ async function filterAndFetchProperties(
     priceFrom,
     priceMost,
     includeRecentlySold,
+    progressFn,
   );
-  const propsWithRents = await attachRentestimates(properties);
+  const propsWithRents = await attachRentestimates(properties, progressFn);
   if (!commuteLocation) {
     return propsWithRents;
   }
-  return attachCommuteTimes(propsWithRents, commuteLocation);
+  return attachCommuteTimes(propsWithRents, commuteLocation, progressFn);
 }
 
 interface ProviderProps {
@@ -476,6 +500,7 @@ interface ProviderProps {
 }
 const ContextState = {
   loading: false,
+  percent: 0,
   filteredProperties: [] as Property[],
   localUpdate: (_: LocalFilterSettings) => {
     // no-op
@@ -494,6 +519,7 @@ const PropertyListingsContext = React.createContext(ContextState);
 export function PropertyListingsProvider({ children }: ProviderProps) {
   const [filteredProperties, setFilteredProperties] = useState<Property[]>([] as Property[]);
   const [state, setState] = useState(ProviderDefaultState);
+  const [percent, setPercent] = useState(0);
 
   const localUpdate = useCallback((settings: LocalFilterSettings): void => {
     // This is a round-about way to enable sorts stacking. Since
@@ -510,8 +536,9 @@ export function PropertyListingsProvider({ children }: ProviderProps) {
         allProperties: [] as Property[],
         loading: true,
       });
+      setPercent(0);
       // eslint-disable-next-line max-len
-      const allProperties = await filterAndFetchProperties(req);
+      const allProperties = await filterAndFetchProperties(req, setPercent);
       setState({
         allProperties,
         loading: false,
@@ -524,8 +551,9 @@ export function PropertyListingsProvider({ children }: ProviderProps) {
     loading: state.loading,
     filteredProperties,
     localUpdate,
+    percent,
     remoteUpdate,
-  }), [state.loading, filteredProperties, localUpdate, remoteUpdate]);
+  }), [state.loading, filteredProperties, localUpdate, percent, remoteUpdate]);
   return (
     <PropertyListingsContext.Provider value={propertyListingsValue}>
       {children}
