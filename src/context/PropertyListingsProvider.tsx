@@ -388,6 +388,7 @@ type DistanceMatrixResponse = {
       status: string;
       duration: Value;
       distance: Value;
+      duration_in_traffic: Value;
     }[];
   }[];
 };
@@ -442,7 +443,7 @@ async function attachCommuteTimes(props: Property[], destination: string): Promi
     }
     const { value: { rows } } = resp;
     const { elements } = rows[idx % 25];
-    const { status, duration: { value } } = elements[0];
+    const { status, duration_in_traffic: { value } } = elements[0];
     if (status !== 'OK') {
       return prop;
     }

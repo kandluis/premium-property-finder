@@ -27,16 +27,18 @@ export default function Listing({ property }: ListingProps): React.ReactElement 
     city,
     detailUrl,
     imgSrc,
+    lastSold,
     livingArea,
     price,
     rentzestimate,
     state,
-    lastSold,
     statusType,
+    travelTime,
     zestimate,
   } = property;
   const columnClasses = classnames('column', 'col-4', 'col-xs-12', 'mb-5');
   const cardClasses = classnames('card');
+  const title = (travelTime) ? `[${(travelTime / 60).toFixed(1)} min] ${address}` : address;
   return (
     <div className={columnClasses} style={{ margin: '1rem 0' }}>
       <div
@@ -48,11 +50,11 @@ export default function Listing({ property }: ListingProps): React.ReactElement 
         style={{ cursor: 'pointer' }}
       >
         <div className="card-image">
-          <img className="img-responsive" src={imgSrc} alt={`${address}, ${city || 'Unknown'} ${state || 'NA'}`} />
+          <img className="img-responsive" src={imgSrc} alt={`${title}, ${city || 'Unknown'} ${state || 'NA'}`} />
         </div>
         <div className="card-header">
           <div className="card-title h5">
-            {(statusType === 'SOLD' && lastSold) ? `[${lastSold}] ${address}` : address}
+            {(statusType === 'SOLD' && lastSold) ? `[${lastSold}] ${title}` : title}
             ,
             {' '}
             {city || 'Unknown'}
