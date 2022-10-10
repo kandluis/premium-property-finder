@@ -56,6 +56,7 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
   const [shareUrl, setShareUrl] = useState<null | string>(null);
   const [remoteForm, setRemoteForm] = useQueryParam('remote', RemoteParser);
   const [localForm, setLocalForm] = useQueryParam('local', LocalParser);
+  remoteForm.commuteLocation = remoteForm.commuteLocation || remoteForm.geoLocation;
 
   const onShareClick = async () => {
     const urlReq = `${urlShortnerEndpoint}?key=${CUTTLY_API_KEY}&short=${encodeURIComponent(window.location.href)}`;
@@ -100,6 +101,8 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
               </label>
             </div>
             <LocationInput
+              id="geo-location"
+              placeholder="Nacogdoches, TX"
               handleInput={(value: string) => setRemoteForm((
                 latestForm: FetchPropertiesRequest,
               ) => ({
@@ -111,11 +114,13 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
           </div>
           <div className="column col-3 col-xs-12">
             <div className="col-sm-12">
-              <label className="form-label" htmlFor="geo-location">
+              <label className="form-label" htmlFor="commute-location">
                 Commute Location
               </label>
             </div>
             <LocationInput
+              id="commute-location"
+              placeholder="1600 Amphitheatre Parkway, Mountain View, CA"
               handleInput={(value: string) => setRemoteForm((
                 latestForm: FetchPropertiesRequest,
               ) => ({

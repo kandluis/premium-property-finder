@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import type { ChangeEvent, ReactElement } from 'react';
+import type { ChangeEvent, InputHTMLAttributes, ReactElement } from 'react';
 import usePlacesAutocomplete, { getDetails } from 'use-places-autocomplete';
 import type { HookReturn, Suggestion } from 'use-places-autocomplete';
 import useOnclickOutside from 'react-cool-onclickoutside';
 import pThrottle from 'p-throttle';
+import { notEmpty } from '../common';
 
 type PlaceInfo = {
   placeId: string,
@@ -11,12 +12,8 @@ type PlaceInfo = {
   address: string,
 };
 
-function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
-  return value !== null && value !== undefined;
-}
-
 const throttle = pThrottle({
-  limit: 10, interval: 1250, strict: true,
+  limit: 8, interval: 1250, strict: true,
 });
 
 const getPlaceInfo = throttle(async ({
@@ -42,13 +39,13 @@ const getPlaceInfo = throttle(async ({
   };
 });
 
-type LocationInputProps = {
+interface LocationInputProps extends InputHTMLAttributes<HTMLInputElement> {
   handleInput: (value: string) => void;
   defaultValue: string;
-};
+}
 
 export default function LocationInput(
-  { handleInput, defaultValue }: LocationInputProps,
+  { handleInput, defaultValue, ...inputProps }: LocationInputProps,
 ): ReactElement {
   const {
     ready,
@@ -88,21 +85,21 @@ export default function LocationInput(
     };
     const _ = fetchDetails();
   }, [data]);
-
+  const { id } = inputProps;
+  const listId = `autocomplete-data-${id || ''}`;
   return (
     <div className="col-10 col-sm-12" ref={ref}>
       <input
         className="form-input"
         type="text"
-        id="geo-location"
-        placeholder="Nacogdoches, TX"
         value={value}
         onChange={handleOnChange}
         disabled={!ready}
-        list="autocomplete-data"
+        list={listId}
+        {...inputProps}
       />
       {/* We can use the 'status' to decide whether we should display the dropdown or not */}
-      <datalist id="autocomplete-data">{status === 'OK' && renderSuggestions()}</datalist>
+      <datalist id={listId}>{status === 'OK' && renderSuggestions()}</datalist>
     </div>
   );
 }

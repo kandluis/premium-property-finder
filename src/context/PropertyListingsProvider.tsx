@@ -7,8 +7,9 @@ import {
   zillowBaseUrl,
 } from '../constants';
 import {
-  LocalFilterSettings,
   FetchPropertiesRequest,
+  LocalFilterSettings,
+  notEmpty,
   Property,
   sortFn,
 } from '../common';
@@ -353,9 +354,106 @@ function filterProperties(all: Property[], settings: LocalFilterSettings): Prope
   return filteredListings;
 }
 
+/*
+  @retuns: A date for next Tuesday 8:10 AM local time.
+*/
+function getNextTuesdayDeparture(): Date {
+  const dayInMill = 1000 * 60 * 60 * 24;
+  const TUESDAY = 2;
+  const currDate = new Date();
+  let departureDate = currDate;
+  if (currDate.getDay() !== TUESDAY
+    || (currDate.getHours() > 8
+      || (currDate.getHours() === 8 && currDate.getMinutes() > 10))) {
+    // Get next Tuesday.
+    departureDate = new Date(currDate.getTime() + dayInMill);
+    while (departureDate.getDay() !== TUESDAY) {
+      departureDate = new Date(departureDate.getTime() + dayInMill);
+    }
+  }
+  departureDate.setHours(8);
+  departureDate.setMinutes(10);
+  return departureDate;
+}
+
+type Value = {
+  value: number;
+  text: string;
+};
+type DistanceMatrixResponse = {
+  originAddresses: string[];
+  destinationAddresses: string[];
+  rows: {
+    elements: {
+      status: string;
+      duration: Value;
+      distance: Value;
+    }[];
+  }[];
+};
+/*
+  Attach distance to commute location if specified.
+
+  @param props - The properties for which we want to estimate commute times to.
+  @param destination - The destination location for travle time estimates.
+
+  @returns: An array of properties equivalent to `props` but with attached
+    travel times estimates if available.
+*/
+async function attachCommuteTimes(props: Property[], destination: string): Promise<Property[]> {
+  const genOrigin = ({
+    address, city, state, zipCode,
+  }: Property) => (city && state && zipCode ? `${address} ${city}, ${state} ${zipCode}` : null);
+  const allOrigins = props.map(genOrigin).filter(notEmpty);
+  const drivingOptions = {
+    departureTime: getNextTuesdayDeparture(),
+    trafficModel: window.google.maps.TrafficModel.BEST_GUESS,
+  };
+  const request = {
+    drivingOptions,
+    destinations: [destination],
+    travelMode: window.google.maps.TravelMode.DRIVING,
+    unitSystem: window.google.maps.UnitSystem.IMPERIAL,
+  };
+  // We can only process 25 origins at a time. Generate all requests.
+  const requests = [];
+  let startIdx = 0;
+  while (startIdx < allOrigins.length) {
+    requests.push({
+      ...request,
+      origins: allOrigins.slice(startIdx, startIdx + 25),
+    });
+    startIdx += 25;
+  }
+  const service = new window.google.maps.DistanceMatrixService();
+  const get = (req: any): Promise<DistanceMatrixResponse> => new Promise((resolve, reject) => { // eslint-disable-line
+    service.getDistanceMatrix(req, (response, status) => { // eslint-disable-line
+      if (status !== 'OK' || !response) {
+        return reject(status);
+      }
+      return resolve(response);
+    });
+  });
+  const result = await Promise.allSettled(requests.map(get));
+  return props.map((prop: Property, idx: number) => {
+    const resp = result[Math.floor(idx / 25)];
+    if (resp.status !== 'fulfilled') {
+      return prop;
+    }
+    const { value: { rows } } = resp;
+    const { elements } = rows[idx % 25];
+    const { status, duration: { value } } = elements[0];
+    if (status !== 'OK') {
+      return prop;
+    }
+    return { ...prop, travelTime: value };
+  });
+}
+
 async function filterAndFetchProperties(
   {
     geoLocation, radius, priceFrom, priceMost, includeRecentlySold,
+    commuteLocation,
   }: FetchPropertiesRequest,
 ): Promise<Property[]> {
   const properties = await fetchProperties(
@@ -365,7 +463,11 @@ async function filterAndFetchProperties(
     priceMost,
     includeRecentlySold,
   );
-  return attachRentestimates(properties);
+  const propsWithRents = await attachRentestimates(properties);
+  if (!commuteLocation) {
+    return propsWithRents;
+  }
+  return attachCommuteTimes(propsWithRents, commuteLocation);
 }
 
 interface ProviderProps {

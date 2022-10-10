@@ -42,6 +42,7 @@ interface Property {
   lotArea?: number,
   rentzestimate?: number
   state?: string,
+  travelTime?: number, // Travel time in minutes to commute location.
   zestimate?: number;
   zipCode?: number,
   zpid?: number,
@@ -160,12 +161,17 @@ function sortFn(order: SortOrder): (_1: Property, _2: Property) => number {
   }
 }
 
+function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
+  return value !== null && value !== undefined;
+}
+
 export {
   DefaultFetchPropertiesRequest,
   DefaultFilter,
   DefaultLocalSettings,
   HomeType,
   LocalFilterSettings,
+  notEmpty,
   FetchPropertiesRequest,
   FilterState,
   Property,
