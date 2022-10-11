@@ -1,5 +1,6 @@
 import accounting from 'accounting';
-import debounce from 'lodash.debounce';
+import debounce from 'lodash/debounce';
+import merge from 'lodash/merge';
 import pThrottle from 'p-throttle';
 import React, { useMemo, useCallback, useState } from 'react';
 import {
@@ -91,64 +92,47 @@ async function fetchRentalBitsEstimates(properties: Property[]): Promise<Databas
   });
   await Promise.all(fetch);
   // At this point we know that rents will have the right values set.
-  const newDB: Database = {};
-  properties.forEach((prop: Property) => {
-    if (!prop.zpid || !prop.zipCode) {
-      return;
+  return properties.reduce((db: Database, { zpid, zipCode }: Property) => {
+    if (!zpid || !zipCode) {
+      return db;
     }
-    const estimate = rents[prop.zipCode];
-    if (estimate) {
-      newDB[prop.zpid] = {
-        rentzestimate: estimate,
-      };
+    const estimate = rents[zipCode];
+    if (!estimate) {
+      return db;
     }
-  });
-  return newDB;
+    return merge(db, { [zpid]: { rentzestimate: estimate } });
+  }, {});
 }
 
 /**
-  Attaches the Zillow zestimate for rent to each propertiy.
+  Fetch the Zillow rentzestimate for rent to each propertiy.
 
   @param properties - The list of properties to which we attach a rental estimate.
+  @param progressFn - Function to call to update progress of fetching.
+    This function takes starts at 30% and completes at 50%.
 
-  @returns: An array of properties with attached rental estimates.
+  @returns: A Database containing newly fetched rental estimates for
+    any properties that needed it out of the passed-in properties.
 */
-async function attachRentestimates(
+async function fetchRentEstimates(
   properties: Property[],
   progressFn: ProgressFn,
-): Promise<Property[]> {
-  let rentalDB = await dbFetch();
+): Promise<Database> {
   progressFn(0.3);
-  properties.forEach(
-    ({ zpid, rentzestimate }) => {
-      if (zpid && rentzestimate) {
-        rentalDB[zpid] = { ...rentalDB[zpid], rentzestimate };
-      }
-    },
-  );
   const needRentEstimates = properties.filter(
     (item: Property) => (
       // Properties we can identify and compute ratio.
       item.zpid && item.address && item.zipCode && item.price
-      // Properties not already in our database (eg, we don't refresh estimates)
-      && !(item.zpid in rentalDB)
+      // Properties that don't already have rentzestimate.
+      && !(item.rentzestimate)
     ),
   );
+  let db = {};
   if (needRentEstimates.length > 0) {
-    const rentBitsEstimates = await fetchRentalBitsEstimates(needRentEstimates);
-    rentalDB = { ...rentalDB, ...rentBitsEstimates };
+    db = await fetchRentalBitsEstimates(needRentEstimates);
   }
-  progressFn(0.4);
-  // Async background update.
-  const _ = dbUpdate(rentalDB);
   progressFn(0.5);
-  const mergedProperties = properties.map((property: Property) => {
-    if (!property.zpid) {
-      return property;
-    }
-    return { ...property, ...rentalDB[property.zpid] };
-  });
-  return mergedProperties;
+  return db;
 }
 
 /**
@@ -406,24 +390,28 @@ type DistanceMatrixResponse = {
     }[];
   }[];
 };
+
 /*
-  Attach distance to commute location if specified.
+  Fetch distance to commute location if specified.
 
   @param props - The properties for which we want to estimate commute times to.
   @param destination - The destination location for travle time estimates.
+  @param progressFn - Function to update request progress. This function takes
+    progress from [50% to 100%).
 
-  @returns: An array of properties equivalent to `props` but with attached
-    travel times estimates if available.
+  @returns: An database of new commute times for properties which do not have
+    them, as provided in props.
 */
-async function attachCommuteTimes(
+async function fetchCommuteTimes(
   props: Property[],
   destination: string,
   progressFn: ProgressFn,
-): Promise<Property[]> {
+): Promise<Database> {
   const genOrigin = ({
     address, city, state, zipCode,
   }: Property) => (city && state && zipCode ? `${address} ${city}, ${state} ${zipCode}` : null);
-  const allOrigins = props.map(genOrigin).filter(notEmpty);
+  const needCommute = props.filter((prop) => !prop.travelTime);
+  const allOrigins = needCommute.map(genOrigin).filter(notEmpty);
   const drivingOptions = {
     departureTime: getNextTuesdayDeparture(),
     trafficModel: window.google.maps.TrafficModel.BEST_GUESS,
@@ -463,19 +451,22 @@ async function attachCommuteTimes(
     const res = await get(req);
     return res;
   }));
-  return props.map((prop: Property, idx: number) => {
+  return needCommute.reduce((db: Database, { zpid }: Property, idx: number) => {
     const resp = result[Math.floor(idx / 25)];
     if (resp.status !== 'fulfilled') {
-      return prop;
+      return db;
     }
     const { value: { rows } } = resp;
     const { elements } = rows[idx % 25];
     const { status, duration_in_traffic: { value } } = elements[0];
     if (status !== 'OK') {
-      return prop;
+      return db;
     }
-    return { ...prop, travelTime: value };
-  });
+    if (!zpid) {
+      return db;
+    }
+    return merge(db, { [zpid]: { travelTime: value } });
+  }, {});
 }
 
 async function filterAndFetchProperties(
@@ -493,11 +484,30 @@ async function filterAndFetchProperties(
     includeRecentlySold,
     progressFn,
   );
-  const propsWithRents = await attachRentestimates(properties, progressFn);
-  if (!commuteLocation) {
-    return propsWithRents;
+  // Fetch additional, costly API data from database and update results.
+  let db = await dbFetch();
+  const updateProp = (prop: Property): Property => {
+    if (!prop.zpid) {
+      return prop;
+    }
+    return { ...prop, ...db[prop.zpid] };
+  };
+  const updatedProps = properties.map(updateProp);
+  db = merge(db, await fetchRentEstimates(updatedProps, progressFn));
+  if (commuteLocation) {
+    db = merge(db, await fetchCommuteTimes(updatedProps, commuteLocation, progressFn));
   }
-  return attachCommuteTimes(propsWithRents, commuteLocation, progressFn);
+  db = properties.reduce((prevDB, { zpid, zestimate, rentzestimate }) => {
+    if (!zpid) {
+      return prevDB;
+    }
+    return merge(prevDB, { [zpid]: { zestimate, rentzestimate } });
+  }, db);
+  // Fire and forget.
+  const _ = dbUpdate(db);
+
+  // Merge into properties.
+  return properties.map(updateProp);
 }
 
 interface ProviderProps {

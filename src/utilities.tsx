@@ -283,6 +283,7 @@ function boundingBox(lat: number, lng: number, side: number): LocationBox {
 interface Database {
   [zpid: number]: {
     rentzestimate: number,
+    travelTime: number,
     zestimate?: number,
   },
 }
@@ -311,7 +312,10 @@ async function dbUpdate(db: Database): Promise<void> {
       'Content-Type': 'application/json',
       'Api-Key': DB_SECRET,
     },
-    body: JSON.stringify(db),
+    body: JSON.stringify({
+      data: db,
+      version: 2,
+    }),
   });
 }
 
