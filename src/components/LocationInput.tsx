@@ -80,7 +80,10 @@ export default function LocationInput(
 
   useEffect(() => {
     const fetchDetails = async () => {
-      const results = (await Promise.all(data.map(getPlaceInfo))).filter(notEmpty);
+      const results = (await Promise.all(data.map(async (val) => {
+        const res = await getPlaceInfo(val);
+        return res;
+      }))).filter(notEmpty);
       setPlaceDetails(results);
     };
     const _ = fetchDetails();

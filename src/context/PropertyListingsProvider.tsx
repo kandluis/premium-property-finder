@@ -447,17 +447,22 @@ async function attachCommuteTimes(
   const throttle = pThrottle({
     limit: 1, interval: 2000, strict: true,
   });
-  const get = throttle((req: any, idx: number): Promise<DistanceMatrixResponse> => new Promise((resolve, reject) => { // eslint-disable-line
+  let processed = 0;
+  const get = throttle((req: any): Promise<DistanceMatrixResponse> => new Promise((resolve, reject) => { // eslint-disable-line
     const service = new window.google.maps.DistanceMatrixService();
     service.getDistanceMatrix(req, (response, status) => { // eslint-disable-line
-      progressFn(0.5 + idx / requests.length);
+      processed += 1;
+      progressFn(0.5 + (processed / (2 * requests.length)));
       if (status !== 'OK' || !response) {
         return reject(status);
       }
       return resolve(response);
     });
   }));
-  const result = await Promise.allSettled(requests.map(get));
+  const result = await Promise.allSettled(requests.map(async (req) => {
+    const res = await get(req);
+    return res;
+  }));
   return props.map((prop: Property, idx: number) => {
     const resp = result[Math.floor(idx / 25)];
     if (resp.status !== 'fulfilled') {
@@ -537,12 +542,12 @@ export function PropertyListingsProvider({ children }: ProviderProps) {
         loading: true,
       });
       setPercent(0);
-      // eslint-disable-next-line max-len
       const allProperties = await filterAndFetchProperties(req, setPercent);
       setState({
         allProperties,
         loading: false,
       });
+      setPercent(1);
     };
     // Fetch gits triggered on any change. Give 1 sec between keys.
     return debounce(fetchFn, 1000);

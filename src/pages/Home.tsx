@@ -32,7 +32,7 @@ export default function Home(): React.ReactElement {
                       {filteredProperties.length}
                     </h3>
                   )
-                  : <ProgressBar width={400} percent={percent} />}
+                  : <ProgressBar percent={percent} />}
                 <div className="columns">
                   {filteredProperties.map((property) => (
                     <Listing property={property} key={property.zpid} />

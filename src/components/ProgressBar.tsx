@@ -1,18 +1,14 @@
 import React, { useState, useEffect, ReactElement } from 'react';
 import styled from 'styled-components';
 
-interface ProgressDivProps {
-  width: number;
-}
-
 interface ProgressProps {
   progress: number;
 }
 
-const ProgressDiv = styled.div<ProgressDivProps>`
+const ProgressDiv = styled.div`
   background-color: rgb(233, 233, 233);
   border-radius: .5rem;
-  width: ${(props) => props.width}px
+  width: 90%;
 `;
 
 const Progress = styled.div<ProgressProps>`
@@ -21,22 +17,21 @@ const Progress = styled.div<ProgressProps>`
   border-radius: 1rem;
   transition: 1s ease;
   transition-delay: 0.5s;
-  width: ${(props) => props.progress}px
+  width: ${(props) => props.progress}%
 `;
 
 type ProgressBarProps = {
-  width: number;
   percent: number;
 };
 
-export default function ProgressBar({ width, percent }: ProgressBarProps): ReactElement {
+export default function ProgressBar({ percent }: ProgressBarProps): ReactElement {
   const [value, setValue] = useState(0);
 
   useEffect(() => {
-    setValue(percent * width);
-  }, [percent, width]);
+    setValue(100 * percent);
+  }, [percent]);
   return (
-    <ProgressDiv width={width}>
+    <ProgressDiv>
       <Progress progress={value} />
     </ProgressDiv>
   );
