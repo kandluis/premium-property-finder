@@ -185,7 +185,7 @@ type AppResponse = LatLongResponse | ZillowResponse | RentBitsResponse | CuttlyA
   @param format - The format of the response expected from the url
   @param useProxy - If set to true, a proxy is used to avoid CORS restrictions
 
-  @returns: The response, in JSON format from the url.
+  @returns The response, in JSON format from the url.
 */
 async function getJsonResponse(
   url: string,
@@ -230,7 +230,7 @@ async function getJsonResponse(
 
   @param location - The geo location. Could be zip code, address, state, etc.
 
-  @returns: The coordinates of the location.
+  @returns The coordinates of the location.
 */
 async function getLatLong(location: string): Promise<Location | null> {
   const geoCodeUrl = `${geocodingBaseUrl}?key=${MAPQUEST_API_KEY}&location=${location.toLowerCase()}`;
@@ -292,7 +292,7 @@ interface Database {
 /**
   Fetches database of rental estimates.
 
-  @returns: A Database object contaiing known zpid and relevant information.
+  @returns A Database object contaiing known zpid and relevant information.
 */
 async function dbFetch(): Promise<Database> {
   const url = `${dbEndpoint}/get`;

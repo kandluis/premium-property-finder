@@ -35,11 +35,13 @@ module.exports = {
     'react',
     'react-hooks',
     '@typescript-eslint',
+    'eslint-plugin-tsdoc',
   ],
   settings: {
     react: { version: 'detect' },
   },
   rules: {
+    'tsdoc/syntax': 'error',
     'no-console': 'off',
     'import/extensions': [
       'error',

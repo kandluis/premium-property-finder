@@ -36,7 +36,7 @@ type ProgressFn = (_action: number | ((_prev: number) => number)) => void;
 
   @param box - The bounding box in which to search for property estimates.
 
-  @returns: The estimated price or null if not possible to estimate.
+  @returns The estimated price or null if not possible to estimate.
 */
 async function getRentBitsEstimate({ lat, lng }: Location): Promise<number | null> {
   const box = boundingBox(lat, lng, 1);
@@ -68,11 +68,11 @@ async function getRentBitsEstimate({ lat, lng }: Location): Promise<number | nul
 /**
   Fetches the rental estimates from bits rental API.
 
-  @param properties: The properties for which to try and fetch a rental estimate.
-  @param progressFn: Function to update progress. This function takes care of
+  @param properties - The properties for which to try and fetch a rental estimate.
+  @param progressFn - Function to update progress. This function takes care of
     going from [25%, 35%].
 
-  @returns: The database containing the estimated prices for each property.
+  @returns The database containing the estimated prices for each property.
 */
 async function fetchRentalBitsEstimates(
   properties: Property[],
@@ -126,7 +126,7 @@ async function fetchRentalBitsEstimates(
   @param progressFn - Function to call to update progress of fetching.
     This takes care of going from [20, 40].
 
-  @returns: A Database containing newly fetched rental estimates for
+  @returns A Database containing newly fetched rental estimates for
     any properties that needed it out of the passed-in properties.
 */
 async function fetchRentEstimates(
