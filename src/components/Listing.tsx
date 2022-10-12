@@ -36,9 +36,11 @@ export default function Listing({ property }: ListingProps): React.ReactElement 
     travelTime,
     zestimate,
   } = property;
+  const title = (travelTime) ? `[${(travelTime / 60).toFixed(1)} min] ${address}` : address;
+  const imgAltText = `${title}, ${city || 'Unknown'} ${state || 'NA'}`;
+  const finalImgSrc = (imgSrc.includes('maps.googleapis.com')) ? `https://via.placeholder.com/378x283?Text=${imgAltText}` : imgSrc;
   const columnClasses = classnames('column', 'col-4', 'col-xs-12', 'mb-5');
   const cardClasses = classnames('card');
-  const title = (travelTime) ? `[${(travelTime / 60).toFixed(1)} min] ${address}` : address;
   return (
     <div className={columnClasses} style={{ margin: '1rem 0' }}>
       <div
@@ -50,7 +52,7 @@ export default function Listing({ property }: ListingProps): React.ReactElement 
         style={{ cursor: 'pointer' }}
       >
         <div className="card-image">
-          <img className="img-responsive" src={imgSrc} alt={`${title}, ${city || 'Unknown'} ${state || 'NA'}`} />
+          <img className="img-responsive" src={finalImgSrc} alt={imgAltText} />
         </div>
         <div className="card-header">
           <div className="card-title h5">

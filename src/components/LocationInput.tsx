@@ -52,22 +52,16 @@ export default function LocationInput(
     debounce: 300,
   });
   const [placeDetails, setPlaceDetails] = useState<PlaceInfo[]>([]);
-  const ref = useOnclickOutside(() => {
-    // When user clicks outside of the component, we can dismiss
-    // the searched suggestions by calling this method
+  const divRef = useOnclickOutside(() => {
     clearSuggestions();
   });
 
   const handleOnChange = ({ target }: ChangeEvent<HTMLInputElement>): void => {
-    // Handle the user selecting a valid value.
     const match = placeDetails.filter(({ address }) => (address === target.value));
     if (match.length === 1) {
-      clearSuggestions();
       handleInput(match[0]);
     }
-    // Update the keyword of the input element. It matters to do this at
-    // the end given how things work.
-    setValue(target.value);
+    setValue(target.value, match.length === 0);
   };
   const renderSuggestions = () => placeDetails.map(({
     placeId, name, address,
@@ -82,11 +76,11 @@ export default function LocationInput(
       setPlaceDetails(results);
     };
     const _ = fetchDetails();
-  }, [data]);
+  }, [data, value.length]);
   const { id } = inputProps;
   const listId = `autocomplete-data-${id || ''}`;
   return (
-    <div className="col-10 col-sm-12" ref={ref}>
+    <div className="col-10 col-sm-12" ref={divRef}>
       <input
         className="form-input"
         type="text"
