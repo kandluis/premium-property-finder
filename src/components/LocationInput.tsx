@@ -4,13 +4,7 @@ import usePlacesAutocomplete, { getDetails } from 'use-places-autocomplete';
 import type { HookReturn, Suggestion } from 'use-places-autocomplete';
 import useOnclickOutside from 'react-cool-onclickoutside';
 import pThrottle from 'p-throttle';
-import { notEmpty } from '../common';
-
-type PlaceInfo = {
-  placeId: string,
-  name: string,
-  address: string,
-};
+import { notEmpty, PlaceInfo } from '../common';
 
 const throttle = pThrottle({
   limit: 8, interval: 1250, strict: true,
@@ -40,7 +34,7 @@ const getPlaceInfo = throttle(async ({
 });
 
 interface LocationInputProps extends InputHTMLAttributes<HTMLInputElement> {
-  handleInput: (value: string) => void;
+  handleInput: (value: PlaceInfo) => void;
   defaultValue: string;
 }
 
@@ -65,14 +59,15 @@ export default function LocationInput(
   });
 
   const handleOnChange = ({ target }: ChangeEvent<HTMLInputElement>): void => {
-    // Update the keyword of the input element
-    setValue(target.value);
     // Handle the user selecting a valid value.
     const match = placeDetails.filter(({ address }) => (address === target.value));
     if (match.length === 1) {
       clearSuggestions();
-      handleInput(match[0].address);
+      handleInput(match[0]);
     }
+    // Update the keyword of the input element. It matters to do this at
+    // the end given how things work.
+    setValue(target.value);
   };
   const renderSuggestions = () => placeDetails.map(({
     placeId, name, address,

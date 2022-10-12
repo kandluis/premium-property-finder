@@ -283,8 +283,10 @@ function boundingBox(lat: number, lng: number, side: number): LocationBox {
 interface Database {
   [zpid: number]: {
     rentzestimate: number,
-    travelTime: number,
     zestimate?: number,
+    // Keys correspond to place_id of destination.
+    // Values are the travel time from zpid.
+    [ destinationPlaceId: string ]: number | undefined,
   },
 }
 /**

@@ -11,6 +11,7 @@ import {
   FetchPropertiesRequest,
   LocalFilterSettings,
   notEmpty,
+  PlaceInfo,
   Property,
   sortFn,
 } from '../common';
@@ -68,29 +69,43 @@ async function getRentBitsEstimate({ lat, lng }: Location): Promise<number | nul
   Fetches the rental estimates from bits rental API.
 
   @param properties: The properties for which to try and fetch a rental estimate.
+  @param progressFn: Function to update progress. This function takes care of
+    going from [25%, 35%].
 
   @returns: The database containing the estimated prices for each property.
 */
-async function fetchRentalBitsEstimates(properties: Property[]): Promise<Database> {
+async function fetchRentalBitsEstimates(
+  properties: Property[],
+  progressFn: ProgressFn,
+): Promise<Database> {
+  progressFn(0.35);
   // We only do this by zip code to reduce the load on the API.
   const zips = properties.filter((item) => item.zipCode).map((item) => item.zipCode) as number[];
   const uniqueZips = Array.from(new Set(zips));
   const rents: { [key: number]: number } = {};
   const throttle = pThrottle({ limit: 5, interval: 3000 });
   const throttled = throttle(getRentBitsEstimate);
+  let processed = 0;
   const fetch = uniqueZips.map(async (zipCode: number) => {
     const location = await getLatLong(`${zipCode}`);
     if (location === null) {
+      processed += 1;
+      progressFn(0.25 + (0.35 - 0.25) * (processed / (1 + uniqueZips.length)));
       return false;
     }
     const rent = await throttled(location);
     if (rent === null) {
+      processed += 1;
+      progressFn(0.25 + (0.35 - 0.25) * (processed / (1 + uniqueZips.length)));
       return false;
     }
     rents[zipCode] = rent;
+    processed += 1;
+    progressFn(0.25 + (0.35 - 0.25) * (processed / (1 + uniqueZips.length)));
     return true;
   });
   await Promise.all(fetch);
+  progressFn(0.35);
   // At this point we know that rents will have the right values set.
   return properties.reduce((db: Database, { zpid, zipCode }: Property) => {
     if (!zpid || !zipCode) {
@@ -109,7 +124,7 @@ async function fetchRentalBitsEstimates(properties: Property[]): Promise<Databas
 
   @param properties - The list of properties to which we attach a rental estimate.
   @param progressFn - Function to call to update progress of fetching.
-    This function takes starts at 30% and completes at 50%.
+    This takes care of going from [20, 40].
 
   @returns: A Database containing newly fetched rental estimates for
     any properties that needed it out of the passed-in properties.
@@ -118,7 +133,7 @@ async function fetchRentEstimates(
   properties: Property[],
   progressFn: ProgressFn,
 ): Promise<Database> {
-  progressFn(0.3);
+  progressFn(0.2);
   const needRentEstimates = properties.filter(
     (item: Property) => (
       // Properties we can identify and compute ratio.
@@ -129,9 +144,9 @@ async function fetchRentEstimates(
   );
   let db = {};
   if (needRentEstimates.length > 0) {
-    db = await fetchRentalBitsEstimates(needRentEstimates);
+    db = await fetchRentalBitsEstimates(needRentEstimates, progressFn);
   }
-  progressFn(0.5);
+  progressFn(0.4);
   return db;
 }
 
@@ -395,18 +410,19 @@ type DistanceMatrixResponse = {
   Fetch distance to commute location if specified.
 
   @param props - The properties for which we want to estimate commute times to.
-  @param destination - The destination location for travle time estimates.
+  @param destination - The destination location for travel time estimates.
   @param progressFn - Function to update request progress. This function takes
-    progress from [50% to 100%).
+    progress from [40% to 90%].
 
   @returns: An database of new commute times for properties which do not have
     them, as provided in props.
 */
 async function fetchCommuteTimes(
   props: Property[],
-  destination: string,
+  { placeId }: PlaceInfo,
   progressFn: ProgressFn,
 ): Promise<Database> {
+  progressFn(0.4);
   const genOrigin = ({
     address, city, state, zipCode,
   }: Property) => (city && state && zipCode ? `${address} ${city}, ${state} ${zipCode}` : null);
@@ -418,7 +434,7 @@ async function fetchCommuteTimes(
   };
   const request = {
     drivingOptions,
-    destinations: [destination],
+    destinations: [{ placeId }],
     travelMode: window.google.maps.TravelMode.DRIVING,
     unitSystem: window.google.maps.UnitSystem.IMPERIAL,
   };
@@ -435,22 +451,23 @@ async function fetchCommuteTimes(
   const throttle = pThrottle({
     limit: 1, interval: 2000, strict: true,
   });
-  let processed = 0;
   const get = throttle((req: any): Promise<DistanceMatrixResponse> => new Promise((resolve, reject) => { // eslint-disable-line
     const service = new window.google.maps.DistanceMatrixService();
     service.getDistanceMatrix(req, (response, status) => { // eslint-disable-line
-      processed += 1;
-      progressFn(0.5 + (processed / (2 * requests.length)));
       if (status !== 'OK' || !response) {
         return reject(status);
       }
       return resolve(response);
     });
   }));
+  let processed = 0;
   const result = await Promise.allSettled(requests.map(async (req) => {
     const res = await get(req);
+    processed += 1;
+    progressFn(0.4 + (0.9 - 0.4) * (processed / (1 + requests.length)));
     return res;
   }));
+  progressFn(0.9);
   return needCommute.reduce((db: Database, { zpid }: Property, idx: number) => {
     const resp = result[Math.floor(idx / 25)];
     if (resp.status !== 'fulfilled') {
@@ -465,10 +482,19 @@ async function fetchCommuteTimes(
     if (!zpid) {
       return db;
     }
-    return merge(db, { [zpid]: { travelTime: value } });
+    return merge(db, { [zpid]: { [placeId]: value } });
   }, {});
 }
 
+/*
+  Fetchers remote properties as per FetchPropertiesRequest.
+
+  @param req - The remote property request with details required to fetch.
+  @param progressFn - Function to call when making progress on request. We
+    take care of going from [0%, 100%] progress.
+
+  @returns
+*/
 async function filterAndFetchProperties(
   {
     geoLocation, radius, priceFrom, priceMost, includeRecentlySold,
@@ -477,7 +503,7 @@ async function filterAndFetchProperties(
   progressFn: ProgressFn,
 ): Promise<Property[]> {
   const properties = await fetchProperties(
-    geoLocation,
+    geoLocation.address,
     radius,
     priceFrom,
     priceMost,
@@ -485,29 +511,45 @@ async function filterAndFetchProperties(
     progressFn,
   );
   // Fetch additional, costly API data from database and update results.
+  progressFn(0.0);
   let db = await dbFetch();
+  progressFn(0.1);
   const updateProp = (prop: Property): Property => {
-    if (!prop.zpid) {
+    if (!prop.zpid || !(prop.zpid in db)) {
       return prop;
     }
-    return { ...prop, ...db[prop.zpid] };
+    const updates = {
+      zestimate: db[prop.zpid].zestimate,
+      rentzestimate: db[prop.zpid].rentzestimate,
+      travelTime: db[prop.zpid][commuteLocation.placeId],
+    };
+    return { ...prop, ...updates };
   };
   const updatedProps = properties.map(updateProp);
+
+  // Update database with unknown values and merge into properties.
   db = merge(db, await fetchRentEstimates(updatedProps, progressFn));
-  if (commuteLocation) {
+  if (commuteLocation.placeId) {
     db = merge(db, await fetchCommuteTimes(updatedProps, commuteLocation, progressFn));
   }
-  db = properties.reduce((prevDB, { zpid, zestimate, rentzestimate }) => {
+  const finalProps = properties.map(updateProp);
+
+  // Update the database.
+  db = properties.reduce((prevDB, {
+    zpid, zestimate, rentzestimate, travelTime,
+  }) => {
     if (!zpid) {
       return prevDB;
     }
-    return merge(prevDB, { [zpid]: { zestimate, rentzestimate } });
+    return merge(prevDB, {
+      [zpid]: { zestimate, rentzestimate, [commuteLocation.placeId]: travelTime },
+    });
   }, db);
   // Fire and forget.
+  progressFn(0.95);
   const _ = dbUpdate(db);
-
-  // Merge into properties.
-  return properties.map(updateProp);
+  progressFn(1);
+  return finalProps;
 }
 
 interface ProviderProps {

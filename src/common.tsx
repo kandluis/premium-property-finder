@@ -25,6 +25,12 @@ const homeTypes = [
 ] as const;
 type HomeType = typeof homeTypes[number];
 
+type PlaceInfo = {
+  placeId: string,
+  name: string,
+  address: string,
+};
+
 interface Property {
   address: string,
   detailUrl: string,
@@ -51,16 +57,22 @@ interface Property {
 }
 
 interface FetchPropertiesRequest {
-  geoLocation: string;
-  commuteLocation: string;
+  geoLocation: PlaceInfo;
+  commuteLocation: PlaceInfo;
   radius: number;
   priceFrom: number;
   priceMost: number;
   includeRecentlySold: boolean;
 }
+
+const DefaultPlaceInfo = {
+  placeId: '',
+  name: '',
+  address: '',
+};
 const DefaultFetchPropertiesRequest: FetchPropertiesRequest = {
-  geoLocation: '',
-  commuteLocation: '',
+  geoLocation: DefaultPlaceInfo,
+  commuteLocation: DefaultPlaceInfo,
   radius: 3.5,
   priceFrom: 0,
   priceMost: 1500000,
@@ -189,6 +201,7 @@ export {
   notEmpty,
   FetchPropertiesRequest,
   FilterState,
+  PlaceInfo,
   Property,
   sortFn,
   SortOrder,

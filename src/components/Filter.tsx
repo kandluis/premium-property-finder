@@ -8,6 +8,7 @@ import {
   FetchPropertiesRequest,
   HomeType,
   LocalFilterSettings,
+  PlaceInfo,
   SortOrder,
 } from '../common';
 import LocationInput from './LocationInput';
@@ -103,13 +104,13 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
             <LocationInput
               id="geo-location"
               placeholder="Nacogdoches, TX"
-              handleInput={(value: string) => setRemoteForm((
+              handleInput={(place: PlaceInfo) => setRemoteForm((
                 latestForm: FetchPropertiesRequest,
               ) => ({
                 ...latestForm,
-                geoLocation: value,
+                geoLocation: place,
               }))}
-              defaultValue={remoteForm.geoLocation}
+              defaultValue={remoteForm.geoLocation.address}
             />
           </div>
           <div className="column col-3 col-xs-12">
@@ -121,13 +122,13 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
             <LocationInput
               id="commute-location"
               placeholder="1600 Amphitheatre Parkway, Mountain View, CA"
-              handleInput={(value: string) => setRemoteForm((
+              handleInput={(place: PlaceInfo) => setRemoteForm((
                 latestForm: FetchPropertiesRequest,
               ) => ({
                 ...latestForm,
-                commuteLocation: value,
+                commuteLocation: place,
               }))}
-              defaultValue={remoteForm.commuteLocation}
+              defaultValue={remoteForm.commuteLocation.address}
             />
           </div>
           <div className="column col-2 col-xs-5">
