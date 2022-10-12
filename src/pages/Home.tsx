@@ -35,7 +35,7 @@ export default function Home(): React.ReactElement {
                   : <ProgressBar percent={percent} />}
                 <div className="columns">
                   {filteredProperties.map((property) => (
-                    <Listing property={property} key={property.zpid} />
+                    <Listing property={property} key={`${property.zpid || ''}-${property.statusType}`} />
                   ))}
                 </div>
               </>
