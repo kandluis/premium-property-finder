@@ -23,6 +23,7 @@ export default function Home(): React.ReactElement {
                 <Filter
                   localUpdate={localUpdate}
                   remoteUpdate={remoteUpdate}
+                  results={filteredProperties}
                 />
                 {!loading
                   ? (

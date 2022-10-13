@@ -1,7 +1,8 @@
 import classnames from 'classnames';
 import React, { useEffect, useState } from 'react';
-import { useQueryParam } from 'use-query-params';
+import { CSVLink } from 'react-csv';
 import styled from 'styled-components';
+import { useQueryParam } from 'use-query-params';
 import {
   DefaultFetchPropertiesRequest,
   DefaultLocalSettings,
@@ -9,13 +10,13 @@ import {
   HomeType,
   LocalFilterSettings,
   PlaceInfo,
+  Property,
   SortOrder,
 } from '../common';
-import LocationInput from './LocationInput';
 import { CUTTLY_API_KEY, urlShortnerEndpoint } from '../constants';
-import { CuttlyApiResponse, getJsonResponse } from '../utilities';
-
+import LocationInput from './LocationInput';
 import styles from './styles.module.css';
+import { CuttlyApiResponse, getJsonResponse } from '../utilities';
 
 const FormRow = styled.div`
   padding-top: 10px;
@@ -28,6 +29,8 @@ type FilterProps = {
   localUpdate: (localSettings: LocalFilterSettings) => void,
   // Callback to update remote state (need to fetch new properties).
   remoteUpdate: (remoteSettings: FetchPropertiesRequest) => void,
+  // The currently displayed list of results. Used to generate download CSV.
+  results: Property[],
 };
 
 const RemoteParser = {
@@ -53,7 +56,7 @@ const LocalParser = {
   },
 };
 
-export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
+export default function Filter({ remoteUpdate, localUpdate, results }: FilterProps) {
   const [shareUrl, setShareUrl] = useState<null | string>(null);
   const [remoteForm, setRemoteForm] = useQueryParam('remote', RemoteParser);
   const [localForm, setLocalForm] = useQueryParam('local', LocalParser);
@@ -83,6 +86,7 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
 
   const containerClasses = classnames('container', 'mb-1', styles.container);
   const formClasses = classnames('form-horizontal', styles.form);
+
   return (
     <div className={containerClasses}>
       <form
@@ -368,6 +372,13 @@ export default function Filter({ remoteUpdate, localUpdate }: FilterProps) {
                 />
               )}
           </div>
+          <CSVLink
+            data={results}
+            filename="properties.csv"
+            type="button"
+          >
+            Download Results
+          </CSVLink>
         </FormRow>
       </form>
     </div>
