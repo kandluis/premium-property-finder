@@ -45,7 +45,6 @@ async function getRentBitsEstimate({ lat, lng }: Location): Promise<number | nul
   try {
     res = await getJsonResponse(url, 'json', true) as RentBitsResponse;
   } catch (e) {
-    console.log(e);
     return null;
   }
   if (res.data === null) {
@@ -559,6 +558,7 @@ const ContextState = {
   loading: false,
   percent: 0,
   filteredProperties: [] as Property[],
+  allProperties: [] as Property[],
   localUpdate: (_: LocalFilterSettings) => {
     // no-op
   },
@@ -606,11 +606,12 @@ export function PropertyListingsProvider({ children }: ProviderProps) {
   }, []);
   const propertyListingsValue = useMemo(() => ({
     loading: state.loading,
+    allProperties: state.allProperties,
     filteredProperties,
     localUpdate,
     percent,
     remoteUpdate,
-  }), [state.loading, filteredProperties, localUpdate, percent, remoteUpdate]);
+  }), [state.loading, state.allProperties, filteredProperties, localUpdate, percent, remoteUpdate]);
   return (
     <PropertyListingsContext.Provider value={propertyListingsValue}>
       {children}

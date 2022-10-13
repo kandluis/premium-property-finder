@@ -9,6 +9,7 @@ import {
   FetchPropertiesRequest,
   HomeType,
   LocalFilterSettings,
+  notEmpty,
   PlaceInfo,
   Property,
   SortOrder,
@@ -31,6 +32,8 @@ type FilterProps = {
   remoteUpdate: (remoteSettings: FetchPropertiesRequest) => void,
   // The currently displayed list of results. Used to generate download CSV.
   results: Property[],
+  // All fetched data, not just that displayed.
+  all: Property[],
 };
 
 const RemoteParser = {
@@ -56,7 +59,9 @@ const LocalParser = {
   },
 };
 
-export default function Filter({ remoteUpdate, localUpdate, results }: FilterProps) {
+export default function Filter({
+  remoteUpdate, localUpdate, results, all,
+}: FilterProps) {
   const [shareUrl, setShareUrl] = useState<null | string>(null);
   const [remoteForm, setRemoteForm] = useQueryParam('remote', RemoteParser);
   const [localForm, setLocalForm] = useQueryParam('local', LocalParser);
@@ -86,6 +91,15 @@ export default function Filter({ remoteUpdate, localUpdate, results }: FilterPro
 
   const containerClasses = classnames('container', 'mb-1', styles.container);
   const formClasses = classnames('form-horizontal', styles.form);
+  const getHomeType = (prop: Property): string => {
+    if (!prop.homeType) {
+      return '';
+    }
+    const parts = prop.homeType.split('_');
+    const upper = parts.map((part) => `${part[0]}${part.toLowerCase().slice(1)}`);
+    return upper.join(' ');
+  };
+  const homeTypes = ['All'].concat([...new Set(all.map(getHomeType))].filter(notEmpty)).sort();
 
   return (
     <div className={containerClasses}>
@@ -198,6 +212,7 @@ export default function Filter({ remoteUpdate, localUpdate, results }: FilterPro
                 <select
                   className="form-select"
                   id="sortorder"
+                  disabled={all.length === 0}
                   value={localForm.sortOrder}
                   onChange={(event) => setLocalForm((latestForm: LocalFilterSettings) => ({
                     ...latestForm,
@@ -229,6 +244,7 @@ export default function Filter({ remoteUpdate, localUpdate, results }: FilterPro
                   step="0.1"
                   id="meets-rule"
                   placeholder="1.5"
+                  disabled={all.length === 0}
                   value={localForm.meetsRule || ''}
                   onChange={(event) => setLocalForm((latestForm: LocalFilterSettings) => ({
                     ...latestForm,
@@ -250,12 +266,13 @@ export default function Filter({ remoteUpdate, localUpdate, results }: FilterPro
                   className="form-select"
                   id="hometype"
                   value={localForm.homeType || ''}
+                  disabled={all.length === 0}
                   onChange={(event) => setLocalForm((latestForm: LocalFilterSettings) => ({
                     ...latestForm,
                     homeType: event.target.value as HomeType,
                   }))}
                 >
-                  {localForm.homeTypes.map((type) => (
+                  {homeTypes.map((type) => (
                     <option key={type} value={type}>
                       {type}
                     </option>
@@ -276,6 +293,7 @@ export default function Filter({ remoteUpdate, localUpdate, results }: FilterPro
               <div className="col-2 col-sm-12">
                 <input
                   type="checkbox"
+                  disabled={all.length === 0}
                   id="only-rent"
                   checked={remoteForm.includeRecentlySold}
                   onChange={(event) => setRemoteForm((latestForm: FetchPropertiesRequest) => ({
@@ -297,6 +315,7 @@ export default function Filter({ remoteUpdate, localUpdate, results }: FilterPro
                 <input
                   type="checkbox"
                   id="only-rent"
+                  disabled={all.length === 0}
                   checked={localForm.rentOnly}
                   onChange={(event) => setLocalForm((latestForm: LocalFilterSettings) => ({
                     ...latestForm,
@@ -317,6 +336,7 @@ export default function Filter({ remoteUpdate, localUpdate, results }: FilterPro
                 <input
                   type="checkbox"
                   id="only-new-construction"
+                  disabled={all.length === 0}
                   checked={localForm.newConstruction}
                   onChange={(event) => setLocalForm((latestForm: LocalFilterSettings) => ({
                     ...latestForm,
@@ -337,6 +357,7 @@ export default function Filter({ remoteUpdate, localUpdate, results }: FilterPro
                 <input
                   type="checkbox"
                   id="only-rent"
+                  disabled={all.length === 0}
                   checked={localForm.includeLand}
                   onChange={(event) => setLocalForm((latestForm: LocalFilterSettings) => ({
                     ...latestForm,
@@ -364,6 +385,7 @@ export default function Filter({ remoteUpdate, localUpdate, results }: FilterPro
                 <input
                   type="button"
                   value="Share"
+                  disabled={all.length === 0}
                   onClick={() => {
                     const _ = (async () => {
                       await onShareClick();

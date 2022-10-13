@@ -220,7 +220,7 @@ async function getJsonResponse(
   try {
     sessionStorage.setItem(storageKey, JSON.stringify(parsedData));
   } catch (e) {
-    console.log(e);
+    // Do nothing.
   }
   return parsedData;
 }
@@ -236,11 +236,9 @@ async function getLatLong(location: string): Promise<Location | null> {
   const geoCodeUrl = `${geocodingBaseUrl}?key=${MAPQUEST_API_KEY}&location=${location.toLowerCase()}`;
   const { info: { statuscode }, results } = await getJsonResponse(geoCodeUrl, /* format= */'json', /* use_proxy= */true) as LatLongResponse;
   if (statuscode !== 0) {
-    console.log(`Failed to retrieve lat/long data from ${location}. Status code: ${statuscode}`);
     return null;
   }
   if (results.length === 0 || results[0].locations.length === 0) {
-    console.log(`Successful response with empty locations for location: ${location}`);
     return null;
   }
   const primaryResult = results[0].locations[0];

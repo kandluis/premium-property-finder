@@ -61,6 +61,10 @@ export default function LocationInput(
     if (match.length === 1) {
       handleInput(match[0]);
     }
+    // On empty input, reset the form.
+    if (target.value === '') {
+      handleInput({ placeId: '', name: '', address: '' });
+    }
     setValue(target.value, match.length === 0);
   };
   const renderSuggestions = () => placeDetails.map(({

@@ -17,20 +17,21 @@ export default function Home(): React.ReactElement {
         <PropertyListingsProvider>
           <PropertyListingsConsumer>
             {({
-              loading, percent, filteredProperties, remoteUpdate, localUpdate,
+              loading, percent, filteredProperties, allProperties, remoteUpdate, localUpdate,
             }) => (
               <>
                 <Filter
                   localUpdate={localUpdate}
                   remoteUpdate={remoteUpdate}
                   results={filteredProperties}
+                  all={allProperties}
                 />
                 {!loading
                   ? (
                     <h3>
-                      Num Results:
+                      Results:
                       {' '}
-                      {filteredProperties.length}
+                      {`${filteredProperties.length} of ${allProperties.length}`}
                     </h3>
                   )
                   : <ProgressBar percent={percent} />}

@@ -42,7 +42,6 @@ module.exports = {
   },
   rules: {
     'tsdoc/syntax': 'error',
-    'no-console': 'off',
     'import/extensions': [
       'error',
       'ignorePackages',

@@ -17,11 +17,12 @@ type SortOrder = typeof sortOrders[number];
 
 const homeTypes = [
   'All',
-  'Single Family',
+  'Condo',
   'Lot',
   'Manufactured',
-  'Townhouse',
   'Multi Family',
+  'Single Family',
+  'Townhouse',
 ] as const;
 type HomeType = typeof homeTypes[number];
 
