@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import type { ChangeEvent, InputHTMLAttributes, ReactElement } from 'react';
 import usePlacesAutocomplete, { getDetails } from 'use-places-autocomplete';
 import type { HookReturn, Suggestion } from 'use-places-autocomplete';
@@ -7,10 +7,10 @@ import pThrottle from 'p-throttle';
 import { notEmpty, PlaceInfo } from '../common';
 
 const throttle = pThrottle({
-  limit: 5, interval: 1250, strict: true,
+  limit: 10, interval: 1250, strict: true,
 });
 
-const getPlaceInfo = throttle(async ({
+const getPlaceInfo = async ({
   place_id, // eslint-disable-line camelcase
   structured_formatting: { main_text }, // eslint-disable-line camelcase
 }: Suggestion): Promise<PlaceInfo | null> => {
@@ -18,7 +18,12 @@ const getPlaceInfo = throttle(async ({
     placeId: place_id, // eslint-disable-line camelcase
     fields: ['formatted_address'],
   };
-  const result = await getDetails(request);
+  let result = null;
+  try {
+    result = await getDetails(request);
+  } catch {
+    // Do nothing. Skip errors.
+  }
   if (result === null || typeof (result) === 'string') {
     return null;
   }
@@ -31,7 +36,7 @@ const getPlaceInfo = throttle(async ({
     name: main_text, // eslint-disable-line camelcase
     address: formatted_address, // eslint-disable-line camelcase
   };
-});
+};
 
 interface LocationInputProps extends InputHTMLAttributes<HTMLInputElement> {
   handleInput: (value: PlaceInfo) => void;
@@ -71,16 +76,17 @@ export default function LocationInput(
     placeId, name, address,
   }) => (<option key={placeId} value={address}>{name}</option>));
 
+  const getInfo = useMemo(() => throttle(getPlaceInfo), []);
   useEffect(() => {
     const fetchDetails = async () => {
       const results = (await Promise.all(data.map(async (val) => {
-        const res = await getPlaceInfo(val);
+        const res = await getInfo(val);
         return res;
       }))).filter(notEmpty);
       setPlaceDetails(results);
     };
     const _ = fetchDetails();
-  }, [data, value.length]);
+  }, [data, getInfo]);
   const { id } = inputProps;
   const listId = `autocomplete-data-${id || ''}`;
   return (
