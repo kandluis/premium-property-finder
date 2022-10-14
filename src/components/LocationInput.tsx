@@ -7,7 +7,7 @@ import pThrottle from 'p-throttle';
 import { notEmpty, PlaceInfo } from '../common';
 
 const throttle = pThrottle({
-  limit: 8, interval: 1250, strict: true,
+  limit: 5, interval: 1250, strict: true,
 });
 
 const getPlaceInfo = throttle(async ({
