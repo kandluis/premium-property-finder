@@ -114,6 +114,15 @@ const DefaultFilter: FilterState = {
   local: DefaultLocalSettings,
 };
 
+const PropAccessors = {
+  getPrice: (prop: Property) => prop.price || prop.zestimate || 0,
+  getRentToPrice: (prop: Property) => 100 * (
+    (prop.rentzestimate || 0) / PropAccessors.getPrice(prop)),
+  getZestimateToPrice: (prop: Property) => 100 * ((prop.zestimate || prop.price) / (prop.price)),
+  getPricePerSqft: (prop: Property) => (prop.price || prop.zestimate || 0) / (prop.livingArea || 1),
+  getCommute: (prop: Property) => (prop.travelTime || Infinity) / 60,
+};
+
 /**
   Constructs a sorting function to sort by the specified order.
 
@@ -125,50 +134,50 @@ function sortFn(order: SortOrder): (_1: Property, _2: Property) => number {
   switch (order) {
     case 'Ascending Price':
       return (a: Property, b: Property) => {
-        const aPrice = (a.price || a.zestimate || 0);
-        const bPrice = (b.price || b.zestimate || 0);
+        const aPrice = PropAccessors.getPrice(a);
+        const bPrice = PropAccessors.getPrice(b);
         return aPrice - bPrice;
       };
     case 'Descending Price':
       return (a: Property, b: Property) => {
-        const aPrice = (a.price || a.zestimate || 0);
-        const bPrice = (b.price || b.zestimate || 0);
+        const aPrice = PropAccessors.getPrice(a);
+        const bPrice = PropAccessors.getPrice(b);
         return bPrice - aPrice;
       };
     case 'Ascending Rent/Price Ratio':
       return (a: Property, b: Property) => {
-        const aRatio = (a.rentzestimate || 0) / (a.price || a.zestimate || 0);
-        const bRatio = (b.rentzestimate || 0) / (b.price || b.zestimate || 0);
+        const aRatio = PropAccessors.getRentToPrice(a);
+        const bRatio = PropAccessors.getRentToPrice(b);
         return aRatio - bRatio;
       };
     case 'Descending Rent/Price Ratio':
       return (a: Property, b: Property) => {
-        const aRatio = (a.rentzestimate || 0) / (a.price || a.zestimate || 0);
-        const bRatio = (b.rentzestimate || 0) / (b.price || b.zestimate || 0);
+        const aRatio = PropAccessors.getRentToPrice(a);
+        const bRatio = PropAccessors.getRentToPrice(b);
         return bRatio - aRatio;
       };
     case 'Ascending Zestimate/Price Ratio':
       return (a: Property, b: Property) => {
-        const aRatio = (a.zestimate || a.price) / (a.price);
-        const bRatio = (b.zestimate || b.price) / (b.price);
+        const aRatio = PropAccessors.getZestimateToPrice(a);
+        const bRatio = PropAccessors.getZestimateToPrice(b);
         return aRatio - bRatio;
       };
     case 'Descending Zestimate/Price Ratio':
       return (a: Property, b: Property) => {
-        const aRatio = (a.zestimate || a.price) / (a.price);
-        const bRatio = (b.zestimate || b.price) / (b.price);
+        const aRatio = PropAccessors.getZestimateToPrice(a);
+        const bRatio = PropAccessors.getZestimateToPrice(b);
         return bRatio - aRatio;
       };
     case 'Ascending Price/SqFt':
       return (a: Property, b: Property) => {
-        const aRatio = (a.price || a.zestimate || 0) / (a.livingArea || 1);
-        const bRatio = (b.price || b.zestimate || 0) / (b.livingArea || 1);
+        const aRatio = PropAccessors.getPricePerSqft(a);
+        const bRatio = PropAccessors.getPricePerSqft(b);
         return aRatio - bRatio;
       };
     case 'Descending Price/SqFt':
       return (a: Property, b: Property) => {
-        const aRatio = (a.price || a.zestimate || 0) / (a.livingArea || 1);
-        const bRatio = (b.price || b.zestimate || 0) / (b.livingArea || 1);
+        const aRatio = PropAccessors.getPricePerSqft(a);
+        const bRatio = PropAccessors.getPricePerSqft(b);
         return bRatio - aRatio;
       };
     case 'Shortest Commute':
@@ -203,6 +212,7 @@ export {
   FetchPropertiesRequest,
   FilterState,
   PlaceInfo,
+  PropAccessors,
   Property,
   sortFn,
   SortOrder,

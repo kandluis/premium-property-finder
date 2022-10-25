@@ -1,6 +1,6 @@
 import classnames from 'classnames';
 import React from 'react';
-import { Property } from '../common';
+import { PropAccessors, Property } from '../common';
 
 type ListingProps = {
   property: Property,
@@ -9,6 +9,8 @@ type ListingProps = {
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
+  notation: 'compact',
+  maximumSignificantDigits: 4,
 });
 
 function openInNewTab(href: string): void {
@@ -36,7 +38,7 @@ export default function Listing({ property }: ListingProps): React.ReactElement 
     travelTime,
     zestimate,
   } = property;
-  const title = (travelTime) ? `[${(travelTime / 60).toFixed(1)} min] ${address}` : address;
+  const title = (travelTime) ? `[${(PropAccessors.getCommute(property)).toFixed(1)} min] ${address}` : address;
   const imgAltText = `${title}, ${city || 'Unknown'} ${state || 'NA'}`;
   const finalImgSrc = (imgSrc.includes('maps.googleapis.com')) ? `https://via.placeholder.com/378x283?Text=${imgAltText}` : imgSrc;
   const columnClasses = classnames('column', 'col-4', 'col-xs-12', 'mb-5');
@@ -64,15 +66,15 @@ export default function Listing({ property }: ListingProps): React.ReactElement 
             {state || 'NA'}
           </div>
           <div className="card-title h6">
-            {(price && statusType !== 'SOLD') ? `Price: ${currencyFormatter.format(price)}` : ''}
-            {(price && statusType === 'SOLD') ? `Sold For: ${currencyFormatter.format(price)}` : ''}
+            {(price && statusType !== 'SOLD') ? `Price: ${currencyFormatter.format(PropAccessors.getPrice(property))}` : ''}
+            {(price && statusType === 'SOLD') ? `Sold For: ${currencyFormatter.format(PropAccessors.getPrice(property))}` : ''}
             {(!price && statusType === 'SOLD') ? 'Unknown Sale Price' : ''}
             {(zestimate) ? ` (est. ${currencyFormatter.format(zestimate)})` : ''}
           </div>
           <div className="card-subtitle text-gray">
             Rent Estimate:
             {(rentzestimate) ? ` ${currencyFormatter.format(rentzestimate)}` : ' N/A'}
-            {(livingArea && price) ? `, ${currencyFormatter.format(price / livingArea)}/ft` : ''}
+            {(livingArea && price) ? `, ${currencyFormatter.format(PropAccessors.getPricePerSqft(property))}/ft` : ''}
           </div>
         </div>
         <div className="card-body">
@@ -88,9 +90,9 @@ export default function Listing({ property }: ListingProps): React.ReactElement 
           { livingArea || 'N/A'}
           sqft
           <br />
-          {(rentzestimate && price) ? `R/P: ${((100 * rentzestimate) / price).toFixed(2)}%` : ''}
+          {(rentzestimate && price) ? `R/P: ${(PropAccessors.getRentToPrice(property)).toFixed(2)}%` : ''}
           <br />
-          {(rentzestimate && zestimate) ? `R/P (est.): ${((100 * rentzestimate) / zestimate).toFixed(2)}%` : ''}
+          {(rentzestimate && zestimate) ? `R/P (est.): ${(PropAccessors.getZestimateToPrice(property)).toFixed(2)}%` : ''}
         </div>
       </div>
     </div>

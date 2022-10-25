@@ -4,6 +4,7 @@ import Filter from '../components/Filter';
 import Hero from '../components/Hero';
 import Listing from '../components/Listing';
 import ProgressBar from '../components/ProgressBar';
+import ResultSummary from '../components/ResultSummary';
 import {
   PropertyListingsProvider,
   PropertyListingsConsumer,
@@ -27,13 +28,7 @@ export default function Home(): React.ReactElement {
                   all={allProperties}
                 />
                 {!loading
-                  ? (
-                    <h3>
-                      Results:
-                      {' '}
-                      {`${filteredProperties.length} of ${allProperties.length}`}
-                    </h3>
-                  )
+                  ? <ResultSummary all={allProperties} filtered={filteredProperties} />
                   : <ProgressBar percent={percent} />}
                 <div className="columns">
                   {filteredProperties.map((property) => (
