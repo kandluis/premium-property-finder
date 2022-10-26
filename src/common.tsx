@@ -115,10 +115,11 @@ const DefaultFilter: FilterState = {
 };
 
 const PropAccessors = {
-  getPrice: (prop: Property) => prop.price || prop.zestimate || 0,
+  getPrice: (prop: Property) => prop.price || prop.zestimate || Infinity,
   getRentToPrice: (prop: Property) => 100 * (
     (prop.rentzestimate || 0) / PropAccessors.getPrice(prop)),
-  getZestimateToPrice: (prop: Property) => 100 * ((prop.zestimate || prop.price) / (prop.price)),
+  getZestimateToPrice: (prop: Property) => 100 * (
+    (prop.zestimate || prop.price) / PropAccessors.getPrice(prop)),
   getPricePerSqft: (prop: Property) => (prop.price || prop.zestimate || 0) / (prop.livingArea || 1),
   getCommute: (prop: Property) => (prop.travelTime || Infinity) / 60,
 };

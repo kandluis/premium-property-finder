@@ -1,4 +1,17 @@
 import classnames from 'classnames';
+
+import DownloadIcon from '@mui/icons-material/Download';
+import SendIcon from '@mui/icons-material/Send';
+import ShareIcon from '@mui/icons-material/Share';
+
+import Button from '@mui/material/Button';
+import FormControl from '@mui/material/FormControl';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormGroup from '@mui/material/FormGroup';
+import Switch from '@mui/material/Switch';
+
+import { LoadingButton } from '@mui/lab';
+
 import React, { useEffect, useState } from 'react';
 import { CSVLink } from 'react-csv';
 import styled from 'styled-components';
@@ -34,6 +47,8 @@ type FilterProps = {
   results: Property[],
   // All fetched data, not just that displayed.
   all: Property[],
+  // If we're currently loading data.
+  loading: boolean;
 };
 
 const RemoteParser = {
@@ -59,21 +74,74 @@ const LocalParser = {
   },
 };
 
+type ShareLinkState = {
+  // The link to share/copy to clip.
+  link: string | null;
+  // Whether we're loading link sharing.
+  loading: boolean;
+  // Whether we've attempted creating a shortlink already for this page.
+  attempted: boolean;
+}
+const DefaultShareLinkState = {
+  link: null,
+  loading: false,
+  attempted: false,
+};
+
+type SwitchOptions = {
+  title: string;
+  localKey?: keyof LocalFilterSettings;
+  remoteKey?: keyof FetchPropertiesRequest;
+};
+
 export default function Filter({
-  remoteUpdate, localUpdate, results, all,
+  remoteUpdate, localUpdate, results, all, loading,
 }: FilterProps) {
-  const [shareUrl, setShareUrl] = useState<null | string>(null);
+  const [share, setShare] = useState<ShareLinkState>(DefaultShareLinkState);
   const [remoteForm, setRemoteForm] = useQueryParam('remote', RemoteParser);
   const [localForm, setLocalForm] = useQueryParam('local', LocalParser);
   remoteForm.commuteLocation = remoteForm.commuteLocation || remoteForm.geoLocation;
 
+  const renderSwitch = ({ title, localKey, remoteKey }: SwitchOptions) => (
+    <FormControlLabel
+      key={localKey || remoteKey}
+      value="top"
+      label={title}
+      labelPlacement="top"
+      control={(
+        <Switch
+          color="primary"
+          checked={(localKey && localForm[localKey] as boolean)
+            || (remoteKey && remoteForm[remoteKey] as boolean) || false}
+          disabled={all.length === 0}
+          onChange={(event) => {
+            if (localKey) {
+              setLocalForm((latestForm: LocalFilterSettings) => ({
+                ...latestForm,
+                [localKey]: event.target.checked,
+              }));
+            }
+            if (remoteKey) {
+              setRemoteForm((latestForm: FetchPropertiesRequest) => ({
+                ...latestForm,
+                [remoteKey]: event.target.checked,
+              }));
+            }
+          }}
+        />
+      )}
+    />
+  );
+
   const onShareClick = async () => {
+    setShare({ link: null, loading: true, attempted: false });
     const urlReq = `${urlShortnerEndpoint}?key=${CUTTLY_API_KEY}&short=${encodeURIComponent(window.location.href)}`;
     const { url } = await getJsonResponse(urlReq, 'json', true) as CuttlyApiResponse;
-    if (url.status === 7) {
+    const shortLink = (url.status === 7) ? url.shortLink : null;
+    if (shortLink) {
       await navigator.clipboard.writeText(url.shortLink);
-      setShareUrl(url.shortLink);
     }
+    setShare({ link: shortLink, loading: false, attempted: true });
   };
 
   // When form is updated, make appropriate requests.
@@ -86,7 +154,7 @@ export default function Filter({
 
   // Also reset sharing link when anything in the form changes.
   useEffect(() => {
-    setShareUrl(null);
+    setShare(DefaultShareLinkState);
   }, [remoteForm, localForm]);
 
   const containerClasses = classnames('container', 'mb-1', styles.container);
@@ -100,16 +168,17 @@ export default function Filter({
     return upper.join(' ');
   };
   const homeTypes = ['All'].concat([...new Set(all.map(getHomeType))].filter(notEmpty)).sort();
-
+  const switches: SwitchOptions[] = [
+    { title: 'Include Recently Sold', remoteKey: 'includeRecentlySold' },
+    { title: 'Only If Rent is Available', localKey: 'rentOnly' },
+    { title: 'Only New Construction', localKey: 'newConstruction' },
+    { title: 'Include Land', localKey: 'includeLand' },
+  ];
   return (
     <div className={containerClasses}>
       <form
         className={formClasses}
         noValidate
-        onSubmit={(event) => {
-          event.preventDefault();
-          remoteUpdate(remoteForm);
-        }}
       >
         <h1>Refine your results</h1>
         <FormRow className="columns text-center">
@@ -282,116 +351,51 @@ export default function Filter({
             </div>
           </div>
         </FormRow>
-        <FormRow className="columns text-center">
-          <div className="column col-3 col-xs-5">
-            <div className="form-group">
-              <div className="col-4 col-sm-12">
-                <label className="form-label" htmlFor="only-rent">
-                  Inc. Sold
-                </label>
-              </div>
-              <div className="col-2 col-sm-12">
-                <input
-                  type="checkbox"
-                  disabled={all.length === 0}
-                  id="only-rent"
-                  checked={remoteForm.includeRecentlySold}
-                  onChange={(event) => setRemoteForm((latestForm: FetchPropertiesRequest) => ({
-                    ...latestForm,
-                    includeRecentlySold: event.target.checked,
-                  }))}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="column col-3 col-xs-5">
-            <div className="form-group">
-              <div className="col-4 col-sm-12">
-                <label className="form-label" htmlFor="only-rent">
-                  Req. Rent
-                </label>
-              </div>
-              <div className="col-2 col-sm-12">
-                <input
-                  type="checkbox"
-                  id="only-rent"
-                  disabled={all.length === 0}
-                  checked={localForm.rentOnly}
-                  onChange={(event) => setLocalForm((latestForm: LocalFilterSettings) => ({
-                    ...latestForm,
-                    rentOnly: event.target.checked,
-                  }))}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="column col-2 col-xs-5">
-            <div className="form-group">
-              <div className="col-6 col-sm-12">
-                <label className="form-label" htmlFor="only-rent">
-                  New Const.
-                </label>
-              </div>
-              <div className="col-2 col-sm-12">
-                <input
-                  type="checkbox"
-                  id="only-new-construction"
-                  disabled={all.length === 0}
-                  checked={localForm.newConstruction}
-                  onChange={(event) => setLocalForm((latestForm: LocalFilterSettings) => ({
-                    ...latestForm,
-                    newConstruction: event.target.checked,
-                  }))}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="column col-2 col-xs-5">
-            <div className="form-group">
-              <div className="col-5 col-sm-12">
-                <label className="form-label" htmlFor="only-rent">
-                  Land
-                </label>
-              </div>
-              <div className="col-2 col-sm-12">
-                <input
-                  type="checkbox"
-                  id="only-rent"
-                  disabled={all.length === 0}
-                  checked={localForm.includeLand}
-                  onChange={(event) => setLocalForm((latestForm: LocalFilterSettings) => ({
-                    ...latestForm,
-                    includeLand: event.target.checked,
-                  }))}
-                />
-              </div>
-            </div>
-          </div>
-        </FormRow>
+        <FormControl component="fieldset">
+          <FormGroup aria-label="position" row>
+            {switches.map(renderSwitch)}
+          </FormGroup>
+        </FormControl>
         <FormRow className="columns text-center">
           <div className="column col-5 col-xs-5">
-            <input type="submit" value="Submit" />
+            <LoadingButton
+              onClick={() => {
+                remoteUpdate(remoteForm);
+              }}
+              endIcon={<SendIcon />}
+              variant="contained"
+              size="medium"
+              loadingPosition="end"
+              loading={loading}
+            >
+              Submit
+            </LoadingButton>
           </div>
           <div className="column col-5 col-xs-5">
-            { (shareUrl)
+            { (share.link)
               ? (
                 <input
                   type="text"
                   readOnly
-                  value={shareUrl}
+                  value={share.link}
                 />
               )
               : (
-                <input
-                  type="button"
-                  value="Share"
-                  disabled={all.length === 0}
+                <LoadingButton
                   onClick={() => {
                     const _ = (async () => {
                       await onShareClick();
                     })();
                   }}
-                />
+                  startIcon={<ShareIcon />}
+                  variant="outlined"
+                  size="medium"
+                  loadingPosition="start"
+                  loading={share.loading}
+                  color={(share.attempted) ? 'error' : undefined}
+                >
+                  Share
+                </LoadingButton>
               )}
           </div>
           <CSVLink
@@ -399,7 +403,9 @@ export default function Filter({
             filename="properties.csv"
             type="button"
           >
-            Download Results
+            <Button variant="outlined" startIcon={<DownloadIcon />}>
+              Download
+            </Button>
           </CSVLink>
         </FormRow>
       </form>

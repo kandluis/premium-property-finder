@@ -26,6 +26,7 @@ export default function Home(): React.ReactElement {
                   remoteUpdate={remoteUpdate}
                   results={filteredProperties}
                   all={allProperties}
+                  loading={loading}
                 />
                 {!loading
                   ? <ResultSummary all={allProperties} filtered={filteredProperties} />
