@@ -1,6 +1,5 @@
 import { computeOffset, LatLng } from 'spherical-geometry-js';
 import { parseStringPromise } from 'xml2js';
-import { HomeType } from './common';
 import {
   dbEndpoint, DB_SECRET, proxyUrl, geocodingBaseUrl, MAPQUEST_API_KEY,
 } from './constants';
@@ -37,7 +36,7 @@ type HDPHomeInfo = {
   daysOnZillow: number;
   homeStatus: 'FOR_SALE';
   homeStatusForHDP: 'FOR_SALE';
-  homeType: HomeType;
+  homeType: string;
   isFeatured: boolean;
   isNonOwnerOccupied: boolean;
   isPreforeclosureAuction: boolean;

@@ -323,7 +323,7 @@ async function fetchProperties(
 function filterProperties(all: Property[], settings: LocalFilterSettings): Property[] {
   let filteredListings = [...all];
   const {
-    homeType,
+    homeTypes,
     includeLand,
     meetsRule,
     newConstruction,
@@ -360,8 +360,11 @@ function filterProperties(all: Property[], settings: LocalFilterSettings): Prope
       return ratio >= meetsRule;
     });
   }
-  if (homeType !== 'All') {
-    filteredListings = filteredListings.filter((item) => item.homeType === homeType.replace(' ', '_').toUpperCase());
+  if (homeTypes) {
+    const selectedTypes = homeTypes.map((type) => type.replace(' ', '_').toUpperCase());
+    filteredListings = filteredListings.filter(
+      (item) => item.homeType && selectedTypes.includes(item.homeType),
+    );
   }
   return filteredListings;
 }

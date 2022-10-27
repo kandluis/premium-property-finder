@@ -1,14 +1,20 @@
+/* eslint-disable react/jsx-props-no-spreading */
 import classnames from 'classnames';
 
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import DownloadIcon from '@mui/icons-material/Download';
 import SendIcon from '@mui/icons-material/Send';
 import ShareIcon from '@mui/icons-material/Share';
 
+import Autocomplete from '@mui/material/Autocomplete';
 import Button from '@mui/material/Button';
+import Checkbox from '@mui/material/Checkbox';
 import FormControl from '@mui/material/FormControl';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormGroup from '@mui/material/FormGroup';
 import Switch from '@mui/material/Switch';
+import TextField from '@mui/material/TextField';
 
 import { LoadingButton } from '@mui/lab';
 
@@ -20,7 +26,6 @@ import {
   DefaultFetchPropertiesRequest,
   DefaultLocalSettings,
   FetchPropertiesRequest,
-  HomeType,
   LocalFilterSettings,
   notEmpty,
   PlaceInfo,
@@ -167,7 +172,10 @@ export default function Filter({
     const upper = parts.map((part) => `${part[0]}${part.toLowerCase().slice(1)}`);
     return upper.join(' ');
   };
-  const homeTypes = ['All'].concat([...new Set(all.map(getHomeType))].filter(notEmpty)).sort();
+  const homeTypes = ([...new Set(all.map(getHomeType))].filter(notEmpty)).sort();
+  if (localForm.homeTypes === null && homeTypes.length > 0) {
+    localForm.homeTypes = (homeTypes.includes('Single Family')) ? ['Single Family'] : homeTypes;
+  }
   const switches: SwitchOptions[] = [
     { title: 'Include Recently Sold', remoteKey: 'includeRecentlySold' },
     { title: 'Only If Rent is Available', localKey: 'rentOnly' },
@@ -323,33 +331,33 @@ export default function Filter({
               </div>
             </div>
           </div>
-          <div className="column col-4 col-xs-12">
-            <div className="form-group">
-              <div className="col-4 col-sm-12">
-                <label className="form-label" htmlFor="hometype">
-                  Type
-                </label>
-              </div>
-              <div className="col-8 col-sm-12">
-                <select
-                  className="form-select"
-                  id="hometype"
-                  value={localForm.homeType || ''}
-                  disabled={all.length === 0}
-                  onChange={(event) => setLocalForm((latestForm: LocalFilterSettings) => ({
-                    ...latestForm,
-                    homeType: event.target.value as HomeType,
-                  }))}
-                >
-                  {homeTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
+          <Autocomplete
+            multiple
+            disableCloseOnSelect
+            id="hometype"
+            limitTags={1}
+            disabled={all.length === 0}
+            options={homeTypes}
+            value={localForm.homeTypes || homeTypes}
+            onChange={(event, types: string[]) => setLocalForm(
+              (latestForm: LocalFilterSettings) => ({
+                ...latestForm,
+                homeTypes: types,
+              }),
+            )}
+            renderOption={(props, option, { selected }) => (
+              <li {...props}>
+                <Checkbox
+                  icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+                  checkedIcon={<CheckBoxIcon fontSize="small" />}
+                  style={{ marginRight: 8 }}
+                  checked={selected}
+                />
+                {option}
+              </li>
+            )}
+            renderInput={(params) => <TextField {...params} label="Home Type" />}
+          />
         </FormRow>
         <FormControl component="fieldset">
           <FormGroup aria-label="position" row>

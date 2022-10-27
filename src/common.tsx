@@ -15,17 +15,6 @@ const sortOrders = [
 ] as const;
 type SortOrder = typeof sortOrders[number];
 
-const homeTypes = [
-  'All',
-  'Condo',
-  'Lot',
-  'Manufactured',
-  'Multi Family',
-  'Single Family',
-  'Townhouse',
-] as const;
-type HomeType = typeof homeTypes[number];
-
 type PlaceInfo = {
   placeId: string,
   name: string,
@@ -45,7 +34,7 @@ interface Property {
   baths?: number,
   beds?: number,
   city?: string,
-  homeType?: HomeType,
+  homeType?: string,
   lastSold?: string,
   livingArea?: number;
   lotArea?: number,
@@ -85,11 +74,10 @@ interface LocalFilterSettings {
   rentOnly: boolean;
   newConstruction: boolean;
   includeLand: boolean;
-  homeType: HomeType;
+  homeTypes: string[] | null;
   sortOrder: SortOrder;
 
   readonly sortOrders: readonly SortOrder[];
-  readonly homeTypes: readonly HomeType[];
 }
 const DefaultLocalSettings: LocalFilterSettings = {
   meetsRule: null,
@@ -98,8 +86,7 @@ const DefaultLocalSettings: LocalFilterSettings = {
   includeLand: false,
   sortOrder: 'Shortest Commute',
   sortOrders,
-  homeType: 'All',
-  homeTypes,
+  homeTypes: null,
 };
 
 interface FilterState {
@@ -207,7 +194,6 @@ export {
   DefaultFetchPropertiesRequest,
   DefaultFilter,
   DefaultLocalSettings,
-  HomeType,
   LocalFilterSettings,
   notEmpty,
   FetchPropertiesRequest,
