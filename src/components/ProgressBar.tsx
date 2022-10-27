@@ -1,38 +1,34 @@
-import React, { useState, useEffect, ReactElement } from 'react';
-import styled from 'styled-components';
+/* eslint-disable react/jsx-props-no-spreading */
+import * as React from 'react';
+import Box from '@mui/material/Box';
+import LinearProgress, { LinearProgressProps, linearProgressClasses } from '@mui/material/LinearProgress';
+import { styled } from '@mui/material/styles';
+import Typography from '@mui/material/Typography';
 
-interface ProgressProps {
-  progress: number;
-}
+const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
+  height: 15,
+  borderRadius: 10,
+  [`&.${linearProgressClasses.colorPrimary}`]: {
+    backgroundColor: theme.palette.grey[theme.palette.mode === 'light' ? 200 : 800],
+  },
+  [`& .${linearProgressClasses.bar}`]: {
+    borderRadius: 10,
+    backgroundColor: theme.palette.mode === 'light' ? '#1a90ff' : '#308fe8',
+  },
+}));
 
-const ProgressDiv = styled.div`
-  background-color: rgb(233, 233, 233);
-  border-radius: .5rem;
-  width: 90%;
-`;
-
-const Progress = styled.div<ProgressProps>`
-  background-color: rgb(62, 122, 235);
-  height: 10px;
-  border-radius: 1rem;
-  transition: 1s ease;
-  transition-delay: 0.5s;
-  width: ${(props) => props.progress}%
-`;
-
-type ProgressBarProps = {
-  percent: number;
-};
-
-export default function ProgressBar({ percent }: ProgressBarProps): ReactElement {
-  const [value, setValue] = useState(0);
-
-  useEffect(() => {
-    setValue(100 * percent);
-  }, [percent]);
+export default function ProgressBar(props: LinearProgressProps & { value: number }) {
+  const { value } = props;
   return (
-    <ProgressDiv>
-      <Progress progress={value} />
-    </ProgressDiv>
+    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+      <Box sx={{ width: '100%', mr: 1 }}>
+        <BorderLinearProgress variant="determinate" {...props} />
+      </Box>
+      <Box sx={{ minWidth: 35 }}>
+        <Typography variant="body2" color="text.secondary">
+          {`${Math.round(value)}%`}
+        </Typography>
+      </Box>
+    </Box>
   );
 }
