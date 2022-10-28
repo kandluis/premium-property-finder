@@ -70,7 +70,7 @@ const DefaultFetchPropertiesRequest: FetchPropertiesRequest = {
 };
 
 interface LocalFilterSettings {
-  meetsRule: number | null;
+  meetsRule: [number, number];
   rentOnly: boolean;
   newConstruction: boolean;
   includeLand: boolean;
@@ -80,7 +80,7 @@ interface LocalFilterSettings {
   readonly sortOrders: readonly SortOrder[];
 }
 const DefaultLocalSettings: LocalFilterSettings = {
-  meetsRule: null,
+  meetsRule: [0, 2],
   rentOnly: false,
   newConstruction: false,
   includeLand: false,

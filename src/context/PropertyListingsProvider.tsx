@@ -8,6 +8,7 @@ import {
   zillowBaseUrl,
 } from '../constants';
 import {
+  DefaultLocalSettings,
   FetchPropertiesRequest,
   LocalFilterSettings,
   notEmpty,
@@ -345,21 +346,21 @@ function filterProperties(all: Property[], settings: LocalFilterSettings): Prope
       (item) => item.beds && item.baths,
     );
   }
-  if (meetsRule) {
-    filteredListings = filteredListings.filter((item) => {
-      if (!item.rentzestimate) {
-        return !rentOnly;
-      }
-      if (item.rentzestimate <= 0) {
-        return !rentOnly;
-      }
-      if (!item.price && !item.zestimate) {
-        return !rentOnly;
-      }
-      const ratio = 100 * (item.rentzestimate / (item.price || item.rentzestimate));
-      return ratio >= meetsRule;
-    });
-  }
+  const [minR, maxR] = meetsRule;
+  const [minRBound, maxRBound] = DefaultLocalSettings.meetsRule;
+  filteredListings = filteredListings.filter((item) => {
+    if (!item.rentzestimate) {
+      return !rentOnly;
+    }
+    if (item.rentzestimate <= 0) {
+      return !rentOnly;
+    }
+    if (!item.price && !item.zestimate) {
+      return !rentOnly;
+    }
+    const ratio = 100 * (item.rentzestimate / (item.price || item.rentzestimate));
+    return (minR === minRBound || minR <= ratio) && (maxR === maxRBound || ratio <= maxR);
+  });
   if (homeTypes) {
     const selectedTypes = homeTypes.map((type) => type.replace(' ', '_').toUpperCase());
     filteredListings = filteredListings.filter(

@@ -7,14 +7,19 @@ import DownloadIcon from '@mui/icons-material/Download';
 import SendIcon from '@mui/icons-material/Send';
 import ShareIcon from '@mui/icons-material/Share';
 
-import Autocomplete from '@mui/material/Autocomplete';
-import Button from '@mui/material/Button';
-import Checkbox from '@mui/material/Checkbox';
-import FormControl from '@mui/material/FormControl';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import FormGroup from '@mui/material/FormGroup';
-import Switch from '@mui/material/Switch';
-import TextField from '@mui/material/TextField';
+import {
+  Autocomplete,
+  Box,
+  Button,
+  Checkbox,
+  FormControl,
+  FormControlLabel,
+  Slider,
+  Stack,
+  Switch,
+  TextField,
+  Typography,
+} from '@mui/material';
 
 import { LoadingButton } from '@mui/lab';
 
@@ -42,6 +47,13 @@ const FormRow = styled.div`
   padding-bottom: 10px;
   text-align: left;
 `;
+
+const TinyText = styled(Typography)({
+  fontSize: '0.75rem',
+  opacity: 0.38,
+  fontWeight: 500,
+  letterSpacing: 0.2,
+});
 
 type FilterProps = {
   // Callback to update local state.
@@ -305,64 +317,97 @@ export default function Filter({
               </div>
             </div>
           </div>
-          <div className="column col-2 col-xs-5">
-            <div className="form-group">
-              <div className="col-4 col-sm-8">
-                <label className="form-label" htmlFor="meets-rule">
-                  Min P/R
-                </label>
-              </div>
-              <div className="col-5 col-sm-8">
-                <input
-                  className="form-input"
-                  min="0"
-                  max="100"
-                  type="number"
-                  step="0.1"
-                  id="meets-rule"
-                  placeholder="1.5"
-                  disabled={all.length === 0}
-                  value={localForm.meetsRule || ''}
-                  onChange={(event) => setLocalForm((latestForm: LocalFilterSettings) => ({
-                    ...latestForm,
-                    meetsRule: Number(event.target.value),
-                  }))}
-                />
-              </div>
-            </div>
-          </div>
-          <Autocomplete
-            multiple
-            disableCloseOnSelect
-            id="hometype"
-            limitTags={1}
-            disabled={all.length === 0}
-            options={homeTypes}
-            value={localForm.homeTypes || homeTypes}
-            onChange={(event, types: string[]) => setLocalForm(
-              (latestForm: LocalFilterSettings) => ({
-                ...latestForm,
-                homeTypes: types,
-              }),
-            )}
-            renderOption={(props, option, { selected }) => (
-              <li {...props}>
-                <Checkbox
-                  icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
-                  checkedIcon={<CheckBoxIcon fontSize="small" />}
-                  style={{ marginRight: 8 }}
-                  checked={selected}
-                />
-                {option}
-              </li>
-            )}
-            renderInput={(params) => <TextField {...params} label="Home Type" />}
-          />
         </FormRow>
         <FormControl component="fieldset">
-          <FormGroup aria-label="position" row>
+          <Stack direction="row" alignItems="center" justifyContent="space-evenly" spacing={5}>
+            <FormControlLabel
+              value="top"
+              label="Price to Rent Ratio"
+              labelPlacement="top"
+              control={(
+                <Box sx={{ width: 200 }}>
+                  <Slider
+                    getAriaLabel={(index) => `${(index === 0) ? 'Minimum' : 'Maximum'} Price to Rent Ratio`}
+                    id="meets-rule"
+                    valueLabelDisplay="auto"
+                    disableSwap
+                    step={0.1}
+                    min={DefaultLocalSettings.meetsRule[0]}
+                    max={DefaultLocalSettings.meetsRule[1]}
+                    disabled={all.length === 0}
+                    value={localForm.meetsRule}
+                    onChange={(event, newValue: number | number[], activeThumb: number) => {
+                      if (!Array.isArray(newValue)) {
+                        return;
+                      }
+                      let [min, max] = newValue;
+                      const minDistance = 0.1;
+                      const [minBound, maxBound] = DefaultLocalSettings.meetsRule;
+                      if (max - min < minDistance) {
+                        if (activeThumb === minBound) {
+                          const clamped = Math.min(min, maxBound - minDistance);
+                          [min, max] = [clamped, clamped + minDistance];
+                        } else {
+                          const clamped = Math.max(max, minDistance);
+                          [min, max] = [clamped - minDistance, clamped];
+                        }
+                      }
+                      setLocalForm((latestForm: LocalFilterSettings) => ({
+                        ...latestForm,
+                        meetsRule: [min, max],
+                      }));
+                    }}
+                    getAriaValueText={(value: number) => `${value}%`}
+                  />
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      mt: -1,
+                    }}
+                  >
+                    <TinyText>
+                      {`${localForm.meetsRule[0]}%`}
+                    </TinyText>
+                    <TinyText>
+                      {`${localForm.meetsRule[1]}%`}
+                    </TinyText>
+                  </Box>
+                </Box>
+              )}
+            />
+            <Autocomplete
+              multiple
+              disableCloseOnSelect
+              id="hometype"
+              limitTags={1}
+              disabled={all.length === 0}
+              options={homeTypes}
+              value={localForm.homeTypes || homeTypes}
+              onChange={(event, types: string[]) => setLocalForm(
+                (latestForm: LocalFilterSettings) => ({
+                  ...latestForm,
+                  homeTypes: types,
+                }),
+              )}
+              renderOption={(props, option, { selected }) => (
+                <li {...props}>
+                  <Checkbox
+                    icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+                    checkedIcon={<CheckBoxIcon fontSize="small" />}
+                    style={{ marginRight: 8 }}
+                    checked={selected}
+                  />
+                  {option}
+                </li>
+              )}
+              renderInput={(params) => <TextField {...params} label="Home Type" />}
+            />
+          </Stack>
+          <Stack direction="row" alignItems="center" justifyContent="space-evenly" spacing={5}>
             {switches.map(renderSwitch)}
-          </FormGroup>
+          </Stack>
         </FormControl>
         <FormRow className="columns text-center">
           <div className="column col-5 col-xs-5">
