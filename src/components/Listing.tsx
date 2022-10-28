@@ -90,9 +90,9 @@ export default function Listing({ property }: ListingProps): React.ReactElement 
           { livingArea || 'N/A'}
           sqft
           <br />
-          {(rentzestimate && price) ? `R/P: ${(PropAccessors.getRentToPrice(property)).toFixed(2)}%` : ''}
+          {(rentzestimate && price) ? `Rent/Price: ${(PropAccessors.getRentToPrice(property)).toFixed(2)}%` : ''}
           <br />
-          {(rentzestimate && zestimate) ? `R/P (est.): ${(PropAccessors.getZestimateToPrice(property)).toFixed(2)}%` : ''}
+          {(rentzestimate && zestimate) ? `Zestimate/Price (est.): ${(PropAccessors.getZestimateToPrice(property)).toFixed(2)}%` : ''}
         </div>
       </div>
     </div>

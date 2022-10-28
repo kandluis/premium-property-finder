@@ -289,37 +289,26 @@ export default function Filter({
             </div>
           </div>
         </FormRow>
-        <FormRow className="columns text-center">
-          <div className="column col-5 col-xs-12">
-            <div className="form-group">
-              <div className="col-4 col-sm-8">
-                <label className="form-label" htmlFor="sortorder">
-                  Sort
-                </label>
-              </div>
-              <div className="col-8 col-sm-10">
-                <select
-                  className="form-select"
-                  id="sortorder"
-                  disabled={all.length === 0}
-                  value={localForm.sortOrder}
-                  onChange={(event) => setLocalForm((latestForm: LocalFilterSettings) => ({
-                    ...latestForm,
-                    sortOrder: event.target.value as SortOrder,
-                  }))}
-                >
-                  {localForm.sortOrders.map((order) => (
-                    <option key={order} value={order}>
-                      {order}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-        </FormRow>
         <FormControl component="fieldset">
-          <Stack direction="row" alignItems="center" justifyContent="space-evenly" spacing={5}>
+          <Stack direction="row" alignItems="center" justifyContent="space-evenly" spacing={10}>
+            <Autocomplete
+              id="sort-order"
+              disableClearable
+              limitTags={1}
+              disabled={all.length === 0}
+              options={localForm.sortOrders}
+              value={localForm.sortOrder}
+              onChange={(event, order: SortOrder | null) => {
+                if (order === null) {
+                  return;
+                }
+                setLocalForm((latestForm: LocalFilterSettings) => ({
+                  ...latestForm,
+                  sortOrder: order,
+                }));
+              }}
+              renderInput={(params) => <TextField {...params} label="Home Type" />}
+            />
             <FormControlLabel
               value="top"
               label="Price to Rent Ratio"
@@ -405,7 +394,7 @@ export default function Filter({
               renderInput={(params) => <TextField {...params} label="Home Type" />}
             />
           </Stack>
-          <Stack direction="row" alignItems="center" justifyContent="space-evenly" spacing={5}>
+          <Stack direction="row" alignItems="center" justifyContent="center" spacing={10}>
             {switches.map(renderSwitch)}
           </Stack>
         </FormControl>
