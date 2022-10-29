@@ -291,24 +291,6 @@ export default function Filter({
         </FormRow>
         <FormControl component="fieldset">
           <Stack direction="row" alignItems="center" justifyContent="space-evenly" spacing={10}>
-            <Autocomplete
-              id="sort-order"
-              disableClearable
-              limitTags={1}
-              disabled={all.length === 0}
-              options={localForm.sortOrders}
-              value={localForm.sortOrder}
-              onChange={(event, order: SortOrder | null) => {
-                if (order === null) {
-                  return;
-                }
-                setLocalForm((latestForm: LocalFilterSettings) => ({
-                  ...latestForm,
-                  sortOrder: order,
-                }));
-              }}
-              renderInput={(params) => <TextField {...params} label="Home Type" />}
-            />
             <FormControlLabel
               value="top"
               label="Price to Rent Ratio"
@@ -392,6 +374,33 @@ export default function Filter({
                 </li>
               )}
               renderInput={(params) => <TextField {...params} label="Home Type" />}
+            />
+            <Autocomplete
+              multiple
+              disableCloseOnSelect
+              id="sort-order"
+              limitTags={1}
+              disabled={all.length === 0}
+              options={localForm.sortOrders}
+              value={localForm.sortOrder}
+              onChange={(event, orders: SortOrder[]) => {
+                setLocalForm((latestForm: LocalFilterSettings) => ({
+                  ...latestForm,
+                  sortOrder: orders,
+                }));
+              }}
+              renderOption={(props, option, { selected }) => (
+                <li {...props}>
+                  <Checkbox
+                    icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+                    checkedIcon={<CheckBoxIcon fontSize="small" />}
+                    style={{ marginRight: 8 }}
+                    checked={selected}
+                  />
+                  {option}
+                </li>
+              )}
+              renderInput={(params) => <TextField {...params} label="Sort By" />}
             />
           </Stack>
           <Stack direction="row" alignItems="center" justifyContent="center" spacing={10}>

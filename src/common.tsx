@@ -75,7 +75,7 @@ interface LocalFilterSettings {
   newConstruction: boolean;
   includeLand: boolean;
   homeTypes: string[] | null;
-  sortOrder: SortOrder;
+  sortOrder: SortOrder[];
 
   readonly sortOrders: readonly SortOrder[];
 }
@@ -84,7 +84,7 @@ const DefaultLocalSettings: LocalFilterSettings = {
   rentOnly: false,
   newConstruction: false,
   includeLand: false,
-  sortOrder: 'Shortest Commute',
+  sortOrder: ['Shortest Commute'],
   sortOrders,
   homeTypes: null,
 };

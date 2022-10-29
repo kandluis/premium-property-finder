@@ -583,13 +583,14 @@ export function PropertyListingsProvider({ children }: ProviderProps) {
   const [percent, setPercent] = useState(0);
 
   const localUpdate = useCallback((settings: LocalFilterSettings): void => {
-    // This is a round-about way to enable sorts stacking. Since
-    // .sort is stable, if we first sort by 'r/p ratio asc' and then we sort
-    // by 'price asc', then properties with the same price will internally
-    // be sorted by 'r/p ration asc.
-    state.allProperties = state.allProperties.sort(sortFn(settings.sortOrder));
-    setFilteredProperties(filterProperties(state.allProperties, settings));
-  }, [state]);
+    // Sort orders are reversed since this enables reasonable multi-sort.
+    setFilteredProperties(
+      settings.sortOrder.reverse().reduce(
+        (acc, order) => acc.sort(sortFn(order)),
+        filterProperties(state.allProperties, settings),
+      ),
+    );
+  }, [state.allProperties]);
 
   const remoteUpdate = useMemo(() => {
     const fetchFn = async (req: FetchPropertiesRequest): Promise<void> => {
