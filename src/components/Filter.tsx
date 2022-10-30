@@ -12,14 +12,13 @@ import {
   Box,
   Button,
   Checkbox,
-  FormControl,
   FormControlLabel,
   Slider,
-  Stack,
   Switch,
   TextField,
   Typography,
 } from '@mui/material';
+import Grid2 from '@mui/material/Unstable_Grid2';
 
 import { LoadingButton } from '@mui/lab';
 
@@ -194,6 +193,17 @@ export default function Filter({
     { title: 'Only New Construction', localKey: 'newConstruction' },
     { title: 'Include Land', localKey: 'includeLand' },
   ];
+  const gridProps = {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  };
+  const columnSizes = { xs: 4, sm: 8, md: 12 };
+  const cols = (nxs: number, nsm: number, nmd: number) => ({
+    xs: columnSizes.xs / nxs,
+    sm: columnSizes.sm / nsm,
+    md: columnSizes.md / nmd,
+  });
   return (
     <div className={containerClasses}>
       <form
@@ -289,14 +299,14 @@ export default function Filter({
             </div>
           </div>
         </FormRow>
-        <FormControl component="fieldset">
-          <Stack direction="row" alignItems="center" justifyContent="space-evenly" spacing={10}>
+        <Grid2 container spacing={{ xs: 2, md: 3 }} columns={columnSizes}>
+          <Grid2 {...cols(1, 3, 3)} {...gridProps}>
             <FormControlLabel
               value="top"
               label="Price to Rent Ratio"
               labelPlacement="top"
               control={(
-                <Box sx={{ width: 200 }}>
+                <Box sx={{ minWidth: '200px' }}>
                   <Slider
                     getAriaLabel={(index) => `${(index === 0) ? 'Minimum' : 'Maximum'} Price to Rent Ratio`}
                     id="meets-rule"
@@ -348,6 +358,8 @@ export default function Filter({
                 </Box>
               )}
             />
+          </Grid2>
+          <Grid2 {...cols(1, 3, 3)} {...gridProps}>
             <Autocomplete
               multiple
               disableCloseOnSelect
@@ -375,6 +387,8 @@ export default function Filter({
               )}
               renderInput={(params) => <TextField {...params} label="Home Type" />}
             />
+          </Grid2>
+          <Grid2 {...cols(1, 3, 3)} {...gridProps}>
             <Autocomplete
               multiple
               disableCloseOnSelect
@@ -402,13 +416,13 @@ export default function Filter({
               )}
               renderInput={(params) => <TextField {...params} label="Sort By" />}
             />
-          </Stack>
-          <Stack direction="row" alignItems="center" justifyContent="center" spacing={10}>
-            {switches.map(renderSwitch)}
-          </Stack>
-        </FormControl>
-        <FormRow className="columns text-center">
-          <div className="column col-5 col-xs-5">
+          </Grid2>
+          {switches.map((item) => (
+            <Grid2 key={item.title} {...cols(2, 4, 4)} {...gridProps}>
+              {renderSwitch(item)}
+            </Grid2>
+          ))}
+          <Grid2 {...cols(1, 3, 3)} {...gridProps}>
             <LoadingButton
               onClick={() => {
                 remoteUpdate(remoteForm);
@@ -421,8 +435,8 @@ export default function Filter({
             >
               Submit
             </LoadingButton>
-          </div>
-          <div className="column col-5 col-xs-5">
+          </Grid2>
+          <Grid2 {...cols(1, 3, 3)} {...gridProps}>
             { (share.link)
               ? (
                 <input
@@ -448,17 +462,19 @@ export default function Filter({
                   Share
                 </LoadingButton>
               )}
-          </div>
-          <CSVLink
-            data={results}
-            filename="properties.csv"
-            type="button"
-          >
-            <Button variant="outlined" startIcon={<DownloadIcon />}>
-              Download
-            </Button>
-          </CSVLink>
-        </FormRow>
+          </Grid2>
+          <Grid2 {...cols(1, 3, 3)} {...gridProps}>
+            <CSVLink
+              data={results}
+              filename="properties.csv"
+              type="button"
+            >
+              <Button variant="outlined" startIcon={<DownloadIcon />}>
+                Download
+              </Button>
+            </CSVLink>
+          </Grid2>
+        </Grid2>
       </form>
     </div>
   );
