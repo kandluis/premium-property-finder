@@ -362,6 +362,7 @@ export default function Filter({
           <Grid2 {...cols(1, 3, 3)} {...gridProps}>
             <Autocomplete
               multiple
+              fullWidth
               disableCloseOnSelect
               id="hometype"
               limitTags={1}
@@ -391,19 +392,43 @@ export default function Filter({
           <Grid2 {...cols(1, 3, 3)} {...gridProps}>
             <Autocomplete
               multiple
+              fullWidth
               disableCloseOnSelect
               id="sort-order"
-              limitTags={1}
+              limitTags={3}
               disabled={all.length === 0}
               options={localForm.sortOrders}
               value={localForm.sortOrder}
               onChange={(event, orders: SortOrder[]) => {
-                setLocalForm((latestForm: LocalFilterSettings) => ({
-                  ...latestForm,
-                  sortOrder: orders,
-                }));
+                setLocalForm((latestForm: LocalFilterSettings) => {
+                  const { sortOrder } = latestForm;
+                  const maxPriority = Math.max(...sortOrder.map(
+                    ({ priority }) => priority,
+                  ).filter(notEmpty));
+                  const updatedOrders = orders.reduce((acc, order) => {
+                    const prev = sortOrder.find(({ ascending, dimension }) => (
+                      dimension === order.dimension
+                      && ascending === order.ascending));
+                    if (!prev) {
+                      // Did not find, means this is a new one.
+                      acc.push({ ...order, priority: maxPriority + 1 });
+                    } else {
+                      acc.push(prev);
+                    }
+                    return acc;
+                  }, [] as SortOrder[]);
+                  updatedOrders.sort((a, b) => (a.priority || 0) - (b.priority || 0));
+                  for (let i = 0; i < updatedOrders.length; i += 1) {
+                    updatedOrders[i].priority = i;
+                  }
+                  return {
+                    ...latestForm,
+                    // Renumber starting from 0.
+                    sortOrder: updatedOrders,
+                  };
+                });
               }}
-              renderOption={(props, option, { selected }) => (
+              renderOption={(props, { dimension }: SortOrder, { selected }) => (
                 <li {...props}>
                   <Checkbox
                     icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
@@ -411,8 +436,15 @@ export default function Filter({
                     style={{ marginRight: 8 }}
                     checked={selected}
                   />
-                  {option}
+                  {dimension}
                 </li>
+              )}
+              getOptionLabel={({ dimension, priority, ascending }) => (
+                `[${(priority !== undefined) ? priority : ''}] ${(ascending) ? 'Asc.' : 'Desc.'} ${dimension}`
+              )}
+              groupBy={({ ascending }) => ((ascending) ? 'Ascending' : 'Descending')}
+              isOptionEqualToValue={(option, value) => (
+                option.ascending === value.ascending && option.dimension === value.dimension
               )}
               renderInput={(params) => <TextField {...params} label="Sort By" />}
             />

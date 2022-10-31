@@ -583,9 +583,11 @@ export function PropertyListingsProvider({ children }: ProviderProps) {
   const [percent, setPercent] = useState(0);
 
   const localUpdate = useCallback((settings: LocalFilterSettings): void => {
+    const { sortOrder } = settings;
     // Sort orders are reversed since this enables reasonable multi-sort.
+    sortOrder.sort((a, b) => (b.priority || 0) - (a.priority || 0));
     setFilteredProperties(
-      settings.sortOrder.reverse().reduce(
+      sortOrder.reduce(
         (acc, order) => acc.sort(sortFn(order)),
         filterProperties(state.allProperties, settings),
       ),

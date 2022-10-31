@@ -1,19 +1,22 @@
-const sortOrders = [
-  'Ascending Price',
-  'Descending Price',
-
-  'Ascending Rent/Price Ratio',
-  'Descending Rent/Price Ratio',
-
-  'Ascending Zestimate/Price Ratio',
-  'Descending Zestimate/Price Ratio',
-
-  'Ascending Price/SqFt',
-  'Descending Price/SqFt',
-
-  'Shortest Commute',
+const dimensions = [
+  'Price',
+  'Rent/Price Ratio',
+  'Zestimate/Price Ratio',
+  'Price/SqFt',
+  'Commute',
 ] as const;
-type SortOrder = typeof sortOrders[number];
+type Dimension = typeof dimensions[number];
+type SortOrder = {
+  ascending: boolean;
+  dimension: Dimension;
+  // Higher priority sorts apply only within equal values of lower priority sorts.
+  priority?: number;
+};
+const sortOrders = dimensions.map(
+  (dimension) => ({ dimension, ascending: true }),
+).concat(dimensions.map(
+  (dimension) => ({ dimension, ascending: false }),
+));
 
 type PlaceInfo = {
   placeId: string,
@@ -84,7 +87,11 @@ const DefaultLocalSettings: LocalFilterSettings = {
   rentOnly: false,
   newConstruction: false,
   includeLand: false,
-  sortOrder: ['Shortest Commute'],
+  sortOrder: [{
+    ascending: true,
+    dimension: 'Commute',
+    priority: 0,
+  }],
   sortOrders,
   homeTypes: null,
 };
@@ -118,66 +125,43 @@ const PropAccessors = {
 
   @returns - The sorting function.
 */
-function sortFn(order: SortOrder): (_1: Property, _2: Property) => number {
-  switch (order) {
-    case 'Ascending Price':
+function sortFn({ ascending, dimension }: SortOrder): (_1: Property, _2: Property) => number {
+  const multiplier = (ascending) ? 1 : -1;
+  switch (dimension) {
+    case 'Price':
       return (a: Property, b: Property) => {
         const aPrice = PropAccessors.getPrice(a);
         const bPrice = PropAccessors.getPrice(b);
-        return aPrice - bPrice;
+        return multiplier * (aPrice - bPrice);
       };
-    case 'Descending Price':
-      return (a: Property, b: Property) => {
-        const aPrice = PropAccessors.getPrice(a);
-        const bPrice = PropAccessors.getPrice(b);
-        return bPrice - aPrice;
-      };
-    case 'Ascending Rent/Price Ratio':
+    case 'Rent/Price Ratio':
       return (a: Property, b: Property) => {
         const aRatio = PropAccessors.getRentToPrice(a);
         const bRatio = PropAccessors.getRentToPrice(b);
-        return aRatio - bRatio;
+        return multiplier * (aRatio - bRatio);
       };
-    case 'Descending Rent/Price Ratio':
-      return (a: Property, b: Property) => {
-        const aRatio = PropAccessors.getRentToPrice(a);
-        const bRatio = PropAccessors.getRentToPrice(b);
-        return bRatio - aRatio;
-      };
-    case 'Ascending Zestimate/Price Ratio':
+    case 'Zestimate/Price Ratio':
       return (a: Property, b: Property) => {
         const aRatio = PropAccessors.getZestimateToPrice(a);
         const bRatio = PropAccessors.getZestimateToPrice(b);
-        return aRatio - bRatio;
+        return multiplier * (aRatio - bRatio);
       };
-    case 'Descending Zestimate/Price Ratio':
-      return (a: Property, b: Property) => {
-        const aRatio = PropAccessors.getZestimateToPrice(a);
-        const bRatio = PropAccessors.getZestimateToPrice(b);
-        return bRatio - aRatio;
-      };
-    case 'Ascending Price/SqFt':
+    case 'Price/SqFt':
       return (a: Property, b: Property) => {
         const aRatio = PropAccessors.getPricePerSqft(a);
         const bRatio = PropAccessors.getPricePerSqft(b);
-        return aRatio - bRatio;
+        return multiplier * (aRatio - bRatio);
       };
-    case 'Descending Price/SqFt':
-      return (a: Property, b: Property) => {
-        const aRatio = PropAccessors.getPricePerSqft(a);
-        const bRatio = PropAccessors.getPricePerSqft(b);
-        return bRatio - aRatio;
-      };
-    case 'Shortest Commute':
+    case 'Commute':
       return (a: Property, b: Property) => {
         if (a.travelTime && b.travelTime) {
-          return a.travelTime - b.travelTime;
+          return multiplier * (a.travelTime - b.travelTime);
         }
         if (!a.travelTime && b.travelTime) {
-          return b.travelTime;
+          return multiplier * (b.travelTime);
         }
         if (a.travelTime && !b.travelTime) {
-          return -a.travelTime;
+          return multiplier * (-a.travelTime);
         }
         return 0;
       };
