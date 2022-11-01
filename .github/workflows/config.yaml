@@ -53,6 +53,7 @@ jobs:
           REACT_APP_ZILLOW_API_KEY: ${{ secrets.REACT_APP_ZILLOW_API_KEY }}
           REACT_APP_CUTTLY: ${{ secrets.REACT_APP_CUTTLY }}
           REACT_APP_SECRET: ${{ secrets.REACT_APP_SECRET }}
+          REACT_APP_GOOGLE_MAPS: ${{ secrets.REACT_APP_GOOGLE_MAPS }}
         run: |
           npm install
           npm run build
