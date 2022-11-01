@@ -41,12 +41,6 @@ import LocationInput from './LocationInput';
 import styles from './styles.module.css';
 import { CuttlyApiResponse, getJsonResponse } from '../utilities';
 
-const FormRow = styled.div`
-  padding-top: 10px;
-  padding-bottom: 10px;
-  text-align: left;
-`;
-
 const TinyText = styled(Typography)({
   fontSize: '0.75rem',
   opacity: 0.38,
@@ -211,11 +205,11 @@ export default function Filter({
         noValidate
       >
         <h1>Refine your results</h1>
-        <FormRow className="columns text-center">
-          <div className="column col-3 col-xs-12">
+        <Grid2 container spacing={{ xs: 2, md: 3 }} columns={columnSizes}>
+          <Grid2 {...cols(1, 2, 4)} {...gridProps}>
             <LocationInput
               id="geo-location"
-              placeholder="Nacogdoches, TX"
+              placeholder="Sunnyvale, CA"
               label="Search Center"
               handleInput={(place: PlaceInfo) => setRemoteForm((
                 latestForm: FetchPropertiesRequest,
@@ -225,12 +219,12 @@ export default function Filter({
               }))}
               defaultValue={remoteForm.geoLocation.prediction}
             />
-          </div>
-          <div className="column col-3 col-xs-12">
+          </Grid2>
+          <Grid2 {...cols(1, 2, 4)} {...gridProps}>
             <LocationInput
               id="commute-location"
               label="Commute Location"
-              placeholder="1600 Amphitheatre Parkway, Mountain View, CA"
+              placeholder="Googleplex"
               handleInput={(place: PlaceInfo) => setRemoteForm((
                 latestForm: FetchPropertiesRequest,
               ) => ({
@@ -239,59 +233,53 @@ export default function Filter({
               }))}
               defaultValue={remoteForm.commuteLocation.prediction}
             />
-          </div>
-          <div className="column col-2 col-xs-5">
-            <div className="form-group">
-              <div className="col-5 col-sm-12">
-                <label className="form-label" htmlFor="radius">
-                  Radius
-                </label>
-              </div>
-              <div className="col-5 col-sm-12">
-                <input
-                  className="form-input"
-                  min="0.25"
-                  max="40"
-                  type="number"
-                  id="radius"
-                  placeholder="3"
-                  value={remoteForm.radius}
-                  step="0.25"
-                  onChange={(event) => setRemoteForm((latestForm: FetchPropertiesRequest) => ({
-                    ...latestForm,
-                    radius: Number(event.target.value),
-                  }))}
-                />
-              </div>
+          </Grid2>
+          <Grid2 {...cols(1, 2, 4)} {...gridProps}>
+            <div className="col-5 col-sm-12">
+              <label className="form-label" htmlFor="radius">
+                Radius
+              </label>
             </div>
-          </div>
-          <div className="column col-4 col-xs-12">
-            <div className="form-group">
-              <div className="col-3 col-sm-12">
-                <label className="form-label" htmlFor="price-most">
-                  High
-                </label>
-              </div>
-              <div className="col-4 col-sm-12">
-                <input
-                  className="form-input"
-                  min="0"
-                  max="10000000"
-                  type="number"
-                  id="price-most"
-                  placeholder="1000000"
-                  step="50000"
-                  value={remoteForm.priceMost || ''}
-                  onChange={(event) => setRemoteForm((latestForm: FetchPropertiesRequest) => ({
-                    ...latestForm,
-                    priceMost: Number(event.target.value),
-                  }))}
-                />
-              </div>
+            <div className="col-5 col-sm-12">
+              <input
+                className="form-input"
+                min="0.25"
+                max="40"
+                type="number"
+                id="radius"
+                placeholder="3"
+                value={remoteForm.radius}
+                step="0.25"
+                onChange={(event) => setRemoteForm((latestForm: FetchPropertiesRequest) => ({
+                  ...latestForm,
+                  radius: Number(event.target.value),
+                }))}
+              />
             </div>
-          </div>
-        </FormRow>
-        <Grid2 container spacing={{ xs: 2, md: 3 }} columns={columnSizes}>
+          </Grid2>
+          <Grid2 {...cols(1, 2, 4)} {...gridProps}>
+            <div className="col-3 col-sm-12">
+              <label className="form-label" htmlFor="price-most">
+                High
+              </label>
+            </div>
+            <div className="col-4 col-sm-12">
+              <input
+                className="form-input"
+                min="0"
+                max="10000000"
+                type="number"
+                id="price-most"
+                placeholder="1000000"
+                step="50000"
+                value={remoteForm.priceMost || ''}
+                onChange={(event) => setRemoteForm((latestForm: FetchPropertiesRequest) => ({
+                  ...latestForm,
+                  priceMost: Number(event.target.value),
+                }))}
+              />
+            </div>
+          </Grid2>
           <Grid2 {...cols(1, 3, 3)} {...gridProps}>
             <FormControlLabel
               value="top"

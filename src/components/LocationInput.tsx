@@ -116,6 +116,7 @@ export default function LocationInput(
       autoComplete
       includeInputInList
       filterSelectedOptions
+      fullWidth
       id={id}
       getOptionLabel={(option) => (typeof option === 'string' ? option : option.description)}
       filterOptions={(x) => x}
