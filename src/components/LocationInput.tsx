@@ -1,6 +1,12 @@
 /// <reference types="google.maps" />
 /* eslint-disable react/jsx-props-no-spreading */
-import React, { useState, ReactElement } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  ReactElement,
+} from 'react';
 import {
   Autocomplete,
   Box,
@@ -52,7 +58,7 @@ export default function LocationInput(
   const [value, setValue] = useState<google.maps.places.AutocompletePrediction | null>(null);
   const [inputValue, setInputValue] = useState('');
   const [options, setOptions] = useState<readonly google.maps.places.AutocompletePrediction[]>([]);
-  const loaded = React.useRef(false);
+  const loaded = useRef(false);
 
   if (typeof window !== 'undefined' && !loaded.current) {
     if (!document.querySelector('#google-maps')) {
@@ -66,7 +72,7 @@ export default function LocationInput(
     loaded.current = true;
   }
 
-  const fetchData = React.useMemo(
+  const fetchData = useMemo(
     () => throttle(
       async (request: google.maps.places.AutocompletionRequest) => {
         if (autocompleteService.current === null) {
@@ -78,7 +84,7 @@ export default function LocationInput(
     [],
   );
 
-  React.useEffect(() => {
+  useEffect(() => {
     let active = true;
 
     if (!autocompleteService.current && window.google) {
@@ -119,6 +125,10 @@ export default function LocationInput(
       fullWidth
       id={id}
       getOptionLabel={(option) => (typeof option === 'string' ? option : option.description)}
+      isOptionEqualToValue={(option, val) => (
+        options.length === 0 && defaultValue
+        && val.description === defaultValue.description)
+        || option.description === val.description}
       filterOptions={(x) => x}
       options={options}
       value={value || defaultValue}
