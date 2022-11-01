@@ -213,31 +213,23 @@ export default function Filter({
         <h1>Refine your results</h1>
         <FormRow className="columns text-center">
           <div className="column col-3 col-xs-12">
-            <div className="col-sm-12">
-              <label className="form-label" htmlFor="geo-location">
-                Search Center
-              </label>
-            </div>
             <LocationInput
               id="geo-location"
               placeholder="Nacogdoches, TX"
+              label="Search Center"
               handleInput={(place: PlaceInfo) => setRemoteForm((
                 latestForm: FetchPropertiesRequest,
               ) => ({
                 ...latestForm,
                 geoLocation: place,
               }))}
-              defaultValue={remoteForm.geoLocation.address}
+              defaultValue={remoteForm.geoLocation.prediction}
             />
           </div>
           <div className="column col-3 col-xs-12">
-            <div className="col-sm-12">
-              <label className="form-label" htmlFor="commute-location">
-                Commute Location
-              </label>
-            </div>
             <LocationInput
               id="commute-location"
+              label="Commute Location"
               placeholder="1600 Amphitheatre Parkway, Mountain View, CA"
               handleInput={(place: PlaceInfo) => setRemoteForm((
                 latestForm: FetchPropertiesRequest,
@@ -245,7 +237,7 @@ export default function Filter({
                 ...latestForm,
                 commuteLocation: place,
               }))}
-              defaultValue={remoteForm.commuteLocation.address}
+              defaultValue={remoteForm.commuteLocation.prediction}
             />
           </div>
           <div className="column col-2 col-xs-5">

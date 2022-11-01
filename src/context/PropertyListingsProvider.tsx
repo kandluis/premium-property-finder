@@ -506,7 +506,7 @@ async function filterAndFetchProperties(
   progressFn: ProgressFn,
 ): Promise<Property[]> {
   const properties = await fetchProperties(
-    geoLocation.address,
+    geoLocation.description,
     radius,
     priceFrom,
     priceMost,

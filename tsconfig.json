@@ -4,6 +4,7 @@
     "plugins": [{
       "name": "typescript-plugin-css-modules",
     }],
+    "skipLibCheck": true,
     "target": "es6",  
     "module": "esnext",
     "lib": [

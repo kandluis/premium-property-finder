@@ -19,9 +19,9 @@ const sortOrders = dimensions.map(
 ));
 
 type PlaceInfo = {
-  placeId: string,
-  name: string,
-  address: string,
+  placeId: string;
+  description: string;
+  prediction?: google.maps.places.AutocompletePrediction;
 };
 
 interface Property {
@@ -60,8 +60,7 @@ interface FetchPropertiesRequest {
 
 const DefaultPlaceInfo = {
   placeId: '',
-  name: '',
-  address: '',
+  description: '',
 };
 const DefaultFetchPropertiesRequest: FetchPropertiesRequest = {
   geoLocation: DefaultPlaceInfo,
