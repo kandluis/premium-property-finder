@@ -256,7 +256,7 @@ export default function Filter({
                 }))}
               >
                 {[...Array(40).keys()].map((item) => (item + 1) / 5).map((value) => (
-                  <MenuItem value={value}>
+                  <MenuItem key={value} value={value}>
                     {`${value.toFixed(1)} miles`}
                   </MenuItem>
                 ))}
