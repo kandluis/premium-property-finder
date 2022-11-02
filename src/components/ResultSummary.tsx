@@ -1,5 +1,8 @@
 import React, { ReactElement, useState } from 'react';
 import {
+  Collapse,
+  FormControlLabel,
+  Switch,
   Paper,
   Table,
   TableBody,
@@ -160,15 +163,18 @@ export default function ResultSummary({ all, filtered }: ResultSummaryProps): Re
   return (
     <>
       <Header>{heading}</Header>
-      <h3>
-        <button
-          type="button"
-          onClick={() => setShowAnalytics((shown) => !shown)}
-        >
-          { (showAnalytics) ? '▼ Analytics' : '► Analytics'}
-        </button>
-      </h3>
-      {showAnalytics && (
+      <FormControlLabel
+        control={(
+          <Switch
+            name="analytics"
+            size="medium"
+            checked={showAnalytics}
+            onChange={(event) => setShowAnalytics(event.target.checked)}
+          />
+        )}
+        label="Analytics"
+      />
+      <Collapse in={showAnalytics}>
         <TableContainer component={Paper}>
           <Table sx={{ minWidth: 650 }} size="small" aria-label="Analytics">
             <TableHead>
@@ -192,7 +198,7 @@ export default function ResultSummary({ all, filtered }: ResultSummaryProps): Re
             </TableBody>
           </Table>
         </TableContainer>
-      )}
+      </Collapse>
     </>
   );
 }
