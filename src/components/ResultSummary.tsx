@@ -162,7 +162,6 @@ export default function ResultSummary({ all, filtered }: ResultSummaryProps): Re
   } = summarize(filtered);
   return (
     <>
-      <Header>{heading}</Header>
       <FormControlLabel
         control={(
           <Switch
@@ -175,6 +174,7 @@ export default function ResultSummary({ all, filtered }: ResultSummaryProps): Re
         label="Analytics"
       />
       <Collapse in={showAnalytics}>
+        <Header>{heading}</Header>
         <TableContainer component={Paper}>
           <Table sx={{ minWidth: 650 }} size="small" aria-label="Analytics">
             <TableHead>
