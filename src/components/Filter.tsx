@@ -12,7 +12,11 @@ import {
   Box,
   Button,
   Checkbox,
+  FormControl,
   FormControlLabel,
+  InputLabel,
+  MenuItem,
+  Select,
   Slider,
   Switch,
   TextField,
@@ -201,14 +205,6 @@ export default function Filter({
     sm: columnSizes.sm / nsm,
     md: columnSizes.md / nmd,
   });
-  const calculateValue = (value: number) => {
-    let total = value;
-    total += 1 * Math.max(0, value - 1e6);
-    total += 1 * Math.max(0, value - 1.75e6);
-    total += 1 * Math.max(0, value - 2.25e6);
-    total += 1 * Math.max(0, value - 2.75e6);
-    return total;
-  };
   return (
     <div className={containerClasses}>
       <form
@@ -246,27 +242,26 @@ export default function Filter({
             />
           </Grid2>
           <Grid2 {...cols(1, 2, 4)} {...gridProps}>
-            <div className="col-5 col-sm-12">
-              <label className="form-label" htmlFor="radius">
-                Radius
-              </label>
-            </div>
-            <div className="col-5 col-sm-12">
-              <input
-                className="form-input"
-                min="0.25"
-                max="40"
-                type="number"
+            <FormControl sx={{ m: 1, minWidth: 80 }}>
+              <InputLabel id="radius-label">Search Radius</InputLabel>
+              <Select
+                autoWidth
+                labelId="radius-label"
                 id="radius"
-                placeholder="3"
+                label="Search Radius"
                 value={remoteForm.radius}
-                step="0.25"
                 onChange={(event) => setRemoteForm((latestForm: FetchPropertiesRequest) => ({
                   ...latestForm,
                   radius: Number(event.target.value),
                 }))}
-              />
-            </div>
+              >
+                {[...Array(40).keys()].map((item) => (item + 1) / 5).map((value) => (
+                  <MenuItem value={value}>
+                    {`${value.toFixed(1)} miles`}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Grid2>
           <Grid2 {...cols(1, 2, 4)} {...gridProps}>
             <FormControlLabel
@@ -283,7 +278,6 @@ export default function Filter({
                     step={50000}
                     min={DefaultFetchPropertiesRequest.priceFrom}
                     max={2 * DefaultFetchPropertiesRequest.priceMost}
-                    scale={calculateValue}
                     value={priceBounds}
                     onChange={(event, newValue: number | number[], activeThumb: number) => {
                       if (!Array.isArray(newValue)) {
@@ -316,10 +310,10 @@ export default function Filter({
                       }));
                     }}
                     getAriaValueText={
-                      (value: number) => currencyFormatter.format(calculateValue(value))
+                      (value: number) => currencyFormatter.format(value)
                     }
                     valueLabelFormat={
-                      (value: number) => currencyFormatter.format(calculateValue(value))
+                      (value: number) => currencyFormatter.format(value)
                     }
                   />
                   <Box
@@ -331,10 +325,10 @@ export default function Filter({
                     }}
                   >
                     <TinyText>
-                      {currencyFormatter.format(calculateValue(remoteForm.priceFrom))}
+                      {currencyFormatter.format(priceBounds[0])}
                     </TinyText>
                     <TinyText>
-                      {currencyFormatter.format(calculateValue(remoteForm.priceMost))}
+                      {currencyFormatter.format(priceBounds[1])}
                     </TinyText>
                   </Box>
                 </Box>
@@ -397,10 +391,10 @@ export default function Filter({
                     }}
                   >
                     <TinyText>
-                      {`${localForm.meetsRule[0]}%`}
+                      {`${ratioBounds[0]}%`}
                     </TinyText>
                     <TinyText>
-                      {`${localForm.meetsRule[1]}%`}
+                      {`${ratioBounds[1]}%`}
                     </TinyText>
                   </Box>
                 </Box>

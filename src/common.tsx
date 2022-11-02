@@ -65,7 +65,7 @@ const DefaultPlaceInfo = {
 const DefaultFetchPropertiesRequest: FetchPropertiesRequest = {
   geoLocation: DefaultPlaceInfo,
   commuteLocation: DefaultPlaceInfo,
-  radius: 3.5,
+  radius: 3.4,
   priceFrom: 0,
   priceMost: 1500000,
   includeRecentlySold: false,
