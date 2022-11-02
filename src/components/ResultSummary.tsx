@@ -1,28 +1,26 @@
 import React, { ReactElement, useState } from 'react';
+import {
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+} from '@mui/material';
+
 import styled from 'styled-components';
 
-import { notEmpty, PropAccessors, Property } from '../common';
+import {
+  currencyFormatter,
+  notEmpty,
+  PropAccessors,
+  Property,
+} from '../common';
 
 const Header = styled.h3`
   text-align: center;
   margin-top: 1em;
-`;
-
-const StatsDiv = styled.div`
-  text-align: center;
-  display: table-cell;
-  padding: 5px;
-`;
-
-const SummaryDiv = styled.div`
-  display: table;
-  table-layout: fixed;
-  width: 100%;
-`;
-
-const StatTitle = styled.div`
-  font-weight: bold;
-  text-align: center;
 `;
 
 type ResultSummaryProps = {
@@ -112,22 +110,13 @@ type StatisticsProps = {
   name: string;
   stats: SummaryStatistics;
   type: NumberFormat;
-  show: boolean;
 };
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  notation: 'compact',
-  maximumSignificantDigits: 3,
-});
-function Statistics({
+function StatsRow({
   name, stats: {
     average, median, minimum, maximum, stddev,
   },
   type,
-  show,
 }: StatisticsProps): ReactElement {
-  const [shown, setShown] = useState(show);
   const format = (val: number): string => {
     if (type === 'currency') {
       return currencyFormatter.format(val);
@@ -136,26 +125,24 @@ function Statistics({
       return `${(val / 60).toFixed(1)} min`;
     }
     if (type === 'ratio') {
-      return `${val.toFixed(2)}`;
+      return `${val.toFixed(2)}%`;
     }
     return `${val}`;
   };
-  const averageStr = `${format(average)}${((stddev) ? ` [${format(average - stddev)}, ${format(average + stddev)}]` : '')}`;
-  const rangeStr = `${format(minimum)}=>${format(maximum)}`;
   return (
-    <StatsDiv>
-      <StatTitle>
-        <button
-          type="button"
-          onClick={() => setShown((wasShown) => !wasShown)}
-        >
-          { (shown) ? `▼ ${name}` : '►'}
-        </button>
-      </StatTitle>
-      {shown && `Avg: ${averageStr}`}
-      {shown && <br />}
-      {shown && `Med: ${format(median)} (${rangeStr})`}
-    </StatsDiv>
+    <TableRow
+      key={name}
+      sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+    >
+      <TableCell component="th" scope="row">
+        {name}
+      </TableCell>
+      <TableCell align="center">{format(average)}</TableCell>
+      <TableCell align="center">{((stddev) ? ` (${format(average - stddev)}, ${format(average + stddev)})` : 'N/A')}</TableCell>
+      <TableCell align="center">{format(median)}</TableCell>
+      <TableCell align="center">{format(minimum)}</TableCell>
+      <TableCell align="center">{format(maximum)}</TableCell>
+    </TableRow>
   );
 }
 
@@ -178,19 +165,33 @@ export default function ResultSummary({ all, filtered }: ResultSummaryProps): Re
           type="button"
           onClick={() => setShowAnalytics((shown) => !shown)}
         >
-          { (showAnalytics) ? '▼ Analytics' : '►'}
+          { (showAnalytics) ? '▼ Analytics' : '► Analytics'}
         </button>
       </h3>
       {showAnalytics && (
-        <SummaryDiv>
-          { price && <Statistics name="Price" stats={price} type="currency" show /> }
-          { travelTime && <Statistics name="Commute" stats={travelTime} type="commute" show /> }
-          { perSqFt && <Statistics name="$/SqFt" stats={perSqFt} type="currency" show /> }
-          { rentzestimate && <Statistics name="Rents" stats={rentzestimate} type="currency" show={false} /> }
-          { rentToPrices && <Statistics name="Rent:Price" stats={rentToPrices} type="ratio" show /> }
-          { zestimate && <Statistics name="Zestimate" stats={zestimate} type="currency" show={false} /> }
-          { zestimateToPrice && <Statistics name="Est.:Price" stats={zestimateToPrice} type="ratio" show={false} /> }
-        </SummaryDiv>
+        <TableContainer component={Paper}>
+          <Table sx={{ minWidth: 650 }} size="small" aria-label="Analytics">
+            <TableHead>
+              <TableRow>
+                <TableCell>Metric</TableCell>
+                <TableCell>Average</TableCell>
+                <TableCell align="center">Confidence Interval</TableCell>
+                <TableCell align="center">Median</TableCell>
+                <TableCell align="center">Minimum</TableCell>
+                <TableCell align="center">Maximum</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              { price && <StatsRow name="Price" stats={price} type="currency" /> }
+              { travelTime && <StatsRow name="Commute" stats={travelTime} type="commute" /> }
+              { perSqFt && <StatsRow name="Price/sqft" stats={perSqFt} type="currency" /> }
+              { rentzestimate && <StatsRow name="Rents" stats={rentzestimate} type="currency" /> }
+              { rentToPrices && <StatsRow name="Rent to Price Ratio" stats={rentToPrices} type="ratio" /> }
+              { zestimate && <StatsRow name="Zestimate" stats={zestimate} type="currency" /> }
+              { zestimateToPrice && <StatsRow name="Estimate to Price" stats={zestimateToPrice} type="ratio" /> }
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
     </>
   );
