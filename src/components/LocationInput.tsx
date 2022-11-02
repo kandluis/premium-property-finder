@@ -102,9 +102,9 @@ export default function LocationInput(
     label,
   }: LocationInputProps,
 ): ReactElement {
-  const [value, setValue] = useState<google.maps.places.AutocompletePrediction | null>(null);
-  const [inputValue, setInputValue] = useState('');
-  const [options, setOptions] = useState<readonly google.maps.places.AutocompletePrediction[]>([]);
+  const [value, setValue] = useState(defaultValue || null);
+  const [inputValue, setInputValue] = useState(defaultValue?.description || '');
+  const [options, setOptions] = useState((defaultValue) ? [defaultValue] : []);
   const loaded = useRef(false);
 
   if (typeof window !== 'undefined' && !loaded.current) {
@@ -133,13 +133,6 @@ export default function LocationInput(
   );
 
   useEffect(() => {
-    if (defaultValue) {
-      setValue(defaultValue);
-      setInputValue(defaultValue.description);
-    }
-  }, [defaultValue]);
-
-  useEffect(() => {
     let active = true;
 
     if (!autocompleteService.current && window.google) {
@@ -156,7 +149,7 @@ export default function LocationInput(
     const fn = async () => {
       const results = await fetchData({ input: inputValue });
       if (active) {
-        let newOptions: readonly google.maps.places.AutocompletePrediction[] = [];
+        let newOptions: google.maps.places.AutocompletePrediction[] = [];
         if (value) {
           newOptions = [value];
         }
@@ -226,7 +219,7 @@ export default function LocationInput(
               <Grid item xs>
                 {parts.map((part) => (
                   <span
-                    key={part.text}
+                    key={`${id}${part.text}`}
                     style={{
                       fontWeight: part.highlight ? 700 : 400,
                     }}

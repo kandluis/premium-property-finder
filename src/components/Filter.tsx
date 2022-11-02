@@ -29,6 +29,7 @@ import { useQueryParam } from 'use-query-params';
 import {
   DefaultFetchPropertiesRequest,
   DefaultLocalSettings,
+  currencyFormatter,
   FetchPropertiesRequest,
   LocalFilterSettings,
   notEmpty,
@@ -110,6 +111,8 @@ export default function Filter({
   const [share, setShare] = useState<ShareLinkState>(DefaultShareLinkState);
   const [remoteForm, setRemoteForm] = useQueryParam('remote', RemoteParser);
   const [localForm, setLocalForm] = useQueryParam('local', LocalParser);
+  const [priceBounds, setPriceBounds] = useState([remoteForm.priceFrom, remoteForm.priceMost]);
+  const [ratioBounds, setRatioBounds] = useState(localForm.meetsRule);
   remoteForm.commuteLocation = remoteForm.commuteLocation || remoteForm.geoLocation;
 
   const renderSwitch = ({ title, localKey, remoteKey }: SwitchOptions) => (
@@ -198,6 +201,14 @@ export default function Filter({
     sm: columnSizes.sm / nsm,
     md: columnSizes.md / nmd,
   });
+  const calculateValue = (value: number) => {
+    let total = value;
+    total += 1 * Math.max(0, value - 1e6);
+    total += 1 * Math.max(0, value - 1.75e6);
+    total += 1 * Math.max(0, value - 2.25e6);
+    total += 1 * Math.max(0, value - 2.75e6);
+    return total;
+  };
   return (
     <div className={containerClasses}>
       <form
@@ -258,27 +269,77 @@ export default function Filter({
             </div>
           </Grid2>
           <Grid2 {...cols(1, 2, 4)} {...gridProps}>
-            <div className="col-3 col-sm-12">
-              <label className="form-label" htmlFor="price-most">
-                High
-              </label>
-            </div>
-            <div className="col-4 col-sm-12">
-              <input
-                className="form-input"
-                min="0"
-                max="10000000"
-                type="number"
-                id="price-most"
-                placeholder="1000000"
-                step="50000"
-                value={remoteForm.priceMost || ''}
-                onChange={(event) => setRemoteForm((latestForm: FetchPropertiesRequest) => ({
-                  ...latestForm,
-                  priceMost: Number(event.target.value),
-                }))}
-              />
-            </div>
+            <FormControlLabel
+              value="top"
+              label="Price"
+              labelPlacement="top"
+              control={(
+                <Box sx={{ minWidth: '200px' }}>
+                  <Slider
+                    getAriaLabel={(index) => `${(index === 0) ? 'Minimum' : 'Maximum'} Price`}
+                    id="price-filter"
+                    valueLabelDisplay="auto"
+                    disableSwap
+                    step={50000}
+                    min={DefaultFetchPropertiesRequest.priceFrom}
+                    max={2 * DefaultFetchPropertiesRequest.priceMost}
+                    scale={calculateValue}
+                    value={priceBounds}
+                    onChange={(event, newValue: number | number[], activeThumb: number) => {
+                      if (!Array.isArray(newValue)) {
+                        return;
+                      }
+                      let [min, max] = newValue;
+                      const minDistance = 50000;
+                      if (max - min < minDistance) {
+                        if (activeThumb === DefaultFetchPropertiesRequest.priceFrom) {
+                          const clamped = Math.min(
+                            min,
+                            DefaultFetchPropertiesRequest.priceMost - minDistance,
+                          );
+                          [min, max] = [clamped, clamped + minDistance];
+                        } else {
+                          const clamped = Math.max(max, minDistance);
+                          [min, max] = [clamped - minDistance, clamped];
+                        }
+                      }
+                      setPriceBounds([min, max]);
+                    }}
+                    onChangeCommitted={(event, newValue: number | number[]) => {
+                      if (!Array.isArray(newValue)) {
+                        return;
+                      }
+                      setRemoteForm((latestForm: FetchPropertiesRequest) => ({
+                        ...latestForm,
+                        priceFrom: newValue[0],
+                        priceMost: newValue[1],
+                      }));
+                    }}
+                    getAriaValueText={
+                      (value: number) => currencyFormatter.format(calculateValue(value))
+                    }
+                    valueLabelFormat={
+                      (value: number) => currencyFormatter.format(calculateValue(value))
+                    }
+                  />
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      mt: -1,
+                    }}
+                  >
+                    <TinyText>
+                      {currencyFormatter.format(calculateValue(remoteForm.priceFrom))}
+                    </TinyText>
+                    <TinyText>
+                      {currencyFormatter.format(calculateValue(remoteForm.priceMost))}
+                    </TinyText>
+                  </Box>
+                </Box>
+              )}
+            />
           </Grid2>
           <Grid2 {...cols(1, 3, 3)} {...gridProps}>
             <FormControlLabel
@@ -296,7 +357,7 @@ export default function Filter({
                     min={DefaultLocalSettings.meetsRule[0]}
                     max={DefaultLocalSettings.meetsRule[1]}
                     disabled={all.length === 0}
-                    value={localForm.meetsRule}
+                    value={ratioBounds}
                     onChange={(event, newValue: number | number[], activeThumb: number) => {
                       if (!Array.isArray(newValue)) {
                         return;
@@ -313,12 +374,19 @@ export default function Filter({
                           [min, max] = [clamped - minDistance, clamped];
                         }
                       }
+                      setRatioBounds([min, max]);
+                    }}
+                    onChangeCommitted={(event, newValue: number | number[]) => {
+                      if (!Array.isArray(newValue)) {
+                        return;
+                      }
                       setLocalForm((latestForm: LocalFilterSettings) => ({
                         ...latestForm,
-                        meetsRule: [min, max],
+                        meetsRule: [newValue[0], newValue[1]],
                       }));
                     }}
                     getAriaValueText={(value: number) => `${value}%`}
+                    valueLabelFormat={(value: number) => `${value}%`}
                   />
                   <Box
                     sx={{

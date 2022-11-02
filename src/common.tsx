@@ -173,10 +173,18 @@ function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
   return value !== null && value !== undefined;
 }
 
+const currencyFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  notation: 'compact',
+  maximumSignificantDigits: 4,
+});
+
 export {
   DefaultFetchPropertiesRequest,
   DefaultFilter,
   DefaultLocalSettings,
+  currencyFormatter,
   LocalFilterSettings,
   notEmpty,
   FetchPropertiesRequest,

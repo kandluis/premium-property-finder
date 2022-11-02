@@ -6,13 +6,6 @@ type ListingProps = {
   property: Property,
 }
 
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  notation: 'compact',
-  maximumSignificantDigits: 4,
-});
-
 function openInNewTab(href: string): void {
   Object.assign(document.createElement('a'), {
     target: '_blank',
@@ -20,6 +13,13 @@ function openInNewTab(href: string): void {
     href,
   }).click();
 }
+
+const currencyFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  notation: 'compact',
+  maximumSignificantDigits: 4,
+});
 
 export default function Listing({ property }: ListingProps): React.ReactElement {
   const {
