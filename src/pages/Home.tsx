@@ -25,7 +25,14 @@ export default function Home(): React.ReactElement {
       <PropertyListingsProvider>
         <PropertyListingsConsumer>
           {({
-            loading, percent, filteredProperties, allProperties, remoteUpdate, localUpdate,
+            loading,
+            percent,
+            filteredProperties,
+            allProperties,
+            remoteUpdate,
+            localUpdate,
+            displayType,
+            setDisplayType,
           }) => (
             <Grid2 xs={12}>
               <Grid2 id="filter" xs={12}>
@@ -35,6 +42,8 @@ export default function Home(): React.ReactElement {
                   results={filteredProperties}
                   all={allProperties}
                   loading={loading}
+                  displayType={displayType}
+                  setDisplayType={setDisplayType}
                 />
               </Grid2>
               {loading
@@ -70,13 +79,15 @@ export default function Home(): React.ReactElement {
                         spacing={{ xs: 2, md: 3 }}
                         columns={{ xs: 4, sm: 8, md: 12 }}
                       >
-                        {filteredProperties.map((property) => (
-                          <Grow key={`${property.zpid || ''}-${property.statusType}`} in={!loading}>
-                            <Grid2 xs={4}>
-                              <Listing property={property} />
-                            </Grid2>
-                          </Grow>
-                        ))}
+                        {(displayType === 'Grid')
+                          ? filteredProperties.map((property) => (
+                            <Grow key={`${property.zpid || ''}-${property.statusType}`} in={!loading}>
+                              <Grid2 xs={4}>
+                                <Listing property={property} />
+                              </Grid2>
+                            </Grow>
+                          ))
+                          : ''}
                       </Grid2>
                     </Paper>
                   </Grid2>

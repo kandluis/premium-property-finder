@@ -4,8 +4,10 @@ import Brightness7Icon from '@mui/icons-material/Brightness7';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import DownloadIcon from '@mui/icons-material/Download';
+import GridViewIcon from '@mui/icons-material/GridView';
 import SendIcon from '@mui/icons-material/Send';
 import ShareIcon from '@mui/icons-material/Share';
+import TableChartIcon from '@mui/icons-material/TableChart';
 
 import {
   Autocomplete,
@@ -68,6 +70,10 @@ type FilterProps = {
   all: Property[],
   // If we're currently loading data.
   loading: boolean;
+  // The display type for the results.
+  displayType: 'Grid' | 'Table';
+  // Callback to update the display type.
+  setDisplayType: (displayType: 'Grid' | 'Table') => void;
 };
 
 const RemoteParser = {
@@ -114,7 +120,7 @@ type SwitchOptions = {
 };
 
 export default function Filter({
-  remoteUpdate, localUpdate, results, all, loading,
+  remoteUpdate, localUpdate, results, all, loading, displayType, setDisplayType,
 }: FilterProps) {
   const [share, setShare] = useState<ShareLinkState>(DefaultShareLinkState);
   const [remoteForm, setRemoteForm] = useQueryParam('remote', RemoteParser);
@@ -515,7 +521,7 @@ export default function Filter({
               {renderSwitch(item)}
             </Grid2>
           ))}
-          <Grid2 {...cols(1, 3, 3)} {...gridProps}>
+          <Grid2 {...cols(1, 2, 4)} {...gridProps}>
             <LoadingButton
               onClick={() => {
                 remoteUpdate(remoteForm);
@@ -529,7 +535,7 @@ export default function Filter({
               Submit
             </LoadingButton>
           </Grid2>
-          <Grid2 {...cols(1, 3, 3)} {...gridProps}>
+          <Grid2 {...cols(1, 2, 4)} {...gridProps}>
             { (share.link)
               ? (
                 <input
@@ -556,7 +562,17 @@ export default function Filter({
                 </LoadingButton>
               )}
           </Grid2>
-          <Grid2 {...cols(1, 3, 3)} {...gridProps}>
+          <Grid2 {...cols(1, 2, 4)} {...gridProps}>
+            <Button
+              size="medium"
+              variant={(displayType === 'Grid') ? 'outlined' : 'contained'}
+              startIcon={(displayType === 'Grid') ? <TableChartIcon /> : <GridViewIcon />}
+              onClick={() => setDisplayType((displayType === 'Grid') ? 'Table' : 'Grid')}
+            >
+              {(displayType === 'Grid') ? 'Table' : 'Grid'}
+            </Button>
+          </Grid2>
+          <Grid2 {...cols(1, 2, 4)} {...gridProps}>
             <CSVLink
               data={results}
               filename="properties.csv"
