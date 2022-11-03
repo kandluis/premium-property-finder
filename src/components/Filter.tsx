@@ -212,8 +212,8 @@ export default function Filter({
   });
   return (
     <Paper elevation={2}>
-      <Grid2 container spacing={{ xs: 2, md: 3 }} columns={columnSizes}>
-        <Grid2 {...cols(2, 2, 2)} {...gridProps} justifyContent="left">
+      <Grid2 container spacing={{ xs: 1, md: 2 }}>
+        <Grid2 xs={11} {...gridProps} justifyContent="left">
           <h1>
             <Switch
               name="analytics"
@@ -224,7 +224,7 @@ export default function Filter({
             Refine your results
           </h1>
         </Grid2>
-        <Grid2 {...cols(2, 2, 2)} {...gridProps} justifyContent="right">
+        <Grid2 xs={1} {...gridProps} justifyContent="right">
           <IconButton sx={{ ml: 1 }} onClick={colorMode.toggleColorMode} color="inherit">
             {theme.palette.mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
           </IconButton>
