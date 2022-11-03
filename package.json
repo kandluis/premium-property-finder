@@ -24,6 +24,7 @@
     "@mui/lab": "^5.0.0-alpha.105",
     "@mui/material": "^5.10.11",
     "@mui/styled-engine-sc": "^5.10.6",
+    "@mui/x-data-grid": "^5.17.9",
     "@types/autosuggest-highlight": "^3.2.0",
     "accounting": "^0.4.1",
     "autosuggest-highlight": "^3.3.4",

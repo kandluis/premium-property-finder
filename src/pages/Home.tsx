@@ -10,6 +10,7 @@ import Filter from '../components/Filter';
 import Hero from '../components/Hero';
 import Listing from '../components/Listing';
 import ProgressBar from '../components/ProgressBar';
+import PropertyTable from '../components/PropertyTable';
 import ResultSummary from '../components/ResultSummary';
 import {
   PropertyListingsProvider,
@@ -87,7 +88,7 @@ export default function Home(): React.ReactElement {
                               </Grid2>
                             </Grow>
                           ))
-                          : ''}
+                          : <PropertyTable properties={filteredProperties} />}
                       </Grid2>
                     </Paper>
                   </Grid2>
