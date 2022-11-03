@@ -1,4 +1,6 @@
 /* eslint-disable react/jsx-props-no-spreading */
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -13,6 +15,7 @@ import {
   Collapse,
   FormControl,
   FormControlLabel,
+  IconButton,
   InputLabel,
   MenuItem,
   Paper,
@@ -22,15 +25,17 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import Grid2 from '@mui/material/Unstable_Grid2';
 
 import { LoadingButton } from '@mui/lab';
 
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { CSVLink } from 'react-csv';
 import styled from 'styled-components';
 import { useQueryParam } from 'use-query-params';
 import {
+  ColorModeContext,
   DefaultFetchPropertiesRequest,
   DefaultLocalSettings,
   currencyFormatter,
@@ -117,6 +122,8 @@ export default function Filter({
   const [priceBounds, setPriceBounds] = useState([remoteForm.priceFrom, remoteForm.priceMost]);
   const [ratioBounds, setRatioBounds] = useState(localForm.meetsRule);
   const [showFilter, setShowFilter] = useState(true);
+  const theme = useTheme();
+  const colorMode = useContext(ColorModeContext);
   remoteForm.commuteLocation = remoteForm.commuteLocation || remoteForm.geoLocation;
 
   const renderSwitch = ({ title, localKey, remoteKey }: SwitchOptions) => (
@@ -205,15 +212,24 @@ export default function Filter({
   });
   return (
     <Paper elevation={2}>
-      <h1>
-        <Switch
-          name="analytics"
-          size="medium"
-          checked={showFilter}
-          onChange={(event) => setShowFilter(event.target.checked)}
-        />
-        Refine your results
-      </h1>
+      <Grid2 container spacing={{ xs: 2, md: 3 }} columns={columnSizes}>
+        <Grid2 {...cols(2, 2, 2)} {...gridProps} justifyContent="left">
+          <h1>
+            <Switch
+              name="analytics"
+              size="medium"
+              checked={showFilter}
+              onChange={(event) => setShowFilter(event.target.checked)}
+            />
+            Refine your results
+          </h1>
+        </Grid2>
+        <Grid2 {...cols(2, 2, 2)} {...gridProps} justifyContent="right">
+          <IconButton sx={{ ml: 1 }} onClick={colorMode.toggleColorMode} color="inherit">
+            {theme.palette.mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+          </IconButton>
+        </Grid2>
+      </Grid2>
       <Collapse in={showFilter}>
         <Grid2 container spacing={{ xs: 2, md: 3 }} columns={columnSizes}>
           <Grid2 {...cols(1, 2, 4)} {...gridProps}>

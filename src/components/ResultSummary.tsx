@@ -1,5 +1,6 @@
 import React, { ReactElement, useState } from 'react';
 import {
+  Box,
   Collapse,
   FormControlLabel,
   Switch,
@@ -29,6 +30,7 @@ const Header = styled.h3`
 type ResultSummaryProps = {
   all: Property[];
   filtered: Property[];
+  collapsed: boolean;
 };
 
 type SummaryStatistics = {
@@ -149,8 +151,10 @@ function StatsRow({
   );
 }
 
-export default function ResultSummary({ all, filtered }: ResultSummaryProps): ReactElement {
-  const [showAnalytics, setShowAnalytics] = useState(true);
+export default function ResultSummary({
+  all, filtered, collapsed,
+}: ResultSummaryProps): ReactElement {
+  const [showAnalytics, setShowAnalytics] = useState(!collapsed);
 
   const heading = (all.length > 0) ? `Results: ${filtered.length} of ${all.length}.` : 'No Results';
   if (all.length === 0 || filtered.length === 0) {
@@ -161,7 +165,7 @@ export default function ResultSummary({ all, filtered }: ResultSummaryProps): Re
     price, rentzestimate, travelTime, zestimate, perSqFt, rentToPrices, zestimateToPrice,
   } = summarize(filtered);
   return (
-    <>
+    <Box>
       <FormControlLabel
         control={(
           <Switch
@@ -199,6 +203,6 @@ export default function ResultSummary({ all, filtered }: ResultSummaryProps): Re
           </Table>
         </TableContainer>
       </Collapse>
-    </>
+    </Box>
   );
 }

@@ -1,3 +1,5 @@
+import { createContext } from 'react';
+
 const dimensions = [
   'Price',
   'Rent/Price Ratio',
@@ -180,7 +182,10 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
   maximumSignificantDigits: 4,
 });
 
+const ColorModeContext = createContext({ toggleColorMode: () => { /* void */ } });
+
 export {
+  ColorModeContext,
   DefaultFetchPropertiesRequest,
   DefaultFilter,
   DefaultLocalSettings,

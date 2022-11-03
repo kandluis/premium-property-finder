@@ -1,5 +1,9 @@
 import React from 'react';
-import { Paper } from '@mui/material';
+import {
+  Grow,
+  Paper,
+  Skeleton,
+} from '@mui/material';
 import Grid2 from '@mui/material/Unstable_Grid2';
 
 import Filter from '../components/Filter';
@@ -34,20 +38,49 @@ export default function Home(): React.ReactElement {
                     loading={loading}
                   />
                 </Grid2>
-                <Grid2 xs={12}>
-                  {!loading
-                    ? <ResultSummary all={allProperties} filtered={filteredProperties} />
-                    : <ProgressBar value={100 * percent} />}
-                </Grid2>
-                <Paper elevation={2}>
-                  <Grid2 container spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }}>
-                    {filteredProperties.map((property) => (
-                      <Grid2 xs={4}>
-                        <Listing property={property} key={`${property.zpid || ''}-${property.statusType}`} />
+                {loading
+                  ? (
+                    <>
+                      <Grid2 xs={12}>
+                        <ProgressBar value={100 * percent} />
                       </Grid2>
-                    ))}
-                  </Grid2>
-                </Paper>
+                      <Grid2
+                        container
+                        spacing={{ xs: 2, md: 3 }}
+                        columns={{ xs: 4, sm: 8, md: 12 }}
+                      >
+                        {[...Array(3).keys()].map((_) => (
+                          <Grid2 xs={4}>
+                            <Skeleton variant="rounded" height={400} />
+                          </Grid2>
+                        ))}
+                      </Grid2>
+                    </>
+                  )
+                  : (
+                    <Grid2 xs={12}>
+                      <ResultSummary
+                        all={allProperties}
+                        filtered={filteredProperties}
+                        collapsed
+                      />
+                      <Paper elevation={2}>
+                        <Grid2
+                          container
+                          spacing={{ xs: 2, md: 3 }}
+                          columns={{ xs: 4, sm: 8, md: 12 }}
+                        >
+                          {filteredProperties.map((property) => (
+                            <Grow key={`${property.zpid || ''}-${property.statusType}`} in={!loading}>
+                              <Grid2 xs={4}>
+                                <Listing property={property} />
+                              </Grid2>
+                            </Grow>
+                          ))}
+                        </Grid2>
+                      </Paper>
+                    </Grid2>
+                  )}
               </>
             )}
           </PropertyListingsConsumer>
