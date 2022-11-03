@@ -1,4 +1,5 @@
 import React from 'react';
+import { Paper } from '@mui/material';
 import Grid2 from '@mui/material/Unstable_Grid2';
 
 import Filter from '../components/Filter';
@@ -38,11 +39,15 @@ export default function Home(): React.ReactElement {
                     ? <ResultSummary all={allProperties} filtered={filteredProperties} />
                     : <ProgressBar value={100 * percent} />}
                 </Grid2>
-                <div className="columns">
-                  {filteredProperties.map((property) => (
-                    <Listing property={property} key={`${property.zpid || ''}-${property.statusType}`} />
-                  ))}
-                </div>
+                <Paper elevation={2}>
+                  <Grid2 container spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }}>
+                    {filteredProperties.map((property) => (
+                      <Grid2 xs={4}>
+                        <Listing property={property} key={`${property.zpid || ''}-${property.statusType}`} />
+                      </Grid2>
+                    ))}
+                  </Grid2>
+                </Paper>
               </>
             )}
           </PropertyListingsConsumer>
