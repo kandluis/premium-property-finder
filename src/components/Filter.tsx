@@ -280,8 +280,8 @@ export default function Filter({
                   radius: Number(event.target.value),
                 }))}
               >
-                {[...Array(40).keys()]
-                  .map((item) => ((item + 1) / 3.333))
+                {[...Array(60).keys()]
+                  .map((item) => ((item + 1) / 5))
                   .map((value) => (
                     <MenuItem key={value} value={value}>
                       {`${value.toFixed(1)} miles`}
