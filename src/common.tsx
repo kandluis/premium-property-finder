@@ -184,6 +184,14 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
 
 const ColorModeContext = createContext({ toggleColorMode: () => { /* void */ } });
 
+function openInNewTab(href: string): void {
+  Object.assign(document.createElement('a'), {
+    target: '_blank',
+    rel: 'noopener noreferrer',
+    href,
+  }).click();
+}
+
 export {
   ColorModeContext,
   DefaultFetchPropertiesRequest,
@@ -194,6 +202,7 @@ export {
   notEmpty,
   FetchPropertiesRequest,
   FilterState,
+  openInNewTab,
   PlaceInfo,
   PropAccessors,
   Property,

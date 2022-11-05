@@ -1,29 +1,105 @@
 import React from 'react';
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
-import { Property } from '../common';
+import {
+  DataGrid,
+  GridColDef,
+  GridValueFormatterParams,
+} from '@mui/x-data-grid';
+import {
+  currencyFormatter,
+  PropAccessors,
+  Property,
+  openInNewTab,
+} from '../common';
+
+function formatCurrency(params: GridValueFormatterParams<number>): string {
+  if (params.value == null) {
+    return '';
+  }
+
+  return currencyFormatter.format(params.value);
+}
+
+type Row = {
+  row: Property;
+}
 
 const columns: GridColDef[] = [
-  { field: 'address', headerName: 'Address', type: 'string' },
-  { field: 'detailUrl', headerName: 'detailUrl', type: 'string' },
-  { field: 'imgSrc', headerName: 'imgSrc', type: 'string' },
-  { field: 'price', headerName: 'price', type: 'number' },
-  { field: 'statusType', headerName: 'statusType', type: 'string' },
-  { field: 'statusText', headerName: 'statusText', type: 'string' },
-  { field: 'listingType', headerName: 'listingType', type: 'string' },
-  { field: 'area?', headerName: 'area?', type: 'number' },
-  { field: 'baths?', headerName: 'baths?', type: 'number' },
-  { field: 'beds?', headerName: 'beds?', type: 'number' },
-  { field: 'city?', headerName: 'city?', type: 'string' },
-  { field: 'homeType?', headerName: 'homeType?', type: 'string' },
-  { field: 'lastSold?', headerName: 'lastSold?', type: 'string' },
-  { field: 'livingArea?', headerName: 'livingArea?', type: 'number' },
-  { field: 'lotArea?', headerName: 'lotArea?', type: 'number' },
-  { field: 'rentzestimate?', headerName: 'rentzestimate?', type: 'number' },
-  { field: 'state?', headerName: 'state?', type: 'string' },
-  { field: 'travelTime?', headerName: 'travelTime?', type: 'number' },
-  { field: 'zestimate?', headerName: 'zestimate?', type: 'number' },
-  { field: 'zipCode?', headerName: 'zipCode?', type: 'number' },
-  { field: 'zpid?', headerName: 'zpid?', type: 'number' },
+  {
+    field: 'address',
+    headerName: 'Address',
+    type: 'string',
+    valueGetter: ({ row }: Row) => `${row.address}, ${row.city || 'Unknown'} ${row.state || 'NA'} ${row.zipCode || ''}`,
+    flex: 1,
+    minWidth: 200,
+  },
+  {
+    field: 'price',
+    headerName: 'Price',
+    type: 'number',
+    valueFormatter: formatCurrency,
+    minWidth: 100,
+    flex: 1,
+  },
+  {
+    field: 'persqft',
+    headerName: 'Price/sqft',
+    type: 'number',
+    valueGetter: ({ row }: Row) => PropAccessors.getPricePerSqft(row),
+    valueFormatter: formatCurrency,
+    flex: 1,
+    minWidth: 100,
+  },
+  {
+    field: 'renttoprice',
+    headerName: 'Rent to Price Ratio',
+    type: 'number',
+    valueGetter: ({ row }: Row) => PropAccessors.getRentToPrice(row),
+    valueFormatter: ({ value }: GridValueFormatterParams<number>) => `${value.toFixed(2)}%`,
+    flex: 1,
+    minWidth: 50,
+  },
+  {
+    field: 'area',
+    headerName: 'Living Area',
+    type: 'number',
+    minWidth: 100,
+    flex: 1,
+  },
+  {
+    field: 'baths',
+    headerName: 'Baths',
+    type: 'number',
+    minWidth: 25,
+  },
+  {
+    field: 'beds',
+    headerName: 'Beds',
+    type: 'number',
+    minWidth: 25,
+  },
+
+  {
+    field: 'rentzestimate',
+    headerName: 'Rent Estimate',
+    type: 'number',
+    valueFormatter: formatCurrency,
+    flex: 1,
+  },
+  {
+    field: 'travelTime',
+    headerName: 'Commute Time',
+    type: 'number',
+    valueFormatter: (params) => ((params.value) ? `${(params.value / 60).toFixed(1)} min` : ''),
+    minWidth: 100,
+    flex: 1,
+  },
+  {
+    field: 'zestimate',
+    headerName: 'Zestimate',
+    type: 'number',
+    valueFormatter: formatCurrency,
+    flex: 1,
+  },
 ];
 
 interface PropertyTableProps {
@@ -35,10 +111,15 @@ export default function PropertyTable({ properties }: PropertyTableProps) {
     <DataGrid
       autoHeight
       autoPageSize
+      density="compact"
       rows={properties}
       columns={columns}
+      pageSize={100}
       disableSelectionOnClick
       getRowId={(row: Property) => `${row.detailUrl}`}
+      onRowClick={({ row }: { row: Property }) => {
+        openInNewTab(`http://www.zillow.com${row.detailUrl}`);
+      }}
     />
   );
 }

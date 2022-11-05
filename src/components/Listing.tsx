@@ -6,18 +6,10 @@ import {
   CardMedia,
   Typography,
 } from '@mui/material';
-import { PropAccessors, Property } from '../common';
+import { openInNewTab, PropAccessors, Property } from '../common';
 
 type ListingProps = {
   property: Property,
-}
-
-function openInNewTab(href: string): void {
-  Object.assign(document.createElement('a'), {
-    target: '_blank',
-    rel: 'noopener noreferrer',
-    href,
-  }).click();
 }
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
