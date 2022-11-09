@@ -166,10 +166,13 @@ export default function Filter({
   const onShareClick = async () => {
     setShare({ link: null, loading: true, attempted: false });
     const urlReq = `${urlShortnerEndpoint}?key=${CUTTLY_API_KEY}&short=${encodeURIComponent(window.location.href)}`;
-    const { url } = await getJsonResponse(urlReq, 'json', true) as CuttlyApiResponse;
-    const shortLink = (url.status === 7) ? url.shortLink : null;
-    if (shortLink) {
-      await navigator.clipboard.writeText(url.shortLink);
+    const { url: { status, shortLink } } = await getJsonResponse(urlReq, 'json', true) as CuttlyApiResponse;
+    const link = (status === 7) ? shortLink : null;
+    if (link) {
+      await navigator.clipboard.writeText(link);
+    } else {
+      /* eslint-disable-next-line no-alert */
+      alert(`Failed to share ${link || ''}, code: ${status}`);
     }
     setShare({ link: shortLink, loading: false, attempted: true });
   };
