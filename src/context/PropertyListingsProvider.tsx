@@ -478,13 +478,14 @@ async function fetchCommuteTimes(
     }
     const { value: { rows } } = resp;
     const { elements } = rows[idx % 25];
-    const { status, duration_in_traffic: { value } } = elements[0];
+    const { status } = elements[0];
     if (status !== 'OK') {
       return db;
     }
     if (!zpid) {
       return db;
     }
+    const { duration_in_traffic: { value } } = elements[0];
     return merge(db, { [zpid]: { [placeId]: value } });
   }, {});
 }
