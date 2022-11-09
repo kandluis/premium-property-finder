@@ -1,11 +1,11 @@
 /// <reference types="google.maps" />
 /* eslint-disable react/jsx-props-no-spreading */
 import React, {
-  useState,
+  ReactElement,
   useEffect,
   useMemo,
   useRef,
-  ReactElement,
+  useState,
 } from 'react';
 import {
   Autocomplete,
@@ -42,6 +42,49 @@ type AutoCompleteService = {
 }
 const autocompleteService: AutoCompleteService = { current: null };
 
+type Cache<T> = Record<
+  string, {
+    data: T;
+    maxAge: number;
+}>;
+async function maybeFetch<T>(
+  key: string,
+  generator: () => Promise<T>,
+  cacheKey = 'upa',
+  cache = 24 * 60 * 60,
+): Promise<T> {
+  let cachedData: Cache<T> = {};
+  try {
+    cachedData = JSON.parse(sessionStorage.getItem(cacheKey) || '{}') as Cache<T>;
+  } catch (error) {
+    // Skip exception
+  }
+  cachedData = Object.keys(cachedData).reduce(
+    (acc: Cache<T>, k: string) => {
+      if (cachedData[k].maxAge - Date.now() >= 0) {
+        acc[k] = cachedData[k];
+      }
+      return acc;
+    },
+    {} as Cache<T>,
+  );
+
+  if (cachedData[key]) {
+    return cachedData[key].data;
+  }
+  const data = await generator();
+  cachedData[key] = {
+    data,
+    maxAge: Date.now() + cache * 1000,
+  };
+  try {
+    sessionStorage.setItem(cacheKey, JSON.stringify(cachedData));
+  } catch (error) {
+    // Skip exception
+  }
+  return data;
+}
+
 interface LocationInputProps {
   id: string;
   handleInput: (value: PlaceInfo) => void;
@@ -52,12 +95,16 @@ interface LocationInputProps {
 
 export default function LocationInput(
   {
-    id, handleInput, defaultValue, placeholder, label,
+    id,
+    handleInput,
+    defaultValue,
+    placeholder,
+    label,
   }: LocationInputProps,
 ): ReactElement {
-  const [value, setValue] = useState<google.maps.places.AutocompletePrediction | null>(null);
-  const [inputValue, setInputValue] = useState('');
-  const [options, setOptions] = useState<readonly google.maps.places.AutocompletePrediction[]>([]);
+  const [value, setValue] = useState(defaultValue || null);
+  const [inputValue, setInputValue] = useState(defaultValue?.description || '');
+  const [options, setOptions] = useState((defaultValue) ? [defaultValue] : []);
   const loaded = useRef(false);
 
   if (typeof window !== 'undefined' && !loaded.current) {
@@ -74,11 +121,12 @@ export default function LocationInput(
 
   const fetchData = useMemo(
     () => throttle(
-      async (request: google.maps.places.AutocompletionRequest) => {
-        if (autocompleteService.current === null) {
+      (request: google.maps.places.AutocompletionRequest) => {
+        const remote = autocompleteService.current;
+        if (!remote) {
           return null;
         }
-        return autocompleteService.current.getPlacePredictions(request);
+        return maybeFetch(request.input, () => remote.getPlacePredictions(request));
       },
     ),
     [],
@@ -101,7 +149,7 @@ export default function LocationInput(
     const fn = async () => {
       const results = await fetchData({ input: inputValue });
       if (active) {
-        let newOptions: readonly google.maps.places.AutocompletePrediction[] = [];
+        let newOptions: google.maps.places.AutocompletePrediction[] = [];
         if (value) {
           newOptions = [value];
         }
@@ -124,14 +172,11 @@ export default function LocationInput(
       filterSelectedOptions
       fullWidth
       id={id}
+      isOptionEqualToValue={(option, val) => option.description === val.description}
       getOptionLabel={(option) => (typeof option === 'string' ? option : option.description)}
-      isOptionEqualToValue={(option, val) => (
-        options.length === 0 && defaultValue
-        && val.description === defaultValue.description)
-        || option.description === val.description}
       filterOptions={(x) => x}
       options={options}
-      value={value || defaultValue}
+      value={value}
       onChange={(event, prediction: google.maps.places.AutocompletePrediction | null) => {
         setOptions(prediction ? [prediction, ...options] : options);
         setValue(prediction);
@@ -174,7 +219,7 @@ export default function LocationInput(
               <Grid item xs>
                 {parts.map((part) => (
                   <span
-                    key={part.text}
+                    key={`${id}${part.text}`}
                     style={{
                       fontWeight: part.highlight ? 700 : 400,
                     }}

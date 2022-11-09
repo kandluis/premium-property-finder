@@ -1,34 +1,46 @@
 /* eslint-disable react/jsx-props-no-spreading */
-import classnames from 'classnames';
-
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import DownloadIcon from '@mui/icons-material/Download';
+import GridViewIcon from '@mui/icons-material/GridView';
 import SendIcon from '@mui/icons-material/Send';
 import ShareIcon from '@mui/icons-material/Share';
+import TableChartIcon from '@mui/icons-material/TableChart';
 
 import {
   Autocomplete,
   Box,
   Button,
   Checkbox,
+  Collapse,
+  FormControl,
   FormControlLabel,
+  IconButton,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
   Slider,
   Switch,
   TextField,
   Typography,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import Grid2 from '@mui/material/Unstable_Grid2';
 
 import { LoadingButton } from '@mui/lab';
 
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { CSVLink } from 'react-csv';
 import styled from 'styled-components';
 import { useQueryParam } from 'use-query-params';
 import {
+  ColorModeContext,
   DefaultFetchPropertiesRequest,
   DefaultLocalSettings,
+  currencyFormatter,
   FetchPropertiesRequest,
   LocalFilterSettings,
   notEmpty,
@@ -38,7 +50,6 @@ import {
 } from '../common';
 import { CUTTLY_API_KEY, urlShortnerEndpoint } from '../constants';
 import LocationInput from './LocationInput';
-import styles from './styles.module.css';
 import { CuttlyApiResponse, getJsonResponse } from '../utilities';
 
 const TinyText = styled(Typography)({
@@ -59,6 +70,10 @@ type FilterProps = {
   all: Property[],
   // If we're currently loading data.
   loading: boolean;
+  // The display type for the results.
+  displayType: 'Grid' | 'Table';
+  // Callback to update the display type.
+  setDisplayType: (displayType: 'Grid' | 'Table') => void;
 };
 
 const RemoteParser = {
@@ -105,11 +120,16 @@ type SwitchOptions = {
 };
 
 export default function Filter({
-  remoteUpdate, localUpdate, results, all, loading,
+  remoteUpdate, localUpdate, results, all, loading, displayType, setDisplayType,
 }: FilterProps) {
   const [share, setShare] = useState<ShareLinkState>(DefaultShareLinkState);
   const [remoteForm, setRemoteForm] = useQueryParam('remote', RemoteParser);
   const [localForm, setLocalForm] = useQueryParam('local', LocalParser);
+  const [priceBounds, setPriceBounds] = useState([remoteForm.priceFrom, remoteForm.priceMost]);
+  const [ratioBounds, setRatioBounds] = useState(localForm.meetsRule);
+  const [showFilter, setShowFilter] = useState(true);
+  const theme = useTheme();
+  const colorMode = useContext(ColorModeContext);
   remoteForm.commuteLocation = remoteForm.commuteLocation || remoteForm.geoLocation;
 
   const renderSwitch = ({ title, localKey, remoteKey }: SwitchOptions) => (
@@ -146,10 +166,13 @@ export default function Filter({
   const onShareClick = async () => {
     setShare({ link: null, loading: true, attempted: false });
     const urlReq = `${urlShortnerEndpoint}?key=${CUTTLY_API_KEY}&short=${encodeURIComponent(window.location.href)}`;
-    const { url } = await getJsonResponse(urlReq, 'json', true) as CuttlyApiResponse;
-    const shortLink = (url.status === 7) ? url.shortLink : null;
-    if (shortLink) {
-      await navigator.clipboard.writeText(url.shortLink);
+    const { url: { status, shortLink } } = await getJsonResponse(urlReq, 'json', true) as CuttlyApiResponse;
+    const link = (status === 7) ? shortLink : null;
+    if (link) {
+      await navigator.clipboard.writeText(link);
+    } else {
+      /* eslint-disable-next-line no-alert */
+      alert(`Failed to share ${link || ''}, code: ${status}`);
     }
     setShare({ link: shortLink, loading: false, attempted: true });
   };
@@ -167,8 +190,6 @@ export default function Filter({
     setShare(DefaultShareLinkState);
   }, [remoteForm, localForm]);
 
-  const containerClasses = classnames('container', 'mb-1', styles.container);
-  const formClasses = classnames('form-horizontal', styles.form);
   const getHomeType = (prop: Property): string => {
     if (!prop.homeType) {
       return '';
@@ -199,12 +220,26 @@ export default function Filter({
     md: columnSizes.md / nmd,
   });
   return (
-    <div className={containerClasses}>
-      <form
-        className={formClasses}
-        noValidate
-      >
-        <h1>Refine your results</h1>
+    <Paper elevation={2}>
+      <Grid2 container spacing={{ xs: 1, md: 2 }}>
+        <Grid2 xs={11} {...gridProps} justifyContent="left">
+          <h1>
+            <Switch
+              name="analytics"
+              size="medium"
+              checked={showFilter}
+              onChange={(event) => setShowFilter(event.target.checked)}
+            />
+            Refine your results
+          </h1>
+        </Grid2>
+        <Grid2 xs={1} {...gridProps} justifyContent="right">
+          <IconButton sx={{ ml: 1 }} onClick={colorMode.toggleColorMode} color="inherit">
+            {theme.palette.mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+          </IconButton>
+        </Grid2>
+      </Grid2>
+      <Collapse in={showFilter}>
         <Grid2 container spacing={{ xs: 2, md: 3 }} columns={columnSizes}>
           <Grid2 {...cols(1, 2, 4)} {...gridProps}>
             <LocationInput
@@ -235,50 +270,100 @@ export default function Filter({
             />
           </Grid2>
           <Grid2 {...cols(1, 2, 4)} {...gridProps}>
-            <div className="col-5 col-sm-12">
-              <label className="form-label" htmlFor="radius">
-                Radius
-              </label>
-            </div>
-            <div className="col-5 col-sm-12">
-              <input
-                className="form-input"
-                min="0.25"
-                max="40"
-                type="number"
+            <FormControl sx={{ m: 1, minWidth: 80 }}>
+              <InputLabel id="radius-label">Search Radius</InputLabel>
+              <Select
+                autoWidth
+                labelId="radius-label"
                 id="radius"
-                placeholder="3"
+                label="Search Radius"
                 value={remoteForm.radius}
-                step="0.25"
                 onChange={(event) => setRemoteForm((latestForm: FetchPropertiesRequest) => ({
                   ...latestForm,
                   radius: Number(event.target.value),
                 }))}
-              />
-            </div>
+              >
+                {[...Array(60).keys()]
+                  .map((item) => ((item + 1) / 5))
+                  .map((value) => (
+                    <MenuItem key={value} value={value}>
+                      {`${value.toFixed(1)} miles`}
+                    </MenuItem>
+                  ))}
+              </Select>
+            </FormControl>
           </Grid2>
           <Grid2 {...cols(1, 2, 4)} {...gridProps}>
-            <div className="col-3 col-sm-12">
-              <label className="form-label" htmlFor="price-most">
-                High
-              </label>
-            </div>
-            <div className="col-4 col-sm-12">
-              <input
-                className="form-input"
-                min="0"
-                max="10000000"
-                type="number"
-                id="price-most"
-                placeholder="1000000"
-                step="50000"
-                value={remoteForm.priceMost || ''}
-                onChange={(event) => setRemoteForm((latestForm: FetchPropertiesRequest) => ({
-                  ...latestForm,
-                  priceMost: Number(event.target.value),
-                }))}
-              />
-            </div>
+            <FormControlLabel
+              value="top"
+              label="Price"
+              labelPlacement="top"
+              control={(
+                <Box sx={{ minWidth: '200px' }}>
+                  <Slider
+                    getAriaLabel={(index) => `${(index === 0) ? 'Minimum' : 'Maximum'} Price`}
+                    id="price-filter"
+                    valueLabelDisplay="auto"
+                    disableSwap
+                    step={50000}
+                    min={DefaultFetchPropertiesRequest.priceFrom}
+                    max={2 * DefaultFetchPropertiesRequest.priceMost}
+                    value={priceBounds}
+                    onChange={(event, newValue: number | number[], activeThumb: number) => {
+                      if (!Array.isArray(newValue)) {
+                        return;
+                      }
+                      let [min, max] = newValue;
+                      const minDistance = 50000;
+                      if (max - min < minDistance) {
+                        if (activeThumb === DefaultFetchPropertiesRequest.priceFrom) {
+                          const clamped = Math.min(
+                            min,
+                            DefaultFetchPropertiesRequest.priceMost - minDistance,
+                          );
+                          [min, max] = [clamped, clamped + minDistance];
+                        } else {
+                          const clamped = Math.max(max, minDistance);
+                          [min, max] = [clamped - minDistance, clamped];
+                        }
+                      }
+                      setPriceBounds([min, max]);
+                    }}
+                    onChangeCommitted={(event, newValue: number | number[]) => {
+                      if (!Array.isArray(newValue)) {
+                        return;
+                      }
+                      setRemoteForm((latestForm: FetchPropertiesRequest) => ({
+                        ...latestForm,
+                        priceFrom: newValue[0],
+                        priceMost: newValue[1],
+                      }));
+                    }}
+                    getAriaValueText={
+                      (value: number) => currencyFormatter.format(value)
+                    }
+                    valueLabelFormat={
+                      (value: number) => currencyFormatter.format(value)
+                    }
+                  />
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      mt: -1,
+                    }}
+                  >
+                    <TinyText>
+                      {currencyFormatter.format(priceBounds[0])}
+                    </TinyText>
+                    <TinyText>
+                      {currencyFormatter.format(priceBounds[1])}
+                    </TinyText>
+                  </Box>
+                </Box>
+              )}
+            />
           </Grid2>
           <Grid2 {...cols(1, 3, 3)} {...gridProps}>
             <FormControlLabel
@@ -296,7 +381,7 @@ export default function Filter({
                     min={DefaultLocalSettings.meetsRule[0]}
                     max={DefaultLocalSettings.meetsRule[1]}
                     disabled={all.length === 0}
-                    value={localForm.meetsRule}
+                    value={ratioBounds}
                     onChange={(event, newValue: number | number[], activeThumb: number) => {
                       if (!Array.isArray(newValue)) {
                         return;
@@ -313,12 +398,19 @@ export default function Filter({
                           [min, max] = [clamped - minDistance, clamped];
                         }
                       }
+                      setRatioBounds([min, max]);
+                    }}
+                    onChangeCommitted={(event, newValue: number | number[]) => {
+                      if (!Array.isArray(newValue)) {
+                        return;
+                      }
                       setLocalForm((latestForm: LocalFilterSettings) => ({
                         ...latestForm,
-                        meetsRule: [min, max],
+                        meetsRule: [newValue[0], newValue[1]],
                       }));
                     }}
                     getAriaValueText={(value: number) => `${value}%`}
+                    valueLabelFormat={(value: number) => `${value}%`}
                   />
                   <Box
                     sx={{
@@ -329,10 +421,10 @@ export default function Filter({
                     }}
                   >
                     <TinyText>
-                      {`${localForm.meetsRule[0]}%`}
+                      {`${ratioBounds[0]}%`}
                     </TinyText>
                     <TinyText>
-                      {`${localForm.meetsRule[1]}%`}
+                      {`${ratioBounds[1]}%`}
                     </TinyText>
                   </Box>
                 </Box>
@@ -434,7 +526,7 @@ export default function Filter({
               {renderSwitch(item)}
             </Grid2>
           ))}
-          <Grid2 {...cols(1, 3, 3)} {...gridProps}>
+          <Grid2 {...cols(1, 2, 4)} {...gridProps}>
             <LoadingButton
               onClick={() => {
                 remoteUpdate(remoteForm);
@@ -448,7 +540,7 @@ export default function Filter({
               Submit
             </LoadingButton>
           </Grid2>
-          <Grid2 {...cols(1, 3, 3)} {...gridProps}>
+          <Grid2 {...cols(1, 2, 4)} {...gridProps}>
             { (share.link)
               ? (
                 <input
@@ -475,7 +567,17 @@ export default function Filter({
                 </LoadingButton>
               )}
           </Grid2>
-          <Grid2 {...cols(1, 3, 3)} {...gridProps}>
+          <Grid2 {...cols(1, 2, 4)} {...gridProps}>
+            <Button
+              size="medium"
+              variant={(displayType === 'Grid') ? 'outlined' : 'contained'}
+              startIcon={(displayType === 'Grid') ? <TableChartIcon /> : <GridViewIcon />}
+              onClick={() => setDisplayType((displayType === 'Grid') ? 'Table' : 'Grid')}
+            >
+              {(displayType === 'Grid') ? 'Table' : 'Grid'}
+            </Button>
+          </Grid2>
+          <Grid2 {...cols(1, 2, 4)} {...gridProps}>
             <CSVLink
               data={results}
               filename="properties.csv"
@@ -487,7 +589,7 @@ export default function Filter({
             </CSVLink>
           </Grid2>
         </Grid2>
-      </form>
-    </div>
+      </Collapse>
+    </Paper>
   );
 }

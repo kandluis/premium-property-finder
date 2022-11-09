@@ -569,8 +569,11 @@ const ContextState = {
   },
   remoteUpdate: (_: FetchPropertiesRequest) => {
     // no-op
-  }
-  ,
+  },
+  displayType: 'Grid' as 'Grid' | 'Table',
+  setDisplayType: (_: 'Grid' | 'Table') => {
+    // no-op
+  },
 };
 const ProviderDefaultState = {
   loading: false,
@@ -582,6 +585,7 @@ export function PropertyListingsProvider({ children }: ProviderProps) {
   const [filteredProperties, setFilteredProperties] = useState<Property[]>([] as Property[]);
   const [state, setState] = useState(ProviderDefaultState);
   const [percent, setPercent] = useState(0);
+  const [displayType, setDisplayType] = useState<'Grid' | 'Table'>('Grid');
 
   const localUpdate = useCallback((settings: LocalFilterSettings): void => {
     const { sortOrder } = settings;
@@ -619,7 +623,18 @@ export function PropertyListingsProvider({ children }: ProviderProps) {
     localUpdate,
     percent,
     remoteUpdate,
-  }), [state.loading, state.allProperties, filteredProperties, localUpdate, percent, remoteUpdate]);
+    displayType,
+    setDisplayType,
+  }), [
+    state.loading,
+    state.allProperties,
+    filteredProperties,
+    localUpdate,
+    percent,
+    remoteUpdate,
+    displayType,
+    setDisplayType,
+  ]);
   return (
     <PropertyListingsContext.Provider value={propertyListingsValue}>
       {children}

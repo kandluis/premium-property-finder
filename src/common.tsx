@@ -1,3 +1,5 @@
+import { createContext } from 'react';
+
 const dimensions = [
   'Price',
   'Rent/Price Ratio',
@@ -65,7 +67,7 @@ const DefaultPlaceInfo = {
 const DefaultFetchPropertiesRequest: FetchPropertiesRequest = {
   geoLocation: DefaultPlaceInfo,
   commuteLocation: DefaultPlaceInfo,
-  radius: 3.5,
+  radius: 3.4,
   priceFrom: 0,
   priceMost: 1500000,
   includeRecentlySold: false,
@@ -173,14 +175,34 @@ function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
   return value !== null && value !== undefined;
 }
 
+const currencyFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  notation: 'compact',
+  maximumSignificantDigits: 4,
+});
+
+const ColorModeContext = createContext({ toggleColorMode: () => { /* void */ } });
+
+function openInNewTab(href: string): void {
+  Object.assign(document.createElement('a'), {
+    target: '_blank',
+    rel: 'noopener noreferrer',
+    href,
+  }).click();
+}
+
 export {
+  ColorModeContext,
   DefaultFetchPropertiesRequest,
   DefaultFilter,
   DefaultLocalSettings,
+  currencyFormatter,
   LocalFilterSettings,
   notEmpty,
   FetchPropertiesRequest,
   FilterState,
+  openInNewTab,
   PlaceInfo,
   PropAccessors,
   Property,
