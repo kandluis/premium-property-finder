@@ -283,7 +283,7 @@ export default function Filter({
                   radius: Number(event.target.value),
                 }))}
               >
-                {[...Array(60).keys()]
+                {[...Array(360).keys()]
                   .map((item) => ((item + 1) / 5))
                   .map((value) => (
                     <MenuItem key={value} value={value}>
