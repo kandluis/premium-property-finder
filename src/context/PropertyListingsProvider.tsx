@@ -268,7 +268,7 @@ async function fetchProperties(
   priceMost: number,
   includeForSale: boolean,
   includeRecentlySold: boolean,
-  sinceSaleFilter: string | null,
+  sinceSaleFilter: string,
   progressFn: ProgressFn,
 )
 : Promise<Property[]> {
@@ -296,7 +296,7 @@ async function fetchProperties(
       isComingSoon: { value: !isRecentlySold },
       isAuction: { value: !isRecentlySold },
       isForSaleForeclosure: { value: !isRecentlySold },
-      doz: (sinceSaleFilter) ? { value: sinceSaleFilter } : undefined,
+      doz: (sinceSaleFilter !== '' && isRecentlySold) ? { value: sinceSaleFilter } : undefined,
     },
   });
   let propertyListings: ZillowProperty[] = [];

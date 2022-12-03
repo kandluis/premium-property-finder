@@ -59,7 +59,7 @@ interface FetchPropertiesRequest {
   priceMost: number;
   includeRecentlySold: boolean;
   includeForSale: boolean;
-  sinceSaleFilter: string | null;
+  sinceSaleFilter: string;
 }
 
 const DefaultPlaceInfo = {
@@ -74,7 +74,7 @@ const DefaultFetchPropertiesRequest: FetchPropertiesRequest = {
   priceMost: 1500000,
   includeRecentlySold: false,
   includeForSale: true,
-  sinceSaleFilter: null,
+  sinceSaleFilter: '30',
 };
 
 interface LocalFilterSettings {

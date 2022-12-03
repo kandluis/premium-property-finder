@@ -115,6 +115,7 @@ const DefaultShareLinkState = {
 
 type SwitchOptions = {
   title: string;
+  disabled: boolean;
   localKey?: keyof LocalFilterSettings;
   remoteKey?: keyof FetchPropertiesRequest;
 };
@@ -132,7 +133,9 @@ export default function Filter({
   const colorMode = useContext(ColorModeContext);
   remoteForm.commuteLocation = remoteForm.commuteLocation || remoteForm.geoLocation;
 
-  const renderSwitch = ({ title, localKey, remoteKey }: SwitchOptions) => (
+  const renderSwitch = ({
+    title, localKey, remoteKey, disabled,
+  }: SwitchOptions) => (
     <FormControlLabel
       key={localKey || remoteKey}
       value="top"
@@ -143,7 +146,7 @@ export default function Filter({
           color="primary"
           checked={(localKey && localForm[localKey] as boolean)
             || (remoteKey && remoteForm[remoteKey] as boolean) || false}
-          disabled={all.length === 0}
+          disabled={disabled}
           onChange={(event) => {
             if (localKey) {
               setLocalForm((latestForm: LocalFilterSettings) => ({
@@ -203,10 +206,11 @@ export default function Filter({
     localForm.homeTypes = (homeTypes.includes('Single Family')) ? ['Single Family'] : homeTypes;
   }
   const switches: SwitchOptions[] = [
-    { title: 'Include Recently Sold', remoteKey: 'includeRecentlySold' },
-    { title: 'Only If Rent is Available', localKey: 'rentOnly' },
-    { title: 'Only New Construction', localKey: 'newConstruction' },
-    { title: 'Include Land', localKey: 'includeLand' },
+    { title: 'Only If Rent is Available', localKey: 'rentOnly', disabled: all.length === 0 },
+    { title: 'Only New Construction', localKey: 'newConstruction', disabled: all.length === 0 },
+    { title: 'Include Land', localKey: 'includeLand', disabled: all.length === 0 },
+    { title: 'Include For Sale', remoteKey: 'includeForSale', disabled: !remoteForm.includeRecentlySold },
+    { title: 'Include Recently Sold', remoteKey: 'includeRecentlySold', disabled: !remoteForm.includeForSale },
   ];
   const gridProps = {
     display: 'flex',
@@ -501,10 +505,38 @@ export default function Filter({
             />
           </Grid2>
           {switches.map((item) => (
-            <Grid2 key={item.title} {...cols(2, 4, 4)} {...gridProps}>
+            <Grid2 key={item.title} {...cols(2, 3, 6)} {...gridProps}>
               {renderSwitch(item)}
             </Grid2>
           ))}
+          <Grid2 {...cols(2, 3, 6)} {...gridProps}>
+            <FormControl sx={{ m: 1, minWidth: 80 }}>
+              <InputLabel id="since-sale-filter-label">Sold in Last</InputLabel>
+              <Select
+                autoWidth
+                disabled={!remoteForm.includeRecentlySold}
+                labelId="since-sale-filter-label"
+                id="since-sale-filter"
+                label="Search Radius"
+                value={remoteForm.sinceSaleFilter}
+                onChange={(event) => setRemoteForm((latestForm: FetchPropertiesRequest) => ({
+                  ...latestForm,
+                  sinceSaleFilter: event.target.value,
+                }))}
+              >
+                <MenuItem key="" value="">Any</MenuItem>
+                <MenuItem key="1" value="1">1 day</MenuItem>
+                <MenuItem key="7" value="7">7 days</MenuItem>
+                <MenuItem key="14" value="14">14 days</MenuItem>
+                <MenuItem key="30" value="30">30 days</MenuItem>
+                <MenuItem key="90" value="90">90 days</MenuItem>
+                <MenuItem key="6m" value="6m">6 months</MenuItem>
+                <MenuItem key="12m" value="12m">12 months</MenuItem>
+                <MenuItem key="24m" value="24m">24 months</MenuItem>
+                <MenuItem key="36m" value="36m">36 months</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid2>
           <Grid2 {...cols(1, 2, 4)} {...gridProps}>
             <LoadingButton
               onClick={() => {
