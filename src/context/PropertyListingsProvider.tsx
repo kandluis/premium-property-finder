@@ -266,7 +266,9 @@ async function fetchProperties(
   radius: number,
   priceFrom: number,
   priceMost: number,
+  includeForSale: boolean,
   includeRecentlySold: boolean,
+  sinceSaleFilter: string | null,
   progressFn: ProgressFn,
 )
 : Promise<Property[]> {
@@ -279,7 +281,7 @@ async function fetchProperties(
   const wants = {
     cat1: ['mapResults'],
   };
-  const searchQueryStateFn = (isRecentlySold: boolean) => ({
+  const searchQueryStateFn = ({ isRecentlySold }: { isRecentlySold: boolean }) => ({
     mapBounds: boundingBox(lat, lng, radius * 2),
     filterState: {
       price: {
@@ -294,15 +296,19 @@ async function fetchProperties(
       isComingSoon: { value: !isRecentlySold },
       isAuction: { value: !isRecentlySold },
       isForSaleForeclosure: { value: !isRecentlySold },
+      doz: (sinceSaleFilter) ? { value: sinceSaleFilter } : undefined,
     },
   });
-  let zillowUrl = `${zillowBaseUrl}?searchQueryState=${JSON.stringify(searchQueryStateFn(false))}&wants=${JSON.stringify(wants)}`;
-  let data = await getJsonResponse(`${zillowUrl}`, 'json', true) as ZillowResponse;
+  let propertyListings: ZillowProperty[] = [];
+  if (includeForSale) {
+    const zillowUrl = `${zillowBaseUrl}?searchQueryState=${JSON.stringify(searchQueryStateFn({ isRecentlySold: false }))}&wants=${JSON.stringify(wants)}`;
+    const data = await getJsonResponse(`${zillowUrl}`, 'json', true) as ZillowResponse;
+    propertyListings = [...propertyListings, ...data.cat1.searchResults.mapResults];
+  }
   progressFn(0.1);
-  let propertyListings = data.cat1.searchResults.mapResults;
   if (includeRecentlySold) {
-    zillowUrl = `${zillowBaseUrl}?searchQueryState=${JSON.stringify(searchQueryStateFn(true))}&wants=${JSON.stringify(wants)}`;
-    data = await getJsonResponse(`${zillowUrl}`, 'json', true) as ZillowResponse;
+    const zillowUrl = `${zillowBaseUrl}?searchQueryState=${JSON.stringify(searchQueryStateFn({ isRecentlySold: true }))}&wants=${JSON.stringify(wants)}`;
+    const data = await getJsonResponse(`${zillowUrl}`, 'json', true) as ZillowResponse;
     propertyListings = [...propertyListings, ...data.cat1.searchResults.mapResults];
   }
   progressFn(0.15);
@@ -502,7 +508,7 @@ async function fetchCommuteTimes(
 async function filterAndFetchProperties(
   {
     geoLocation, radius, priceFrom, priceMost, includeRecentlySold,
-    commuteLocation,
+    includeForSale, sinceSaleFilter, commuteLocation,
   }: FetchPropertiesRequest,
   progressFn: ProgressFn,
 ): Promise<Property[]> {
@@ -512,6 +518,8 @@ async function filterAndFetchProperties(
     priceFrom,
     priceMost,
     includeRecentlySold,
+    includeForSale,
+    sinceSaleFilter,
     progressFn,
   );
   // Fetch additional, costly API data from database and update results.
