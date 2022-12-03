@@ -266,8 +266,8 @@ async function fetchProperties(
   radius: number,
   priceFrom: number,
   priceMost: number,
-  includeForSale: boolean,
   includeRecentlySold: boolean,
+  includeForSale: boolean,
   sinceSaleFilter: string,
   progressFn: ProgressFn,
 )

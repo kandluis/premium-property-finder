@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
+  Divider,
   Grow,
   Paper,
   Skeleton,
@@ -18,6 +19,7 @@ import {
 } from '../context/PropertyListingsProvider';
 
 export default function Home(): React.ReactElement {
+  const [showAnalytics, setShowAnalytics] = useState(false);
   return (
     <Grid2 container spacing={2}>
       <Grid2 xs={12}>
@@ -72,7 +74,8 @@ export default function Home(): React.ReactElement {
                     <ResultSummary
                       all={allProperties}
                       filtered={filteredProperties}
-                      collapsed
+                      showAnalytics={showAnalytics}
+                      setShowAnalytics={setShowAnalytics}
                     />
                     <Paper elevation={2}>
                       <Grid2

@@ -359,10 +359,10 @@ export default function Filter({
                     }}
                   >
                     <TinyText>
-                      {currencyFormatter.format(priceBounds[0])}
+                      {currencyFormatter.format(DefaultFetchPropertiesRequest.priceFrom)}
                     </TinyText>
                     <TinyText>
-                      {currencyFormatter.format(priceBounds[1])}
+                      {currencyFormatter.format(2 * DefaultFetchPropertiesRequest.priceMost)}
                     </TinyText>
                   </Box>
                 </Box>
@@ -425,10 +425,10 @@ export default function Filter({
                     }}
                   >
                     <TinyText>
-                      {`${ratioBounds[0]}%`}
+                      {`${DefaultLocalSettings.meetsRule[0]}%`}
                     </TinyText>
                     <TinyText>
-                      {`${ratioBounds[1]}%`}
+                      {`${DefaultLocalSettings.meetsRule[1]}%`}
                     </TinyText>
                   </Box>
                 </Box>

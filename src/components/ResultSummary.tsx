@@ -1,4 +1,4 @@
-import React, { ReactElement, useState } from 'react';
+import React, { ReactElement } from 'react';
 import {
   Box,
   Collapse,
@@ -30,7 +30,8 @@ const Header = styled.h3`
 type ResultSummaryProps = {
   all: Property[];
   filtered: Property[];
-  collapsed: boolean;
+  showAnalytics: boolean;
+  setShowAnalytics: (_: boolean) => void;
 };
 
 type SummaryStatistics = {
@@ -152,10 +153,8 @@ function StatsRow({
 }
 
 export default function ResultSummary({
-  all, filtered, collapsed,
+  all, filtered, showAnalytics, setShowAnalytics,
 }: ResultSummaryProps): ReactElement {
-  const [showAnalytics, setShowAnalytics] = useState(!collapsed);
-
   const heading = (all.length > 0) ? `Results: ${filtered.length} of ${all.length}.` : 'No Results';
   if (all.length === 0 || filtered.length === 0) {
     return <Header>{heading}</Header>;
