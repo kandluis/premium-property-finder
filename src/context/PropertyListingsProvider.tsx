@@ -437,7 +437,9 @@ async function fetchCommuteTimes(
   const genOrigin = ({
     address, city, state, zipCode,
   }: Property) => (city && state && zipCode ? `${address} ${city}, ${state} ${zipCode}` : null);
-  const needCommute = props.filter((prop) => !prop.travelTime);
+  const needCommute = props.filter(({
+    city, state, zipCode, travelTime,
+  }) => !travelTime && city && state && zipCode);
   const allOrigins = needCommute.map(genOrigin).filter(notEmpty);
   const drivingOptions = {
     departureTime: getNextTuesdayDeparture(),
