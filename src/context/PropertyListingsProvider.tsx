@@ -179,19 +179,19 @@ function parsePrice(item: ZillowProperty): number {
  */
 function addHDPResults(parsedItem: Property, home: HDPHomeInfo): void {
   const local = parsedItem;
-  local.baths = home.bathrooms;
-  local.beds = home.bedrooms;
-  local.city = home.city;
-  local.homeType = home.homeType;
-  local.livingArea = home.livingArea;
+  local.baths = home.bathrooms || local.baths;
+  local.beds = home.bedrooms || local.beds;
+  local.city = home.city || local.city;
+  local.homeType = home.homeType || local.homeType;
+  local.livingArea = home.livingArea || local.livingArea;
   if (home.price) {
     local.price = home.price;
   }
-  local.rentzestimate = home.rentZestimate;
-  local.state = home.state;
-  local.zestimate = home.zestimate;
-  local.zipCode = Number(home.zipcode);
-  local.zpid = home.zpid;
+  local.rentzestimate = home.rentZestimate || local.rentzestimate;
+  local.state = home.state || local.state;
+  local.zestimate = home.zestimate || local.zestimate;
+  local.zipCode = Number(home.zipcode) || local.zipCode;
+  local.zpid = home.zpid || local.zpid;
 }
 // Adds same fields as above function but when we don't have HDP data.
 function addResults(parsedItem: Property, item: ZillowProperty): void {
@@ -235,7 +235,6 @@ function parseResult(item: ZillowProperty): Property {
   // This is not always valid. If a city is two words, we'll only get the
   // last one! :o
   parsedItem.city = addressComponents[addressComponents.length - 3];
-  parsedItem.address = addressComponents.slice(0, addressComponents.length - 3).join(' ');
   if (item.area || item.minArea) {
     parsedItem.area = Number(item.area || item.minArea);
   }
@@ -246,6 +245,9 @@ function parseResult(item: ZillowProperty): Property {
     addHDPResults(parsedItem, item.hdpData.homeInfo);
   } else {
     addResults(parsedItem, item);
+  }
+  if (parsedItem.address.length < 5) {
+    parsedItem.address = addressComponents.slice(0, addressComponents.length - 3).join(' ');
   }
   return parsedItem;
 }
