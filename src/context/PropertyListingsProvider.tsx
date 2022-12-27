@@ -313,8 +313,7 @@ async function fetchProperties(
   }
   progressFn(0.15);
   const ret = propertyListings
-    .map((item) => parseResult(item))
-    .filter((item) => (item.zpid));
+    .map((item) => parseResult(item));
   progressFn(0.25);
   return ret;
 }
@@ -344,7 +343,8 @@ function filterProperties(all: Property[], settings: LocalFilterSettings): Prope
   }
   if (newConstruction) {
     filteredListings = filteredListings.filter(
-      (item) => item.listingType && item.listingType === 'NEW_CONSTRUCTION',
+      // Keep anything with unknown listing type.
+      (item) => !item.listingType || (item.listingType && item.listingType === 'NEW_CONSTRUCTION'),
     );
   }
   if (!includeLand) {
@@ -370,7 +370,7 @@ function filterProperties(all: Property[], settings: LocalFilterSettings): Prope
   if (homeTypes) {
     const selectedTypes = homeTypes.map((type) => type.replace(' ', '_').toUpperCase());
     filteredListings = filteredListings.filter(
-      (item) => item.homeType && selectedTypes.includes(item.homeType),
+      (item) => !item.homeType || (item.homeType && selectedTypes.includes(item.homeType)),
     );
   }
   return filteredListings;
