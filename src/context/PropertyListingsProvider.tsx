@@ -246,7 +246,7 @@ function parseResult(item: ZillowProperty): Property {
   } else {
     addResults(parsedItem, item);
   }
-  if (parsedItem.address.length < 5) {
+  if (!parsedItem.address || parsedItem.address.length < 5) {
     parsedItem.address = addressComponents.slice(0, addressComponents.length - 3).join(' ');
   }
   return parsedItem;
