@@ -79,13 +79,13 @@ export default function Home(): React.ReactElement {
                     <Paper elevation={2}>
                       <Grid2
                         container
-                        spacing={{ xs: 2, md: 3 }}
-                        columns={{ xs: 4, sm: 8, md: 12 }}
+                        spacing={{ xs: 1, md: 2 }}
+                        columns={{ xs: 1, sm: 2, md: 3 }}
                       >
                         {(displayType === 'Grid')
                           ? filteredProperties.map((property) => (
                             <Grow key={`${property.detailUrl}-${property.statusType}`} in={!loading}>
-                              <Grid2 xs={4}>
+                              <Grid2 xs={1}>
                                 <Listing property={property} />
                               </Grid2>
                             </Grow>
