@@ -54,6 +54,7 @@ interface Property {
 interface FetchPropertiesRequest {
   geoLocation: PlaceInfo;
   commuteLocation: PlaceInfo;
+  refreshCommute: boolean;
   radius: number;
   priceFrom: number;
   priceMost: number;
@@ -69,6 +70,7 @@ const DefaultPlaceInfo = {
 const DefaultFetchPropertiesRequest: FetchPropertiesRequest = {
   geoLocation: DefaultPlaceInfo,
   commuteLocation: DefaultPlaceInfo,
+  refreshCommute: false,
   radius: 3.4,
   priceFrom: 0,
   priceMost: 1500000,

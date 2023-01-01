@@ -217,7 +217,7 @@ export default function Filter({
     justifyContent: 'center',
     alignItems: 'center',
   };
-  const columnSizes = { xs: 4, sm: 8, md: 12 };
+  const columnSizes = { xs: 2, sm: 6, md: 12 };
   const cols = (nxs: number, nsm: number, nmd: number) => ({
     xs: columnSizes.xs / nxs,
     sm: columnSizes.sm / nsm,
@@ -273,29 +273,74 @@ export default function Filter({
               defaultValue={remoteForm.commuteLocation.prediction}
             />
           </Grid2>
-          <Grid2 {...cols(1, 2, 4)} {...gridProps}>
-            <FormControl sx={{ m: 1, minWidth: 80 }}>
-              <InputLabel id="radius-label">Search Radius</InputLabel>
-              <Select
-                autoWidth
-                labelId="radius-label"
-                id="radius"
-                label="Search Radius"
-                value={remoteForm.radius}
-                onChange={(event) => setRemoteForm((latestForm: FetchPropertiesRequest) => ({
+          <Grid2 {...cols(2, 2, 4)} {...gridProps}>
+            <Autocomplete
+              multiple
+              fullWidth
+              disableCloseOnSelect
+              id="hometype"
+              limitTags={1}
+              disabled={all.length === 0}
+              options={homeTypes}
+              value={localForm.homeTypes || homeTypes}
+              onChange={(event, types: string[]) => setLocalForm(
+                (latestForm: LocalFilterSettings) => ({
                   ...latestForm,
-                  radius: Number(event.target.value),
-                }))}
-              >
-                {[...Array(360).keys()]
-                  .map((item) => ((item + 1) / 5))
-                  .map((value) => (
-                    <MenuItem key={value} value={value}>
-                      {`${value.toFixed(1)} miles`}
-                    </MenuItem>
-                  ))}
-              </Select>
-            </FormControl>
+                  homeTypes: types,
+                }),
+              )}
+              renderOption={(props, option, { selected }) => (
+                <li {...props}>
+                  <Checkbox
+                    icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+                    checkedIcon={<CheckBoxIcon fontSize="small" />}
+                    style={{ marginRight: 8 }}
+                    checked={selected}
+                  />
+                  {option}
+                </li>
+              )}
+              renderInput={(params) => <TextField {...params} label="Home Type" />}
+            />
+          </Grid2>
+          <Grid2 {...cols(2, 2, 4)} {...gridProps}>
+            <Autocomplete
+              fullWidth
+              disableClearable
+              id="sort-order"
+              limitTags={3}
+              disabled={all.length === 0}
+              options={localForm.sortOrders}
+              value={localForm.sortOrder[0]}
+              onChange={(event, order: SortOrder | null) => {
+                if (!order) {
+                  return;
+                }
+                setLocalForm((latestForm: LocalFilterSettings) => ({
+                  ...latestForm,
+                  sortOrder: [order],
+                }));
+              }}
+              renderOption={(props, { dimension }: SortOrder, { selected }) => (
+                <li {...props}>
+                  <Checkbox
+                    icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+                    checkedIcon={<CheckBoxIcon fontSize="small" />}
+                    style={{ marginRight: 8 }}
+                    checked={selected}
+                  />
+                  {dimension}
+                </li>
+              )}
+              getOptionLabel={({ dimension, ascending }) => (
+                `${(ascending) ? 'Ascending' : 'Descending'} ${dimension}`
+              )}
+              groupBy={({ ascending }) => ((ascending) ? 'Ascending' : 'Descending')}
+              isOptionEqualToValue={(option, value) => (
+                option.ascending === value.ascending && option.dimension === value.dimension
+              )}
+              renderInput={(params) => <TextField {...params} label="Sort By" />}
+            />
           </Grid2>
           <Grid2 {...cols(1, 2, 4)} {...gridProps}>
             <FormControlLabel
@@ -369,7 +414,7 @@ export default function Filter({
               )}
             />
           </Grid2>
-          <Grid2 {...cols(1, 3, 3)} {...gridProps}>
+          <Grid2 {...cols(1, 2, 4)} {...gridProps}>
             <FormControlLabel
               value="top"
               label="Price to Rent Ratio"
@@ -435,81 +480,31 @@ export default function Filter({
               )}
             />
           </Grid2>
-          <Grid2 {...cols(1, 3, 3)} {...gridProps}>
-            <Autocomplete
-              multiple
-              fullWidth
-              disableCloseOnSelect
-              id="hometype"
-              limitTags={1}
-              disabled={all.length === 0}
-              options={homeTypes}
-              value={localForm.homeTypes || homeTypes}
-              onChange={(event, types: string[]) => setLocalForm(
-                (latestForm: LocalFilterSettings) => ({
+          <Grid2 {...cols(2, 2, 4)} {...gridProps}>
+            <FormControl sx={{ m: 1, minWidth: 80 }}>
+              <InputLabel id="radius-label">Search Radius</InputLabel>
+              <Select
+                autoWidth
+                labelId="radius-label"
+                id="radius"
+                label="Search Radius"
+                value={remoteForm.radius}
+                onChange={(event) => setRemoteForm((latestForm: FetchPropertiesRequest) => ({
                   ...latestForm,
-                  homeTypes: types,
-                }),
-              )}
-              renderOption={(props, option, { selected }) => (
-                <li {...props}>
-                  <Checkbox
-                    icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
-                    checkedIcon={<CheckBoxIcon fontSize="small" />}
-                    style={{ marginRight: 8 }}
-                    checked={selected}
-                  />
-                  {option}
-                </li>
-              )}
-              renderInput={(params) => <TextField {...params} label="Home Type" />}
-            />
+                  radius: Number(event.target.value),
+                }))}
+              >
+                {[...Array(360).keys()]
+                  .map((item) => ((item + 1) / 5))
+                  .map((value) => (
+                    <MenuItem key={value} value={value}>
+                      {`${value.toFixed(1)} miles`}
+                    </MenuItem>
+                  ))}
+              </Select>
+            </FormControl>
           </Grid2>
-          <Grid2 {...cols(1, 3, 3)} {...gridProps}>
-            <Autocomplete
-              fullWidth
-              disableClearable
-              id="sort-order"
-              limitTags={3}
-              disabled={all.length === 0}
-              options={localForm.sortOrders}
-              value={localForm.sortOrder[0]}
-              onChange={(event, order: SortOrder | null) => {
-                if (!order) {
-                  return;
-                }
-                setLocalForm((latestForm: LocalFilterSettings) => ({
-                  ...latestForm,
-                  sortOrder: [order],
-                }));
-              }}
-              renderOption={(props, { dimension }: SortOrder, { selected }) => (
-                <li {...props}>
-                  <Checkbox
-                    icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
-                    checkedIcon={<CheckBoxIcon fontSize="small" />}
-                    style={{ marginRight: 8 }}
-                    checked={selected}
-                  />
-                  {dimension}
-                </li>
-              )}
-              getOptionLabel={({ dimension, ascending }) => (
-                `${(ascending) ? 'Ascending' : 'Descending'} ${dimension}`
-              )}
-              groupBy={({ ascending }) => ((ascending) ? 'Ascending' : 'Descending')}
-              isOptionEqualToValue={(option, value) => (
-                option.ascending === value.ascending && option.dimension === value.dimension
-              )}
-              renderInput={(params) => <TextField {...params} label="Sort By" />}
-            />
-          </Grid2>
-          {switches.map((item) => (
-            <Grid2 key={item.title} {...cols(2, 3, 6)} {...gridProps}>
-              {renderSwitch(item)}
-            </Grid2>
-          ))}
-          <Grid2 {...cols(2, 3, 6)} {...gridProps}>
+          <Grid2 {...cols(2, 2, 4)} {...gridProps}>
             <FormControl sx={{ m: 1, minWidth: 80 }}>
               <InputLabel id="since-sale-filter-label">Sold in Last</InputLabel>
               <Select
@@ -537,7 +532,19 @@ export default function Filter({
               </Select>
             </FormControl>
           </Grid2>
-          <Grid2 {...cols(1, 2, 4)} {...gridProps}>
+          {switches.map((item) => (
+            <Grid2 key={item.title} {...cols(2, 3, 6)} {...gridProps}>
+              {renderSwitch(item)}
+            </Grid2>
+          ))}
+          <Grid2 {...cols(2, 3, 6)} {...gridProps}>
+            {renderSwitch({
+              title: 'Refresh Commutes',
+              remoteKey: 'refreshCommute',
+              disabled: !remoteForm.commuteLocation.prediction,
+            })}
+          </Grid2>
+          <Grid2 {...cols(2, 2, 4)} {...gridProps}>
             <LoadingButton
               onClick={() => {
                 remoteUpdate(remoteForm);
@@ -551,7 +558,7 @@ export default function Filter({
               Submit
             </LoadingButton>
           </Grid2>
-          <Grid2 {...cols(1, 2, 4)} {...gridProps}>
+          <Grid2 {...cols(2, 2, 4)} {...gridProps}>
             { (share.link)
               ? (
                 <input
@@ -578,7 +585,7 @@ export default function Filter({
                 </LoadingButton>
               )}
           </Grid2>
-          <Grid2 {...cols(1, 2, 4)} {...gridProps}>
+          <Grid2 {...cols(2, 2, 4)} {...gridProps}>
             <Button
               size="medium"
               variant={(displayType === 'Grid') ? 'outlined' : 'contained'}
@@ -588,7 +595,7 @@ export default function Filter({
               {(displayType === 'Grid') ? 'Table' : 'Grid'}
             </Button>
           </Grid2>
-          <Grid2 {...cols(1, 2, 4)} {...gridProps}>
+          <Grid2 {...cols(2, 2, 4)} {...gridProps}>
             <CSVLink
               data={results}
               filename="properties.csv"

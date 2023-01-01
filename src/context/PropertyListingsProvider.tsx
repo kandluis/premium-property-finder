@@ -512,7 +512,7 @@ async function fetchCommuteTimes(
 async function filterAndFetchProperties(
   {
     geoLocation, radius, priceFrom, priceMost, includeRecentlySold,
-    includeForSale, sinceSaleFilter, commuteLocation,
+    includeForSale, sinceSaleFilter, commuteLocation, refreshCommute,
   }: FetchPropertiesRequest,
   progressFn: ProgressFn,
 ): Promise<Property[]> {
@@ -537,7 +537,7 @@ async function filterAndFetchProperties(
     const updates = {
       zestimate: db[prop.zpid].zestimate,
       rentzestimate: db[prop.zpid].rentzestimate,
-      travelTime: db[prop.zpid][commuteLocation.placeId],
+      travelTime: (refreshCommute) ? db[prop.zpid][commuteLocation.placeId] : undefined,
     };
     return { ...prop, ...updates };
   };
