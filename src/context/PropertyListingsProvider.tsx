@@ -481,7 +481,7 @@ async function fetchCommuteTimes(
     return res;
   }));
   progressFn(0.9);
-  return needCommute.reduce((db: Database, { zpid }: Property, idx: number) => {
+  const commuteDb = needCommute.reduce((db: Database, { zpid }: Property, idx: number) => {
     const resp = result[Math.floor(idx / 25)];
     if (resp.status !== 'fulfilled') {
       return db;
@@ -498,6 +498,7 @@ async function fetchCommuteTimes(
     const { duration_in_traffic: { value } } = elements[0];
     return merge(db, { [zpid]: { [placeId]: value } });
   }, {});
+  return commuteDb;
 }
 
 /*
@@ -530,25 +531,29 @@ async function filterAndFetchProperties(
   progressFn(0.0);
   let db = await dbFetch();
   progressFn(0.1);
-  const updateProp = (prop: Property): Property => {
-    if (!prop.zpid || !(prop.zpid in db)) {
+  const updateProp = (source: Database, prop: Property, updateTravelTime: boolean): Property => {
+    if (!prop.zpid || !(prop.zpid in source)) {
       return prop;
     }
     const updates = {
-      zestimate: db[prop.zpid].zestimate,
-      rentzestimate: db[prop.zpid].rentzestimate,
-      travelTime: (refreshCommute) ? db[prop.zpid][commuteLocation.placeId] : undefined,
+      zestimate: source[prop.zpid].zestimate,
+      rentzestimate: source[prop.zpid].rentzestimate,
+      travelTime: (updateTravelTime) ? source[prop.zpid][commuteLocation.placeId] : undefined,
     };
     return { ...prop, ...updates };
   };
-  const updatedProps = properties.map(updateProp);
+  // From source, only update commute if specified.
+  const updatedProps = properties.map((item) => updateProp(db, item, !refreshCommute));
 
   // Update database with unknown values and merge into properties.
-  db = merge(db, await fetchRentEstimates(updatedProps, progressFn));
+  const rentDb = await fetchRentEstimates(updatedProps, progressFn);
+  db = merge(db, rentDb);
   if (commuteLocation.placeId) {
-    db = merge(db, await fetchCommuteTimes(updatedProps, commuteLocation, progressFn));
+    const commuteDb = await fetchCommuteTimes(updatedProps, commuteLocation, progressFn);
+    db = merge(db, commuteDb);
   }
-  const finalProps = properties.map(updateProp);
+  // After fetching all data, update everything.
+  const finalProps = properties.map((item) => updateProp(db, item, /* updateTravelTime= */true));
 
   // Update the database.
   db = properties.reduce((prevDB, {

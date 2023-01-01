@@ -62,7 +62,7 @@ export default function Home(): React.ReactElement {
                     >
                       {[...Array(3).keys()].map((key: number) => (
                         <Grid2 key={key} xs={4}>
-                          <Skeleton key={key} variant="rounded" height={400} />
+                          <Skeleton variant="rounded" height={400} />
                         </Grid2>
                       ))}
                     </Grid2>
@@ -84,7 +84,7 @@ export default function Home(): React.ReactElement {
                       >
                         {(displayType === 'Grid')
                           ? filteredProperties.map((property) => (
-                            <Grow key={`${property.zpid || ''}-${property.statusType}`} in={!loading}>
+                            <Grow key={`${property.detailUrl}-${property.statusType}`} in={!loading}>
                               <Grid2 xs={4}>
                                 <Listing property={property} />
                               </Grid2>
