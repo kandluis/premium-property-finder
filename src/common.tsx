@@ -25,7 +25,7 @@ type PlaceInfo = {
   description: string;
   prediction?: google.maps.places.AutocompletePrediction;
 };
-
+type ApiResult = {[key: string]: string | number | null | undefined | ApiResult };
 interface Property {
   address: string,
   detailUrl: string,
@@ -34,6 +34,9 @@ interface Property {
   statusType: string, // Usually we check just for 'SOLD'. Have seen 'FOR_SALE'.
   statusText: string,
   listingType: string, // Usually just 'NEW_CONSTRUCTION'
+
+  // This is the full result of the API, unvalidated.
+  apiResult?: ApiResult,
 
   area?: number,
   baths?: number,
@@ -198,6 +201,27 @@ function openInNewTab(href: string): void {
   }).click();
 }
 
+/**
+ * Flatten a multidimensional object and attach keyPrefix to all keys.
+ */
+type FlatApiResults = {[key: string]: string | number };
+function flatten(obj: ApiResult, keyPrefix: string): FlatApiResults {
+  const flattened: FlatApiResults = {};
+  Object.keys(obj).forEach((key: string) => {
+    const value = obj[key];
+    if (value === null || value === undefined) {
+      return;
+    }
+    if (typeof value === 'number' || typeof value === 'string') {
+      flattened[`${keyPrefix}${key}`] = value;
+      return;
+    }
+    Object.assign(flattened, flatten(value, `${key}.`));
+  });
+
+  return flattened;
+}
+
 interface ComputedMetrics {
   priceOrZestimate: number;
   rentToPriceRatio: number;
@@ -206,19 +230,28 @@ interface ComputedMetrics {
   commuteMinutes: number;
 }
 function computeMetrics(item: Property): ComputedMetrics {
-  return {
+  const props = {
     priceOrZestimate: PropAccessors.getPrice(item),
     rentToPriceRatio: PropAccessors.getRentToPrice(item),
     zestimateToPriceRatio: PropAccessors.getZestimateToPrice(item),
     pricePerSqft: PropAccessors.getPricePerSqft(item),
     commuteMinutes: PropAccessors.getCommute(item),
   };
+  if (!item.apiResult) {
+    return props;
+  }
+  return { ...props, ...flatten(item.apiResult, 'apiResult.') };
 }
 function attachComputedMetrics(items: Property[]): (Property & ComputedMetrics)[] {
-  return items.map((item) => ({ ...item, ...computeMetrics(item) }));
+  return items.map((item: Property) => {
+    const withoutApi = { ...item };
+    delete withoutApi.apiResult;
+    return { ...withoutApi, ...computeMetrics(item) };
+  });
 }
 
 export {
+  ApiResult,
   attachComputedMetrics,
   ColorModeContext,
   DefaultFetchPropertiesRequest,

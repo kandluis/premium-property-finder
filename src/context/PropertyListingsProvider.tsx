@@ -8,6 +8,7 @@ import {
   zillowBaseUrl,
 } from '../constants';
 import {
+  ApiResult,
   DefaultLocalSettings,
   FetchPropertiesRequest,
   LocalFilterSettings,
@@ -42,7 +43,7 @@ type ProgressFn = (_action: number | ((_prev: number) => number)) => void;
 async function getRentBitsEstimate({ lat, lng }: Location): Promise<number | null> {
   const box = boundingBox(lat, lng, 1);
   const url = `${rentBitsApiBaseUrl}?bounds=${box.south},${box.north},${box.west},${box.east}`;
-  let res = null;
+  let res: null | RentBitsResponse = null;
   try {
     res = await getJsonResponse(url, 'json', true) as RentBitsResponse;
   } catch (e) {
@@ -223,6 +224,8 @@ function parseResult(item: ZillowProperty): Property {
     price: parsePrice(item),
     statusText: item.statusText,
     statusType: item.statusType,
+    // Widen the type signature.
+    apiResult: (item as unknown) as ApiResult,
   };
   if (item.statusType === 'SOLD' && item.variableData) {
     parsedItem.lastSold = item.variableData.text;
@@ -452,7 +455,7 @@ async function fetchCommuteTimes(
     unitSystem: window.google.maps.UnitSystem.IMPERIAL,
   };
   // We can only process 25 origins at a time. Generate all requests.
-  const requests = [];
+  const requests: (typeof request & { origins: string[] })[] = [];
   let startIdx = 0;
   while (startIdx < allOrigins.length) {
     requests.push({
