@@ -37,6 +37,7 @@ import { CSVLink } from 'react-csv';
 import styled from 'styled-components';
 import { useQueryParam } from 'use-query-params';
 import {
+  attachComputedMetrics,
   ColorModeContext,
   DefaultFetchPropertiesRequest,
   DefaultLocalSettings,
@@ -597,7 +598,7 @@ export default function Filter({
           </Grid2>
           <Grid2 {...cols(2, 2, 4)} {...gridProps}>
             <CSVLink
-              data={results}
+              data={attachComputedMetrics(results)}
               filename="properties.csv"
               type="button"
             >

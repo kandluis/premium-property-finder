@@ -198,7 +198,28 @@ function openInNewTab(href: string): void {
   }).click();
 }
 
+interface ComputedMetrics {
+  priceOrZestimate: number;
+  rentToPriceRatio: number;
+  zestimateToPriceRatio: number;
+  pricePerSqft: number;
+  commuteMinutes: number;
+}
+function computeMetrics(item: Property): ComputedMetrics {
+  return {
+    priceOrZestimate: PropAccessors.getPrice(item),
+    rentToPriceRatio: PropAccessors.getRentToPrice(item),
+    zestimateToPriceRatio: PropAccessors.getZestimateToPrice(item),
+    pricePerSqft: PropAccessors.getPricePerSqft(item),
+    commuteMinutes: PropAccessors.getCommute(item),
+  };
+}
+function attachComputedMetrics(items: Property[]): (Property & ComputedMetrics)[] {
+  return items.map((item) => ({ ...item, ...computeMetrics(item) }));
+}
+
 export {
+  attachComputedMetrics,
   ColorModeContext,
   DefaultFetchPropertiesRequest,
   DefaultFilter,
