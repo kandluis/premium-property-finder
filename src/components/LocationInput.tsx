@@ -25,22 +25,35 @@ const throttle = pThrottle({
   limit: 10, interval: 1000, strict: true,
 });
 
+type AutoCompleteService = {
+  current: google.maps.places.AutocompleteService | null;
+}
+const autocompleteService: AutoCompleteService = { current: null };
+
+function initMap() {
+  if (!autocompleteService.current && window.google) {
+    autocompleteService.current = new window.google.maps.places.AutocompleteService();
+  }
+}
+
+declare global {
+  interface Window {
+    initMap: () => void;
+  }
+}
+
 function loadScript(src: string, position: HTMLElement | null, id: string) {
   if (!position) {
     return;
   }
-
+  // eslint-ignore-next-line
+  window.initMap = initMap;
   const script = document.createElement('script');
   script.setAttribute('async', '');
   script.setAttribute('id', id);
   script.src = src;
   position.appendChild(script);
 }
-
-type AutoCompleteService = {
-  current: google.maps.places.AutocompleteService | null;
-}
-const autocompleteService: AutoCompleteService = { current: null };
 
 type Cache<T> = Record<
   string, {
@@ -110,7 +123,7 @@ export default function LocationInput(
   if (typeof window !== 'undefined' && !loaded.current) {
     if (!document.querySelector('#google-maps')) {
       loadScript(
-        `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`,
+        `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMap`,
         document.querySelector('head'),
         'google-maps',
       );
@@ -134,10 +147,7 @@ export default function LocationInput(
 
   useEffect(() => {
     let active = true;
-
-    if (!autocompleteService.current && window.google) {
-      autocompleteService.current = new window.google.maps.places.AutocompleteService();
-    }
+    initMap();
     if (!autocompleteService.current) {
       return undefined;
     }
