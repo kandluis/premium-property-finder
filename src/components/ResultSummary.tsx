@@ -100,14 +100,15 @@ const summarize = (props: Property[]): Summary => {
     }
     return prop[key] as number;
   }).filter(notEmpty);
+  const nonZero = (value: number) => value !== 0;
   return {
     price: compute(fetch('price')),
     rentzestimate: compute(fetch('rentzestimate')),
     travelTime: compute(fetch('travelTime')),
     zestimate: compute(fetch('zestimate')),
-    perSqFt: compute(props.map(PropAccessors.getPricePerSqft)),
-    rentToPrices: compute(props.map(PropAccessors.getRentToPrice)),
-    zestimateToPrice: compute(props.map(PropAccessors.getZestimateToPrice)),
+    perSqFt: compute(props.map(PropAccessors.getPricePerSqft).filter(nonZero)),
+    rentToPrices: compute(props.map(PropAccessors.getRentToPrice).filter(nonZero)),
+    zestimateToPrice: compute(props.map(PropAccessors.getZestimateToPrice).filter(nonZero)),
   };
 };
 
