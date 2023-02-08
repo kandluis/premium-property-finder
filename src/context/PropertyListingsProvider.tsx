@@ -498,7 +498,17 @@ async function fetchCommuteTimes(
     if (!zpid) {
       return db;
     }
-    const { duration_in_traffic: { value } } = elements[0];
+    if (elements.length === 0) {
+      return db;
+    }
+    const { duration_in_traffic: duration } = elements[0];
+    if (duration === undefined) {
+      return db;
+    }
+    const { value } = duration;
+    if (value === undefined) {
+      return db;
+    }
     return merge(db, { [zpid]: { [placeId]: value } });
   }, {});
   return commuteDb;
