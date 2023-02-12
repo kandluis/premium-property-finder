@@ -86,7 +86,7 @@ CREATE TABLE properties(
 The repo is setup to automatically deploy on every push to master. This means if you have everything setup on `fly.io`, you shouldn't have to do anything. If there are issues, you can debug with:
 
 ```sh
-flyclt deploy --local-only --verbose
+flyctl deploy --local-only --verbose
 ```
 
 This requires you have Docker installed.
