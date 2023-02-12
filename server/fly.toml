@@ -6,7 +6,7 @@ kill_timeout = 5
 processes = []
 
 [build]
-  builder = "paketobuildpacks/builder-jammy-base"
+  builder = "paketobuildpacks/builder:base"
   [build.args]
     USE_NPM_INSTALL = true
     NODE_MODULES_CACHE = true
