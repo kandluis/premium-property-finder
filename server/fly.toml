@@ -8,9 +8,9 @@ processes = []
 [build]
   builder = "paketobuildpacks/builder:base"
   [build.args]
-    USE_NPM_INSTALL = true
-    NODE_MODULES_CACHE = true
-    NPM_CONFIG_PRODUCTION = false
+    USE_NPM_INSTALL = "true"
+    NODE_MODULES_CACHE = "true"
+    NPM_CONFIG_PRODUCTION = "false"
     NODE_ENV = "production"
 
 [env]
