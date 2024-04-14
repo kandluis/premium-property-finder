@@ -96,14 +96,12 @@ This requires you have Docker installed.
 You'll need to have `WireGuard` setup and an active connection to your fly.io organization. [This article](https://fly.io/docs/reference/private-networking/) walks you through a step-by-step process to enable this. If done correctly, you can connect to the production back-ends w/o making any changes to the `.env` variables.
 
 
-
-
 ## Current Routes
 
 The server has several routes. Note that `/api` also accepts `GET` requests without requiring a `SECRET` when `NODE_ENV=debug`.
 
 - `/api` [GET] - This is a heartbeat endpoint.
-- `/proxy/<URL>` [GET, POST] - This removes CORS headers by forwarding incoming messages. This enables us to scrape requests from domains we don't own.
+- `/proxy/<URL>` [GET, POST, PUT] - This removes CORS headers by forwarding incoming messages. This enables us to scrape requests from domains we don't own.
 - `/api/<ACTION>` [POST] - Main APIs, by default POST requests. Actions include:
   - refresh: Refreshes the Redis in-memory store to match persistent storage.
   - set: Allow simple requests directly pushing the data.
@@ -114,6 +112,28 @@ The server has several routes. Note that `/api` also accepts `GET` requests with
 
 
 ## Frequently Encountered Issues
+
+## PG does not connect
+
+If PG is not connecting and you still have an old version of the application running, you can SSH into it and retrieve the relevant environment variables (keys). Example commands:
+
+```sh
+fly ssh console 
+
+# In the virtual machine
+echo $DATABASE_URL
+```
+
+## Redis does not connect
+
+If Redis refuses to connect even after setting up Wireguard, it's likely that the URI for the redis database has changed. You can try the following commands to get the URI.
+
+```sh
+flyctl redis list  # note the name of the redis database
+fly redis status white-smoke-8194  # this will give you the Private URL to use.
+```
+
+Update your `.env` to set `REDISCLOUD_URL` to the value obtained above! You should see `connect redis success` on startup.
 
 ### [DEPRECATED] Redis Add-On Is Deleted
 
