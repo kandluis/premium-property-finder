@@ -224,6 +224,10 @@ const router = express.Router()
     req.url = req.url.replace('/proxy/', '/');
     corsProxyServer.emit('request', req, res);
   })
+  .put('/proxy/:proxyUrl*', (req, res) => {
+    req.url = req.url.replace('/proxy/', '/');
+    corsProxyServer.emit('request', req, res);
+  })
   .get('/api', (req, res) => {
     res.send('alive');
   })
