@@ -1,8 +1,7 @@
 // URL for API used when translating an address or location to lat/long coordinates.
 export const geocodingBaseUrl = 'https://www.mapquestapi.com/geocoding/v1/address';
 // URL for public Zillow API.
-export const zillowBaseUrl = 'https://www.zillow.com/search/GetSearchPageState.htm';
-export const zillowApiBaseUrl = 'https://www.zillow.com/webservice';
+export const zillowBaseUrl = 'www.zillow.com/async-create-search-page-state';
 // URL used for Rent Bits rental estimates.proxyUrl
 export const rentBitsApiBaseUrl = 'https://service.rentbits.com/api/v1/search';
 export const proxyUrl = 'https://premium-property-finder-server.fly.dev/proxy';

@@ -196,17 +196,20 @@ async function getJsonResponse(
   if (useProxy) {
     fullUrl = `${proxyUrl}/${url}`;
   }
-  const storageKey = `getJsonReponse(${fullUrl})`;
+  const storageKey = `getJsonReponse(${fullUrl})?${JSON.stringify(options)}`;
   const data = sessionStorage.getItem(storageKey);
   if (data != null) {
     return JSON.parse(data) as AppResponse;
   }
-  const blob = await fetch(fullUrl, {
-    ...options,
+  const reqOptions = {
+    mode: 'cors' as RequestMode,
     headers: {
       'Api-Key': DB_SECRET,
+      ...(format === 'json') ? { 'Content-Type': 'application/json' } : {},
     },
-  });
+    ...options,
+  };
+  const blob = await fetch(fullUrl, reqOptions);
   const fetchParsed = async (): Promise<AppResponse> => {
     if (format === 'json') {
       return blob.json() as Promise<AppResponse>;

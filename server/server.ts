@@ -177,7 +177,7 @@ function allowCrossDomains(
 ): void {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET,POST,PUT');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, Api-Key');
+  res.header('Access-Control-Allow-Headers', 'Api-Key, Authorization, Content-Type, Content-Length, X-Requested-With');
 
   // intercept OPTIONS method
   if (req.method === 'OPTIONS') {

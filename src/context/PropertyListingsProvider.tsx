@@ -306,14 +306,20 @@ async function fetchProperties(
   });
   let propertyListings: ZillowProperty[] = [];
   if (includeForSale) {
-    const zillowUrl = `${zillowBaseUrl}?searchQueryState=${JSON.stringify(searchQueryStateFn({ isRecentlySold: false }))}&wants=${JSON.stringify(wants)}`;
-    const data = await getJsonResponse(`${zillowUrl}`, 'json', true) as ZillowResponse;
+    const body = {
+      searchQueryState: searchQueryStateFn({ isRecentlySold: false }),
+      wants,
+    };
+    const data = await getJsonResponse(`${zillowBaseUrl}`, 'json', true, { method: 'PUT', body: JSON.stringify(body) }) as ZillowResponse;
     propertyListings = [...propertyListings, ...data.cat1.searchResults.mapResults];
   }
   progressFn(0.1);
   if (includeRecentlySold) {
-    const zillowUrl = `${zillowBaseUrl}?searchQueryState=${JSON.stringify(searchQueryStateFn({ isRecentlySold: true }))}&wants=${JSON.stringify(wants)}`;
-    const data = await getJsonResponse(`${zillowUrl}`, 'json', true) as ZillowResponse;
+    const body = {
+      searchQueryState: searchQueryStateFn({ isRecentlySold: true }),
+      wants,
+    };
+    const data = await getJsonResponse(`${zillowBaseUrl}`, 'json', true, { method: 'PUT', body: JSON.stringify(body) }) as ZillowResponse;
     propertyListings = [...propertyListings, ...data.cat1.searchResults.mapResults];
   }
   progressFn(0.15);
